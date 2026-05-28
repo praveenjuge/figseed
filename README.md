@@ -28,6 +28,14 @@ possible.
    Figseed creates a variable alias instead of a literal color — so updating
    `red/600` once cascades through every theme variable that references it.
 
+5. After the variables are written, Figseed rebuilds a `Design System` page
+   that visualizes the system: theme-color pair cards (light + dark), the
+   full Tailwind palette grid, font sizes / weights / tracking / leading,
+   border radii, the spacing scale, border widths, the box-shadow scale,
+   blur (with a backdrop demo), and the opacity scale. Every visual node
+   is bound to the underlying variable, so editing a token in the panel
+   flows through to the page automatically.
+
 The plugin is **idempotent**: re-running with a different preset reuses the
 existing collections and updates values in place. It runs **fully offline** —
 no network requests are made (Figma plugin iframes have a `null` origin and
@@ -59,6 +67,7 @@ src/
   colors.ts      # Tailwind color table, OKLCH→sRGB, alias matcher
   primitives.ts  # radius/spacing/typography token tables
   generator.ts   # builds Figma collections, modes, and variables
+  designSystem.ts # rebuilds the "Design System" page with visual swatches
   data/themes.json   # snapshot of shadcn's apps/v4/registry/themes.ts
 manifest.json    # Figma plugin manifest
 scripts/
@@ -72,7 +81,8 @@ reference and is git-ignored.
 ## Roadmap
 
 - Apply the generated theme variables to a starter component sheet (buttons,
-  cards, inputs) so designers immediately see the system in action.
+  cards, inputs) so designers immediately see the system in action — the
+  Design System page is the foundation; component blocks come next.
 - Optional: emit the matching DTCG `Default.tokens.json` for round-tripping
   with Tokens Studio / Variables2CSS workflows.
 - Refresh `src/data/themes.json` when shadcn ships new themes

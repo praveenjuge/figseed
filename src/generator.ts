@@ -49,10 +49,24 @@ export type GenerateOptions = {
   presetSummary?: Record<string, string | undefined>;
 };
 
+export type ThemeVariableMaps = {
+  // Variables in `shadcn / Theme` keyed by their bare name (e.g. "background")
+  // for the light pass, and "dark-<name>" for the dark pass.
+  light: Map<string, Variable>;
+  dark: Map<string, Variable>;
+};
+
+export type PrimitiveVariableMap = Map<string, Variable>;
+
 export type GenerateResult = {
   presetCode: string;
   collections: { name: string; variableCount: number }[];
   fallbackThemeColors: number;
+  variables: {
+    tailwindColors: TailwindColorVarMap;
+    primitives: PrimitiveVariableMap;
+    theme: ThemeVariableMaps;
+  };
 };
 
 // Top-level entry. Idempotent: existing collections by name are reused.
@@ -61,7 +75,7 @@ export async function generateFromRegistry(
   options: GenerateOptions,
 ): Promise<GenerateResult> {
   const colorVars = await ensureTailwindColorCollection();
-  const primitivesCount = await ensurePrimitivesCollection({
+  const primitives = await ensurePrimitivesCollection({
     fontFamily: resolveFontFamily(options.presetSummary?.["font"]),
   });
   const themeResult = await ensureThemeCollection(data, colorVars);
@@ -70,13 +84,18 @@ export async function generateFromRegistry(
     presetCode: options.presetCode,
     collections: [
       { name: COLLECTION_TAILWIND_COLORS, variableCount: colorVars.size },
-      { name: COLLECTION_PRIMITIVES, variableCount: primitivesCount },
+      { name: COLLECTION_PRIMITIVES, variableCount: primitives.size },
       {
         name: COLLECTION_THEME,
         variableCount: themeResult.variableCount,
       },
     ],
     fallbackThemeColors: themeResult.unaliasedCount,
+    variables: {
+      tailwindColors: colorVars,
+      primitives,
+      theme: themeResult.maps,
+    },
   };
 }
 
@@ -120,7 +139,7 @@ async function getOrCreateVariable(
 
 // ----------------- Tailwind colors -----------------
 
-type TailwindColorVarMap = Map<string, Variable>;
+export type TailwindColorVarMap = Map<string, Variable>;
 
 // Returns a flat lookup keyed by "family/scale" plus "black", "white",
 // "transparent". Allows the theme step to alias matching values.
@@ -172,96 +191,87 @@ type PrimitivesOpts = { fontFamily: ResolvedFontFamily };
 
 async function ensurePrimitivesCollection(
   opts: PrimitivesOpts,
-): Promise<number> {
+): Promise<PrimitiveVariableMap> {
   const collection = await getOrCreateCollection(COLLECTION_PRIMITIVES);
   ensureSingleMode(collection, "Default");
   const modeId = collection.modes[0]!.modeId;
 
-  let count = 0;
+  const map: PrimitiveVariableMap = new Map();
 
-  count += await writeNumberGroup(collection, modeId, "radius", RADIUS_TOKENS);
-  count += await writeNumberGroup(
+  await writeNumberGroup(collection, modeId, "radius", RADIUS_TOKENS, map);
+  await writeNumberGroup(
     collection,
     modeId,
     "border-width",
     BORDER_WIDTH_TOKENS,
+    map,
   );
-  count += await writeNumberGroup(
-    collection,
-    modeId,
-    "opacity",
-    OPACITY_TOKENS,
-  );
-  count += await writeNumberGroup(collection, modeId, "blur", BLUR_TOKENS);
-  count += await writeNumberGroup(collection, modeId, "skew", SKEW_TOKENS);
-  count += await writeNumberGroup(
+  await writeNumberGroup(collection, modeId, "opacity", OPACITY_TOKENS, map);
+  await writeNumberGroup(collection, modeId, "blur", BLUR_TOKENS, map);
+  await writeNumberGroup(collection, modeId, "skew", SKEW_TOKENS, map);
+  await writeNumberGroup(
     collection,
     modeId,
     "breakpoint",
     BREAKPOINT_TOKENS,
+    map,
   );
-  count += await writeNumberGroup(
+  await writeNumberGroup(
     collection,
     modeId,
     "container",
     CONTAINER_TOKENS,
+    map,
   );
-  count += await writeNumberGroup(
-    collection,
-    modeId,
-    "spacing",
-    SPACING_TOKENS,
-  );
+  await writeNumberGroup(collection, modeId, "spacing", SPACING_TOKENS, map);
 
   // Font / typography.
-  count += await writeNumberGroup(
+  await writeNumberGroup(
     collection,
     modeId,
     "font/size",
     FONT_SIZE_TOKENS,
+    map,
   );
-  count += await writeNumberGroup(
+  await writeNumberGroup(
     collection,
     modeId,
     "font/weight",
     FONT_WEIGHT_TOKENS,
+    map,
   );
-  count += await writeNumberGroup(
+  await writeNumberGroup(
     collection,
     modeId,
     "font/tracking",
     FONT_TRACKING_TOKENS,
+    map,
   );
-  count += await writeNumberGroup(
+  await writeNumberGroup(
     collection,
     modeId,
     "font/leading",
     FONT_LEADING_TOKENS,
+    map,
   );
 
   // Font families: bucket the preset font into sans/serif/mono.
   const families = computeFontFamilies(opts.fontFamily);
   for (const family of families) {
-    const variable = await getOrCreateVariable(
-      collection,
-      `font/family/${family.name}`,
-      "STRING",
-    );
+    const name = `font/family/${family.name}`;
+    const variable = await getOrCreateVariable(collection, name, "STRING");
     variable.setValueForMode(modeId, family.value);
-    count += 1;
+    map.set(name, variable);
   }
 
   for (const styleToken of FONT_STYLE_TOKENS) {
-    const variable = await getOrCreateVariable(
-      collection,
-      `font/style/${styleToken.name}`,
-      "STRING",
-    );
+    const name = `font/style/${styleToken.name}`;
+    const variable = await getOrCreateVariable(collection, name, "STRING");
     variable.setValueForMode(modeId, styleToken.value);
-    count += 1;
+    map.set(name, variable);
   }
 
-  return count;
+  return map;
 }
 
 async function writeNumberGroup(
@@ -269,16 +279,14 @@ async function writeNumberGroup(
   modeId: string,
   group: string,
   tokens: NumberToken[],
-): Promise<number> {
+  map: PrimitiveVariableMap,
+): Promise<void> {
   for (const token of tokens) {
-    const variable = await getOrCreateVariable(
-      collection,
-      `${group}/${token.name}`,
-      "FLOAT",
-    );
+    const name = `${group}/${token.name}`;
+    const variable = await getOrCreateVariable(collection, name, "FLOAT");
     variable.setValueForMode(modeId, token.value);
+    map.set(name, variable);
   }
-  return tokens.length;
 }
 
 function computeFontFamilies(presetFontFamily: ResolvedFontFamily) {
@@ -305,7 +313,11 @@ function resolveFontFamily(slug: string | undefined): ResolvedFontFamily {
 
 // ----------------- Theme (light + dark) -----------------
 
-type ThemeResult = { variableCount: number; unaliasedCount: number };
+type ThemeResult = {
+  variableCount: number;
+  unaliasedCount: number;
+  maps: ThemeVariableMaps;
+};
 
 async function ensureThemeCollection(
   data: ResolvedRegistry,
@@ -326,13 +338,22 @@ async function ensureThemeCollection(
   let variableCount = 0;
   let unaliasedCount = 0;
 
+  const maps: ThemeVariableMaps = {
+    light: new Map(),
+    dark: new Map(),
+  };
+
   // Free-tier Figma collections only support one mode. Instead of two modes,
   // we emit one variable per (key, scheme): "background" carries the light
   // value, "dark-background" carries the dark value. Designers swap by
   // re-binding to the dark-* variants when they want a dark surface.
-  const passes: Array<{ prefix: string; values: Record<string, string> }> = [
-    { prefix: "", values: light },
-    { prefix: "dark-", values: dark },
+  const passes: Array<{
+    prefix: string;
+    values: Record<string, string>;
+    target: Map<string, Variable>;
+  }> = [
+    { prefix: "", values: light, target: maps.light },
+    { prefix: "dark-", values: dark, target: maps.dark },
   ];
 
   for (const key of allKeys) {
@@ -353,6 +374,7 @@ async function ensureThemeCollection(
         const number = parseLengthRem(rawValue);
         if (number !== null) variable.setValueForMode(modeId, number);
         variableCount += 1;
+        pass.target.set(key, variable);
         continue;
       }
 
@@ -370,10 +392,11 @@ async function ensureThemeCollection(
       );
       if (!applied.aliased) unaliasedCount += 1;
       variableCount += 1;
+      pass.target.set(key, variable);
     }
   }
 
-  return { variableCount, unaliasedCount };
+  return { variableCount, unaliasedCount, maps };
 }
 
 function applyThemeColor(

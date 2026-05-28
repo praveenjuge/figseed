@@ -1,6 +1,7 @@
 // Plugin sandbox entry. Runs in Figma's main thread and has access to the
 // figma.* APIs.
 
+import { buildDesignSystem } from "./designSystem";
 import { generateFromRegistry } from "./generator";
 import { decodePreset } from "./preset";
 import { resolvePreset } from "./registry";
@@ -37,17 +38,37 @@ async function handleGenerate(rawCode: string) {
 
   try {
     const decoded = decodePreset(presetCode) ?? undefined;
+    const presetSummary = decoded
+      ? {
+          style: decoded.style,
+          baseColor: decoded.baseColor,
+          theme: decoded.theme,
+          font: decoded.font,
+          radius: decoded.radius,
+        }
+      : undefined;
+
     const result = await generateFromRegistry(resolved.data, {
       presetCode: resolved.presetCode,
-      presetSummary: decoded
-        ? {
-            style: decoded.style,
-            baseColor: decoded.baseColor,
-            theme: decoded.theme,
-            font: decoded.font,
-            radius: decoded.radius,
-          }
-        : undefined,
+      presetSummary,
+    });
+
+    post({ type: "progress", message: "Building Design System page…" });
+
+    const ds = await buildDesignSystem({
+      presetCode: result.presetCode,
+      presetSummary,
+      tailwindColors: result.variables.tailwindColors,
+      primitives: result.variables.primitives,
+      theme: result.variables.theme,
+      onProgress: (current, total, label) => {
+        post({
+          type: "progress",
+          message: `Building ${label}…`,
+          step: current,
+          total,
+        });
+      },
     });
 
     post({
@@ -56,6 +77,7 @@ async function handleGenerate(rawCode: string) {
       summary: {
         collections: result.collections,
         fallbackThemeColors: result.fallbackThemeColors,
+        designSystemNodes: ds.nodeCount,
       },
     });
 
@@ -64,7 +86,7 @@ async function handleGenerate(rawCode: string) {
       0,
     );
     figma.notify(
-      `Figseed: created ${variableTotal} variables across ${result.collections.length} collections.`,
+      `Figseed: ${variableTotal} variables · Design System page ready (${ds.nodeCount} nodes).`,
     );
   } catch (error) {
     const messageText =

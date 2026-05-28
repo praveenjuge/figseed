@@ -8,6 +8,8 @@ const input = document.getElementById("preset") as HTMLInputElement;
 const generateButton = document.getElementById("generate") as HTMLButtonElement;
 const cancelButton = document.getElementById("cancel") as HTMLButtonElement;
 const status = document.getElementById("status") as HTMLDivElement;
+const progress = document.getElementById("progress") as HTMLDivElement;
+const progressBar = progress.querySelector(".bar") as HTMLSpanElement;
 
 let busy = false;
 
@@ -19,6 +21,36 @@ function setStatus(text: string, variant: "info" | "error" | "done" = "info") {
   status.textContent = text;
   status.classList.toggle("error", variant === "error");
   status.classList.toggle("done", variant === "done");
+}
+
+// Show the bar and either drive it directly (step + total provided) or run
+// the indeterminate stripe while we wait for the next tick.
+function updateProgress(step?: number, total?: number) {
+  progress.classList.add("visible");
+  if (typeof step === "number" && typeof total === "number" && total > 0) {
+    progress.classList.remove("indeterminate");
+    const pct = Math.max(0, Math.min(100, (step / total) * 100));
+    progressBar.style.width = `${pct}%`;
+  } else {
+    progress.classList.add("indeterminate");
+    progressBar.style.width = "";
+  }
+}
+
+function finishProgress() {
+  progress.classList.remove("indeterminate");
+  progressBar.style.width = "100%";
+  // Fade the bar back out once the run completes — keeps the resting UI
+  // clean without removing the element entirely.
+  setTimeout(() => {
+    progress.classList.remove("visible");
+    progressBar.style.width = "0%";
+  }, 600);
+}
+
+function resetProgress() {
+  progress.classList.remove("visible", "indeterminate");
+  progressBar.style.width = "0%";
 }
 
 function syncGenerateButton() {
@@ -45,6 +77,7 @@ generateButton.addEventListener("click", () => {
   busy = true;
   syncGenerateButton();
   setStatus(`Working on it (${presetCode})…`);
+  updateProgress();
   postToPlugin({ type: "generate", presetCode });
 });
 
@@ -63,12 +96,14 @@ window.addEventListener("message", (event: MessageEvent) => {
 
   if (message.type === "progress") {
     setStatus(message.message);
+    updateProgress(message.step, message.total);
     return;
   }
 
   if (message.type === "error") {
     busy = false;
     setStatus(message.message, "error");
+    resetProgress();
     syncGenerateButton();
     return;
   }
@@ -80,9 +115,10 @@ window.addEventListener("message", (event: MessageEvent) => {
       0,
     );
     setStatus(
-      `Created ${total} variables across ${message.summary.collections.length} collections.`,
+      `Created ${total} variables and a Design System page (${message.summary.designSystemNodes} nodes).`,
       "done",
     );
+    finishProgress();
     syncGenerateButton();
     return;
   }

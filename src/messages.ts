@@ -6,13 +6,21 @@ export type UiToPlugin =
 
 export type PluginToUi =
   | { type: "ready" }
-  | { type: "progress"; message: string }
+  | {
+      type: "progress";
+      message: string;
+      // step/total are optional so legacy progress messages still render. The
+      // UI uses them to drive a determinate progress bar.
+      step?: number;
+      total?: number;
+    }
   | {
       type: "done";
       presetCode: string;
       summary: {
         collections: { name: string; variableCount: number }[];
         fallbackThemeColors: number;
+        designSystemNodes: number;
       };
     }
   | { type: "error"; message: string };
