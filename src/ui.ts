@@ -115,7 +115,7 @@ window.addEventListener("message", (event: MessageEvent) => {
       0,
     );
     setStatus(
-      `Created ${total} variables and a Design System page (${message.summary.designSystemNodes} nodes).`,
+      `Created ${total} variables · Design System (${message.summary.designSystemNodes} nodes) · Components (${message.summary.componentsNodes} nodes).`,
       "done",
     );
     finishProgress();

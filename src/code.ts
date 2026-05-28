@@ -1,6 +1,7 @@
 // Plugin sandbox entry. Runs in Figma's main thread and has access to the
 // figma.* APIs.
 
+import { buildComponentsPage } from "./componentsPage";
 import { buildDesignSystem } from "./designSystem";
 import { generateFromRegistry } from "./generator";
 import { decodePreset } from "./preset";
@@ -71,6 +72,23 @@ async function handleGenerate(rawCode: string) {
       },
     });
 
+    post({ type: "progress", message: "Building Components page…" });
+
+    const components = await buildComponentsPage({
+      presetCode: result.presetCode,
+      presetSummary,
+      primitives: result.variables.primitives,
+      theme: result.variables.theme,
+      onProgress: (current, total, label) => {
+        post({
+          type: "progress",
+          message: `Building ${label}…`,
+          step: current,
+          total,
+        });
+      },
+    });
+
     post({
       type: "done",
       presetCode: result.presetCode,
@@ -78,6 +96,7 @@ async function handleGenerate(rawCode: string) {
         collections: result.collections,
         fallbackThemeColors: result.fallbackThemeColors,
         designSystemNodes: ds.nodeCount,
+        componentsNodes: components.nodeCount,
       },
     });
 
@@ -86,7 +105,7 @@ async function handleGenerate(rawCode: string) {
       0,
     );
     figma.notify(
-      `Figseed: ${variableTotal} variables · Design System page ready (${ds.nodeCount} nodes).`,
+      `Figseed: ${variableTotal} variables · Design System (${ds.nodeCount} nodes) · Components (${components.nodeCount} nodes).`,
     );
   } catch (error) {
     const messageText =

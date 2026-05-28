@@ -36,6 +36,12 @@ possible.
    is bound to the underlying variable, so editing a token in the panel
    flows through to the page automatically.
 
+6. Figseed also rebuilds a `Components` page with a starter sheet of
+   shadcn primitives — Button, Badge, Avatar, Input, Card, Alert, and
+   Switch — covering every variant, size, and state. The components are
+   wired to the same variables as the Design System page, so the entire
+   sheet retones with the active preset.
+
 The plugin is **idempotent**: re-running with a different preset reuses the
 existing collections and updates values in place. It runs **fully offline** —
 no network requests are made (Figma plugin iframes have a `null` origin and
@@ -68,6 +74,7 @@ src/
   primitives.ts  # radius/spacing/typography token tables
   generator.ts   # builds Figma collections, modes, and variables
   designSystem.ts # rebuilds the "Design System" page with visual swatches
+  componentsPage.ts # rebuilds the "Components" page with shadcn primitives
   data/themes.json   # snapshot of shadcn's apps/v4/registry/themes.ts
 manifest.json    # Figma plugin manifest
 scripts/
@@ -77,14 +84,3 @@ scripts/
 
 `shadcn-ui/` is a clone of <https://github.com/shadcn-ui/ui> kept locally for
 reference and is git-ignored.
-
-## Roadmap
-
-- Apply the generated theme variables to a starter component sheet (buttons,
-  cards, inputs) so designers immediately see the system in action — the
-  Design System page is the foundation; component blocks come next.
-- Optional: emit the matching DTCG `Default.tokens.json` for round-tripping
-  with Tokens Studio / Variables2CSS workflows.
-- Refresh `src/data/themes.json` when shadcn ships new themes
-  (`node scripts/extract-themes.mjs` from this repo while `shadcn-ui/` is the
-  upstream clone).

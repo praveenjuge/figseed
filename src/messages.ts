@@ -21,6 +21,7 @@ export type PluginToUi =
         collections: { name: string; variableCount: number }[];
         fallbackThemeColors: number;
         designSystemNodes: number;
+        componentsNodes: number;
       };
     }
   | { type: "error"; message: string };
