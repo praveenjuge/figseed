@@ -10,9 +10,14 @@ import { addAvatarSection } from "./sections/avatar";
 import { addBadgeSection } from "./sections/badge";
 import { addButtonSection } from "./sections/button";
 import { addCardSection } from "./sections/card";
+import { addCheckboxSection } from "./sections/checkbox";
 import { addHeader } from "./sections/header";
 import { addInputSection } from "./sections/input";
+import { addProgressSection } from "./sections/progress";
+import { addSkeletonSection } from "./sections/skeleton";
+import { addSliderSection } from "./sections/slider";
 import { addSwitchSection } from "./sections/switch";
+import { addTextareaSection } from "./sections/textarea";
 import {
   PAGE_NAME,
   SECTION_GAP,
@@ -30,9 +35,14 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Badge", build: addBadgeSection },
   { label: "Avatar", build: addAvatarSection },
   { label: "Input", build: addInputSection },
+  { label: "Textarea", build: addTextareaSection },
+  { label: "Checkbox", build: addCheckboxSection },
+  { label: "Switch", build: addSwitchSection },
+  { label: "Slider", build: addSliderSection },
+  { label: "Progress", build: addProgressSection },
+  { label: "Skeleton", build: addSkeletonSection },
   { label: "Card", build: addCardSection },
   { label: "Alert", build: addAlertSection },
-  { label: "Switch", build: addSwitchSection },
 ];
 
 export async function buildComponentsPage(
