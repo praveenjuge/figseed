@@ -13,14 +13,11 @@ export function createSectionFrame(
   frame.primaryAxisSizingMode = "AUTO";
   frame.counterAxisSizingMode = "FIXED";
   frame.itemSpacing = 16;
-  frame.paddingTop = 24;
-  frame.paddingBottom = 24;
-  frame.paddingLeft = 24;
-  frame.paddingRight = 24;
-  frame.cornerRadius = 12;
+  frame.paddingTop = 16;
+  frame.paddingBottom = 16;
+  frame.paddingLeft = 16;
+  frame.paddingRight = 16;
   frame.fills = [solidPaint(1)];
-  frame.strokes = [solidPaint(0.92)];
-  frame.strokeWeight = 1;
   frame.resize(SECTION_WIDTH, 100);
 
   const heading = figma.createText();
@@ -76,10 +73,8 @@ export function createVertical(parent: FrameNode, spacing: number): FrameNode {
 // Standardised wrapper styling used by every component-set frame on the
 // canvas (Button, Badge, Avatar, etc).
 export function styleComponentSet(componentSet: ComponentSetNode) {
-  componentSet.fills = [solidPaint(0.98)];
   componentSet.strokes = [solidPaint(0.9)];
   componentSet.strokeWeight = 1;
-  componentSet.cornerRadius = 8;
   componentSet.paddingTop = 16;
   componentSet.paddingBottom = 16;
   componentSet.paddingLeft = 16;

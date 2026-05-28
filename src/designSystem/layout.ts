@@ -19,14 +19,11 @@ export function createSectionFrame(
   frame.primaryAxisSizingMode = "AUTO";
   frame.counterAxisSizingMode = "FIXED";
   frame.itemSpacing = 16;
-  frame.paddingTop = 24;
-  frame.paddingBottom = 24;
-  frame.paddingLeft = 24;
-  frame.paddingRight = 24;
-  frame.cornerRadius = 12;
+  frame.paddingTop = 16;
+  frame.paddingBottom = 16;
+  frame.paddingLeft = 16;
+  frame.paddingRight = 16;
   frame.fills = [solidPaint(1)];
-  frame.strokes = [solidPaint(0.92)];
-  frame.strokeWeight = 1;
   frame.resize(SECTION_WIDTH, 100);
   // Clip so oversized children (large font sizes, shadow bleed at edges)
   // stay inside the rounded card. Sections that need bleed compensate by
