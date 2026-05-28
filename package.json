@@ -5,6 +5,7 @@
   "description": "Generate a shadcn/ui design system as Figma variables from a preset code.",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
     "watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit"
   },
