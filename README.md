@@ -1,86 +1,33 @@
 # Figseed
 
 Generate a [shadcn/ui](https://ui.shadcn.com) design system inside Figma from a
-preset code. Paste a code, hit Generate, and the plugin materializes Tailwind v4
-colors, primitive tokens, and a light/dark theme — all as native Figma
-variables, with theme colors aliased back to the Tailwind palette where
-possible.
+preset code. Paste a code, hit Generate, and Figseed materializes Tailwind v4
+colors, primitive tokens, and a light/dark theme as native Figma variables —
+with theme colors aliased back to the Tailwind palette where possible.
 
-## How it works
+## Usage
 
-1. The user builds a preset at <https://ui.shadcn.com/create> and copies its
-   short code (e.g. `b0`, `bAhk2P`).
-2. Figseed decodes the code locally — same bit-pack scheme as shadcn's
-   `decodePreset` — and looks up the matching theme entry from a bundled JSON
-   snapshot of `apps/v4/registry/themes.ts`. It then mirrors shadcn's
-   `buildRegistryTheme` to apply chart-color overrides, the menu-accent
-   transformation, and the radius override.
-3. The plugin populates three Figma variable collections:
+1. Build a preset at <https://ui.shadcn.com/create> and copy its short code
+   (e.g. `b0`, `bAhk2P`).
+2. In Figma desktop: **Plugins → Development → Import plugin from manifest…**
+   and pick `manifest.json` from this repo.
+3. Run **Figseed**, paste the code, and hit Generate.
 
-   | Collection              | Modes   | Contents                                                                                                                                                                                                                                                                                                                                                     |
-   | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-   | `Tailwind / Colors`     | Default | Every Tailwind family (red…rose + slate, gray, zinc, neutral, stone, mauve, olive, mist, taupe) at 50–950 plus `black`, `white`, `transparent`.                                                                                                                                                                                                              |
-   | `Tailwind / Primitives` | Default | radius, border-width, opacity, blur, skew, breakpoint, container, spacing, font sizes, font families, font weights, tracking, leading, font styles.                                                                                                                                                                                                          |
-   | `shadcn / Theme`        | Default | Light values under their plain name (`background`, `primary`, `chart-1`…) and dark values under `dark-<name>` (`dark-background`, `dark-primary`…), plus `radius` / `dark-radius`. Designers swap themes by binding to the `dark-*` variants — keeping the collection on a single mode so it works on the free Figma tier where collections are 1-mode only. |
+Figseed creates three variable collections — `Tailwind / Colors`,
+`Tailwind / Primitives`, and `shadcn / Theme` (light values plus `dark-*`
+twins) — then rebuilds a `Design System` page and a `Components` page wired to
+those variables. Re-running with a different preset updates everything in
+place.
 
-4. Theme color values are matched against the Tailwind OKLCH table (using the
-   same normalization shadcn uses). When a value matches a Tailwind shade,
-   Figseed creates a variable alias instead of a literal color — so updating
-   `red/600` once cascades through every theme variable that references it.
+The plugin runs fully offline. No network requests are made.
 
-5. After the variables are written, Figseed rebuilds a `Design System` page
-   that visualizes the system: theme-color pair cards (light + dark), the
-   full Tailwind palette grid, font sizes / weights / tracking / leading,
-   border radii, the spacing scale, border widths, the box-shadow scale,
-   blur (with a backdrop demo), and the opacity scale. Every visual node
-   is bound to the underlying variable, so editing a token in the panel
-   flows through to the page automatically.
-
-6. Figseed also rebuilds a `Components` page with a starter sheet of
-   shadcn primitives — Button, Badge, Avatar, Input, Card, Alert, and
-   Switch — covering every variant, size, and state. The components are
-   wired to the same variables as the Design System page, so the entire
-   sheet retones with the active preset.
-
-The plugin is **idempotent**: re-running with a different preset reuses the
-existing collections and updates values in place. It runs **fully offline** —
-no network requests are made (Figma plugin iframes have a `null` origin and
-ui.shadcn.com doesn't send `Access-Control-Allow-Origin`, so a direct fetch
-would be blocked anyway).
-
-## Development
+## Develop
 
 ```bash
 npm install
-npm run build       # one-shot build → dist/code.js + dist/ui.html
+npm run build       # → dist/code.js + dist/ui.html
 npm run watch       # rebuild on changes
-npm run typecheck   # tsc --noEmit
+npm run typecheck
 ```
 
-In Figma desktop: **Plugins → Development → Import plugin from manifest…** and
-pick `manifest.json` from this repo.
-
-## Project layout
-
-```
-src/
-  code.ts        # plugin sandbox entry (figma.* APIs)
-  ui.ts          # iframe UI (input box + status)
-  ui.html        # iframe shell, picks up Figma theme colors
-  messages.ts    # message contract between sandbox and UI
-  registry.ts    # local resolver (mirrors shadcn buildRegistryTheme)
-  preset.ts      # mirror of shadcn's preset codec (validate + decode)
-  colors.ts      # Tailwind color table, OKLCH→sRGB, alias matcher
-  primitives.ts  # radius/spacing/typography token tables
-  generator.ts   # builds Figma collections, modes, and variables
-  designSystem.ts # rebuilds the "Design System" page with visual swatches
-  componentsPage.ts # rebuilds the "Components" page with shadcn primitives
-  data/themes.json   # snapshot of shadcn's apps/v4/registry/themes.ts
-manifest.json    # Figma plugin manifest
-scripts/
-  build.mjs          # esbuild runner (sandbox bundle is es2017 for QuickJS)
-  extract-themes.mjs # one-off: regenerates src/data/themes.json
-```
-
-`shadcn-ui/` is a clone of <https://github.com/shadcn-ui/ui> kept locally for
-reference and is git-ignored.
+See [AGENTS.md](./AGENTS.md) for project layout and conventions.
