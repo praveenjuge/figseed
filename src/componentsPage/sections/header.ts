@@ -1,10 +1,8 @@
 // Components page header — preset summary and a friendly intro line.
 
 import { solidPaint } from "../paints";
-import type { ComponentsInputs } from "../types";
+import { SECTION_WIDTH, type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
-
-const HEADER_WIDTH = 1120;
 
 export async function addHeader(
   page: PageNode,
@@ -21,7 +19,7 @@ export async function addHeader(
   frame.paddingLeft = 16;
   frame.paddingRight = 16;
   frame.fills = [solidPaint(1)];
-  frame.resize(HEADER_WIDTH, 100);
+  frame.resize(SECTION_WIDTH, 100);
 
   const title = figma.createText();
   title.fontName = { family: "Inter", style: "Semi Bold" };

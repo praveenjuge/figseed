@@ -2,7 +2,7 @@
 
 import { bindCornerRadii, bindFill } from "../bindings";
 import { styleComponentSet } from "../layout";
-import type { ComponentsInputs } from "../types";
+import { SECTION_WIDTH, type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
 const AVATAR_SIZES = ["sm", "default", "lg"] as const;
@@ -37,6 +37,8 @@ export async function addAvatarSection(
   componentSet.itemSpacing = 16;
   componentSet.counterAxisSpacing = 16;
   styleComponentSet(componentSet);
+  componentSet.primaryAxisSizingMode = "FIXED";
+  componentSet.resize(SECTION_WIDTH, componentSet.height);
 
   return countDescendants(componentSet);
 }
