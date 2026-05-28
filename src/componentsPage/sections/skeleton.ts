@@ -5,11 +5,7 @@
 // short and full-width text rows, and a card-sized block.
 
 import { bindCornerRadii, bindFill } from "../bindings";
-import {
-  createSectionFrame,
-  createVertical,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -27,12 +23,6 @@ export async function addSkeletonSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Skeleton", {
-    title: "Skeleton",
-    subtitle:
-      "Loading placeholders bound to the accent colour. Drop them in for empty states.",
-  });
-
   const components: ComponentNode[] = [];
   for (const shape of SKELETON_SHAPES) {
     const comp = buildSkeletonComponent(inputs, shape);
@@ -46,13 +36,7 @@ export async function addSkeletonSection(
   componentSet.itemSpacing = 12;
   styleComponentSet(componentSet);
 
-  const showcase = createVertical(section, 12);
-  for (const comp of components) {
-    showcase.appendChild(comp.createInstance());
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildSkeletonComponent(

@@ -1,11 +1,7 @@
 // Avatar: circular initials/image placeholder. Three sizes × two kinds.
 
 import { bindCornerRadii, bindFill } from "../bindings";
-import {
-  createSectionFrame,
-  createWrappingRow,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -25,11 +21,6 @@ export async function addAvatarSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Avatar", {
-    title: "Avatar",
-    subtitle: "Three sizes × two kinds (image placeholder, initials fallback).",
-  });
-
   const components: ComponentNode[] = [];
   for (const size of AVATAR_SIZES) {
     for (const kind of AVATAR_KINDS) {
@@ -47,13 +38,7 @@ export async function addAvatarSection(
   componentSet.counterAxisSpacing = 16;
   styleComponentSet(componentSet);
 
-  const showcase = createWrappingRow(section, 16);
-  for (const comp of components) {
-    showcase.appendChild(comp.createInstance());
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildAvatarComponent(

@@ -2,8 +2,8 @@
 // ComponentSetNode) so designers can drag instances and swap variants.
 //
 // Each component is created via figma.createComponent(), grouped into a
-// ComponentSet when there are multiple variants. The showcase page then
-// places instances of each variant for reference.
+// ComponentSet when there are multiple variants. The page only holds the
+// components themselves — no example frames or showcases.
 
 import { addAlertSection } from "./sections/alert";
 import { addAvatarSection } from "./sections/avatar";

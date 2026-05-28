@@ -6,11 +6,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
-import {
-  createSectionFrame,
-  createVertical,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -21,11 +17,6 @@ export async function addAlertSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Alert", {
-    title: "Alert",
-    subtitle: "Default and destructive variants with title and description.",
-  });
-
   const components: ComponentNode[] = [];
   for (const variant of ALERT_VARIANTS) {
     const comp = buildAlertComponent(inputs, variant);
@@ -46,16 +37,7 @@ export async function addAlertSection(
     }
   }
 
-  const showcase = createVertical(section, 12);
-  showcase.layoutSizingHorizontal = "FILL";
-  for (const comp of components) {
-    const instance = comp.createInstance();
-    showcase.appendChild(instance);
-    instance.layoutSizingHorizontal = "FILL";
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildAlertComponent(

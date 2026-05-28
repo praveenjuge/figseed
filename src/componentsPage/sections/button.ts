@@ -6,11 +6,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
-import {
-  createSectionFrame,
-  createWrappingRow,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -31,12 +27,6 @@ export async function addButtonSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Button", {
-    title: "Button",
-    subtitle:
-      "Six variants × five sizes. Each cell is an instance of the Button component set.",
-  });
-
   // Build one ComponentNode per (variant, size) combination, then group
   // them into a ComponentSet so Figma shows a variant picker.
   const components: ComponentNode[] = [];
@@ -58,22 +48,7 @@ export async function addButtonSection(
   componentSet.counterAxisSpacing = 16;
   styleComponentSet(componentSet);
 
-  // Showcase: place instances in the section frame for visual reference.
-  const showcase = createWrappingRow(section, 12);
-  for (const variant of BUTTON_VARIANTS) {
-    for (const size of BUTTON_SIZES) {
-      const comp = components.find(
-        (c) => c.name === `Variant=${variant}, Size=${size}`,
-      );
-      if (comp) {
-        const inst = comp.createInstance();
-        showcase.appendChild(inst);
-      }
-    }
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildButtonComponent(

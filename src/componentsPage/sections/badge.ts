@@ -6,11 +6,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
-import {
-  createSectionFrame,
-  createWrappingRow,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -26,12 +22,6 @@ export async function addBadgeSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Badge", {
-    title: "Badge",
-    subtitle:
-      "Four variants — pill-shaped labels for status, counts, and tags.",
-  });
-
   const components: ComponentNode[] = [];
   for (const variant of BADGE_VARIANTS) {
     const comp = buildBadgeComponent(inputs, variant);
@@ -45,13 +35,7 @@ export async function addBadgeSection(
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 
-  const showcase = createWrappingRow(section, 12);
-  for (const comp of components) {
-    showcase.appendChild(comp.createInstance());
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildBadgeComponent(

@@ -10,11 +10,7 @@
 // variable is bound, so we layer two siblings instead.
 
 import { bindCornerRadii, bindFill } from "../bindings";
-import {
-  createSectionFrame,
-  createVertical,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -28,11 +24,6 @@ export async function addProgressSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Progress", {
-    title: "Progress",
-    subtitle: "Indeterminate-style track with a primary-coloured indicator.",
-  });
-
   const components: ComponentNode[] = [];
   for (const value of PROGRESS_VALUES) {
     const comp = buildProgressComponent(inputs, value);
@@ -46,13 +37,7 @@ export async function addProgressSection(
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 
-  const showcase = createVertical(section, 12);
-  for (const comp of components) {
-    showcase.appendChild(comp.createInstance());
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildProgressComponent(

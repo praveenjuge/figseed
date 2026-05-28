@@ -4,11 +4,7 @@
 // circular thumb with primary border.
 
 import { bindFill, bindStrokeColor } from "../bindings";
-import {
-  createSectionFrame,
-  createVertical,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -25,11 +21,6 @@ export async function addSliderSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Slider", {
-    title: "Slider",
-    subtitle: "Three sample values with a draggable thumb on a muted track.",
-  });
-
   const components: ComponentNode[] = [];
   for (const value of SLIDER_VALUES) {
     const comp = buildSliderComponent(inputs, value);
@@ -43,13 +34,7 @@ export async function addSliderSection(
   componentSet.itemSpacing = 24;
   styleComponentSet(componentSet);
 
-  const showcase = createVertical(section, 24);
-  for (const comp of components) {
-    showcase.appendChild(comp.createInstance());
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildSliderComponent(

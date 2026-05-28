@@ -6,7 +6,6 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
-import { createSectionFrame, createWrappingRow } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -14,20 +13,9 @@ export async function addCardSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Card", {
-    title: "Card",
-    subtitle:
-      "A composable card component with header, content, and footer slots.",
-  });
-
   const comp = buildCardComponent(inputs);
   page.appendChild(comp);
-
-  const showcase = createWrappingRow(section, 24);
-  showcase.appendChild(comp.createInstance());
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(comp);
+  return countDescendants(comp);
 }
 
 function buildCardComponent(inputs: ComponentsInputs): ComponentNode {

@@ -6,11 +6,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
-import {
-  createSectionFrame,
-  createVertical,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -21,11 +17,6 @@ export async function addInputSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Input", {
-    title: "Input",
-    subtitle: "Four states: default, focused, disabled, and invalid.",
-  });
-
   const components: ComponentNode[] = [];
   for (const state of INPUT_STATES) {
     const comp = buildInputComponent(inputs, state);
@@ -39,13 +30,7 @@ export async function addInputSection(
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 
-  const showcase = createVertical(section, 12);
-  for (const comp of components) {
-    showcase.appendChild(comp.createInstance());
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildInputComponent(

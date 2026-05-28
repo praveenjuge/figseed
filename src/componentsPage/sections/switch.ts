@@ -1,11 +1,7 @@
 // Switch: toggle with thumb, two sizes × two states.
 
 import { bindCornerRadii, bindFill } from "../bindings";
-import {
-  createSectionFrame,
-  createWrappingRow,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -25,11 +21,6 @@ export async function addSwitchSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Switch", {
-    title: "Switch",
-    subtitle: "Two sizes × two states (unchecked, checked).",
-  });
-
   const components: ComponentNode[] = [];
   for (const size of SWITCH_SIZES) {
     for (const state of SWITCH_STATES) {
@@ -47,13 +38,7 @@ export async function addSwitchSection(
   componentSet.counterAxisSpacing = 16;
   styleComponentSet(componentSet);
 
-  const showcase = createWrappingRow(section, 16);
-  for (const comp of components) {
-    showcase.appendChild(comp.createInstance());
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildSwitchComponent(

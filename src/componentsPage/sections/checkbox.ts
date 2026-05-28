@@ -4,11 +4,7 @@
 // border by default; primary fill + check icon when checked.
 
 import { bindCornerRadii, bindFill, bindStrokeColor } from "../bindings";
-import {
-  createSectionFrame,
-  createWrappingRow,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -19,11 +15,6 @@ export async function addCheckboxSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Checkbox", {
-    title: "Checkbox",
-    subtitle: "Three states: unchecked, checked, and indeterminate.",
-  });
-
   const components: ComponentNode[] = [];
   for (const state of CHECKBOX_STATES) {
     const comp = buildCheckboxComponent(inputs, state);
@@ -37,13 +28,7 @@ export async function addCheckboxSection(
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 
-  const showcase = createWrappingRow(section, 16);
-  for (const comp of components) {
-    showcase.appendChild(comp.createInstance());
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildCheckboxComponent(

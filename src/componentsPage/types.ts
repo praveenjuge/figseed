@@ -3,7 +3,6 @@
 import type { PrimitiveVariableMap, ThemeVariableMaps } from "../generator";
 
 export const PAGE_NAME = "Components";
-export const SECTION_WIDTH = 1120;
 export const SECTION_GAP = 32;
 
 export type ComponentsInputs = {

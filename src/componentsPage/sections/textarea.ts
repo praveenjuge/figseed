@@ -10,11 +10,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
-import {
-  createSectionFrame,
-  createVertical,
-  styleComponentSet,
-} from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -28,11 +24,6 @@ export async function addTextareaSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Textarea", {
-    title: "Textarea",
-    subtitle: "Three states: default, focused, and invalid.",
-  });
-
   const components: ComponentNode[] = [];
   for (const state of TEXTAREA_STATES) {
     const comp = buildTextareaComponent(inputs, state);
@@ -46,13 +37,7 @@ export async function addTextareaSection(
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 
-  const showcase = createVertical(section, 12);
-  for (const comp of components) {
-    showcase.appendChild(comp.createInstance());
-  }
-
-  page.appendChild(section);
-  return countDescendants(section) + countDescendants(componentSet);
+  return countDescendants(componentSet);
 }
 
 function buildTextareaComponent(
