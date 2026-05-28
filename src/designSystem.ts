@@ -117,13 +117,15 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Theme · Light", build: (p, i) => addThemeSection(p, i, "light") },
   { label: "Theme · Dark", build: (p, i) => addThemeSection(p, i, "dark") },
   { label: "Tailwind palette", build: addTailwindPalette },
-  { label: "Typography", build: addTypography },
   { label: "Border radius", build: addRadiusScale },
   { label: "Spacing scale", build: addSpacingScale },
   { label: "Border widths", build: addBorderWidthScale },
   { label: "Box shadows", build: addBoxShadows },
   { label: "Blur & backdrop", build: addBlurAndBackdrop },
   { label: "Opacity scale", build: addOpacityScale },
+  // Typography last — its many subsections make it the tallest panel and
+  // having it at the bottom keeps the rest of the page scannable.
+  { label: "Typography", build: addTypography },
 ];
 
 export async function buildDesignSystem(
@@ -316,15 +318,19 @@ async function addTailwindPalette(
   const stack = createVertical(section, 8);
   const rowWidth = sectionContentWidth();
   const labelWidth = 64;
+  const rowHeight = 36; // each scale row is exactly this tall
 
   for (const family of TAILWIND_COLOR_FAMILIES) {
     const row = figma.createFrame();
     row.layoutMode = "HORIZONTAL";
-    row.primaryAxisSizingMode = "FIXED";
-    row.counterAxisSizingMode = "AUTO";
     row.itemSpacing = 0;
-    row.resize(rowWidth, 1);
     row.fills = [];
+    // Pin both axes so the row keeps a consistent height regardless of how
+    // tall its children would otherwise size themselves to.
+    row.resize(rowWidth, rowHeight);
+    row.primaryAxisSizingMode = "FIXED";
+    row.counterAxisSizingMode = "FIXED";
+    row.counterAxisAlignItems = "CENTER";
 
     const label = figma.createText();
     label.characters = family;
@@ -343,16 +349,17 @@ async function addTailwindPalette(
       swatch.paddingRight = 4;
       swatch.paddingTop = 4;
       swatch.paddingBottom = 4;
+      // Grow horizontally to share the remaining row width and stretch
+      // vertically to match the row height. Together these keep the swatch
+      // a real rectangle instead of collapsing onto its label.
       swatch.layoutGrow = 1;
-      // Slightly shorter than the previous version — keeps the row compact.
-      swatch.resize(64, 36);
+      swatch.layoutAlign = "STRETCH";
       bindFill(swatch, inputs.tailwindColors.get(`${family}/${scale}`));
 
       const tag = figma.createText();
       tag.characters = scale;
       tag.fontSize = 9;
       tag.fontName = { family: "Inter", style: "Medium" };
-      // Light text on dark shades, dark text on light shades.
       const isDark = parseInt(scale, 10) >= 500;
       tag.fills = [solidPaint(isDark ? 0.95 : 0.1)];
       swatch.appendChild(tag);
@@ -636,7 +643,13 @@ async function addBoxShadows(
 ): Promise<number> {
   const section = createSectionFrame("Box shadows");
 
-  const row = createWrappingRow(section, 24);
+  // Generous gap and inner padding so the larger shadows have room to
+  // bleed without overlapping their neighbours.
+  const row = createWrappingRow(section, 32);
+  row.paddingTop = 24;
+  row.paddingBottom = 32;
+  row.paddingLeft = 8;
+  row.paddingRight = 8;
 
   // Shadows aren't first-class Figma variables, so we apply them as
   // literal effects. Each one mirrors Tailwind v4's preset.
@@ -720,37 +733,48 @@ async function addBlurAndBackdrop(
   for (const token of BLUR_TOKENS) {
     const cell = createVertical(row, 8);
 
-    // The blurred surface sits over a tile bound to the theme primary so
-    // the backdrop blur produces a visible difference. We bind the radius
-    // to the variable so updates flow through.
+    // The stage holds a colorful pattern (so the blur has something to
+    // dissolve) plus a frosted overlay sitting on top. Overlapping circles
+    // produce a much smoother gradient than the previous stripe pattern,
+    // which made bigger radii look identical to small ones.
     const stage = figma.createFrame();
-    stage.resize(96, 96);
-    stage.cornerRadius = 10;
-    stage.clipsContent = true;
+    stage.resize(112, 112);
+    stage.cornerRadius = 12;
+    stage.clipsContent = true; // blur should stay within the tile
     bindFill(stage, inputs.theme.light.get("primary"));
 
-    // Inner stripes give the blur something to chew on.
-    const stripes = figma.createFrame();
-    stripes.resize(96, 96);
-    stripes.layoutMode = "VERTICAL";
-    stripes.primaryAxisSizingMode = "FIXED";
-    stripes.counterAxisSizingMode = "FIXED";
-    stripes.itemSpacing = 0;
-    stripes.fills = [];
-    for (let i = 0; i < 6; i++) {
-      const stripe = figma.createFrame();
-      stripe.resize(96, 16);
-      stripe.fills = [solidPaint(i % 2 === 0 ? 0.2 : 0.85)];
-      stripes.appendChild(stripe);
+    // Three soft circles in different shades of the primary palette. They
+    // overlap so any blur radius produces a noticeably different feathering.
+    const blobConfigs: Array<{
+      x: number;
+      y: number;
+      size: number;
+      tone: number;
+    }> = [
+      { x: -16, y: -16, size: 80, tone: 0.95 },
+      { x: 48, y: 8, size: 90, tone: 0.15 },
+      { x: 8, y: 56, size: 80, tone: 0.6 },
+    ];
+    for (const blob of blobConfigs) {
+      const circle = figma.createEllipse();
+      circle.resize(blob.size, blob.size);
+      circle.x = blob.x;
+      circle.y = blob.y;
+      circle.fills = [solidPaint(blob.tone)];
+      stage.appendChild(circle);
     }
-    stage.appendChild(stripes);
 
+    // Frosted overlay with a backdrop blur. We give it a non-zero radius
+    // even at "blur/none" so Figma keeps the effect on the node and the
+    // bound variable continues to drive it.
     const overlay = figma.createFrame();
-    overlay.resize(76, 50);
-    overlay.x = 10;
-    overlay.y = 23;
-    overlay.cornerRadius = 6;
-    overlay.fills = [solidPaintRgba({ r: 1, g: 1, b: 1, a: 0.35 })];
+    overlay.resize(88, 56);
+    overlay.x = 12;
+    overlay.y = 28;
+    overlay.cornerRadius = 8;
+    overlay.fills = [solidPaintRgba({ r: 1, g: 1, b: 1, a: 0.4 })];
+    overlay.strokes = [solidPaintRgba({ r: 1, g: 1, b: 1, a: 0.5 })];
+    overlay.strokeWeight = 1;
     overlay.effects = [
       {
         type: "BACKGROUND_BLUR",
@@ -856,6 +880,10 @@ function createSectionFrame(
   frame.strokes = [solidPaint(0.92)];
   frame.strokeWeight = 1;
   frame.resize(SECTION_WIDTH, 100);
+  // Clip so oversized children (large font sizes, shadow bleed at edges)
+  // stay inside the rounded card. Sections that need bleed compensate by
+  // adding internal padding on their inner rows instead.
+  frame.clipsContent = true;
 
   const heading = figma.createText();
   heading.fontName = { family: "Inter", style: "Semi Bold" };
