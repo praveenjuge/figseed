@@ -2,6 +2,7 @@
 // parent.postMessage and receives them via window.message events.
 
 import { extractPresetCode } from "./preset";
+import { POPULAR_PRESETS } from "./popularPresets";
 import type { PluginToUi, UiToPlugin } from "./messages";
 
 const input = document.getElementById("preset") as HTMLInputElement;
@@ -10,6 +11,7 @@ const cancelButton = document.getElementById("cancel") as HTMLButtonElement;
 const status = document.getElementById("status") as HTMLDivElement;
 const progress = document.getElementById("progress") as HTMLDivElement;
 const progressBar = progress.querySelector(".bar") as HTMLSpanElement;
+const presetsList = document.getElementById("presets-list") as HTMLDivElement;
 
 let busy = false;
 
@@ -56,10 +58,50 @@ function resetProgress() {
 function syncGenerateButton() {
   if (busy) {
     generateButton.disabled = true;
+    setPresetButtonsDisabled(true);
     return;
   }
   generateButton.disabled = extractPresetCode(input.value) === null;
+  setPresetButtonsDisabled(false);
 }
+
+function setPresetButtonsDisabled(disabled: boolean) {
+  const buttons = presetsList.querySelectorAll<HTMLButtonElement>(
+    "button.preset-badge",
+  );
+  buttons.forEach((button) => {
+    button.disabled = disabled;
+  });
+}
+
+function runPreset(presetCode: string) {
+  busy = true;
+  syncGenerateButton();
+  setStatus(`Working on it (${presetCode})…`);
+  updateProgress();
+  postToPlugin({ type: "generate", presetCode });
+}
+
+function renderPopularPresets() {
+  for (const preset of POPULAR_PRESETS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "preset-badge";
+    button.title = `${preset.description} · ${preset.code}`;
+    button.setAttribute("aria-label", `Import ${preset.name} preset`);
+    button.textContent = preset.name;
+
+    button.addEventListener("click", () => {
+      if (busy) return;
+      input.value = preset.code;
+      runPreset(preset.code);
+    });
+
+    presetsList.appendChild(button);
+  }
+}
+
+renderPopularPresets();
 
 input.addEventListener("input", syncGenerateButton);
 input.addEventListener("keydown", (event) => {
@@ -74,11 +116,7 @@ generateButton.addEventListener("click", () => {
     setStatus("Couldn't find a preset code in that input.", "error");
     return;
   }
-  busy = true;
-  syncGenerateButton();
-  setStatus(`Working on it (${presetCode})…`);
-  updateProgress();
-  postToPlugin({ type: "generate", presetCode });
+  runPreset(presetCode);
 });
 
 cancelButton.addEventListener("click", () => {

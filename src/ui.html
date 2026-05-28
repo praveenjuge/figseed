@@ -41,12 +41,13 @@
         padding: 16px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
         flex: 1;
       }
       h1 {
         margin: 0;
-        font-size: 13px;
+        font-size: 12px;
+        margin-bottom: 2px;
         font-weight: 600;
       }
       p.subtitle {
@@ -156,6 +157,42 @@
         margin: 4px 0 0;
         padding-left: 16px;
       }
+      .presets {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .presets-label {
+        font-weight: 500;
+        color: var(--fg);
+      }
+      .presets-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .preset-badge {
+        display: inline-flex;
+        align-items: center;
+        height: 20px;
+        padding: 0 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--input-bg);
+        color: var(--fg);
+        font: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .preset-badge:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+      .preset-badge:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
@@ -168,8 +205,16 @@
         </p>
       </header>
 
+      <p class="help">
+        Build a preset at
+        <a href="https://ui.shadcn.com/create" target="_blank" rel="noopener"
+          >ui.shadcn.com/create</a
+        >
+        and paste the code here.
+      </p>
+
       <label for="preset">
-        Preset code or command
+        Preset code
         <input
           id="preset"
           type="text"
@@ -179,13 +224,9 @@
         />
       </label>
 
-      <p class="help">
-        Build a preset at
-        <a href="https://ui.shadcn.com/create" target="_blank" rel="noopener"
-          >ui.shadcn.com/create</a
-        >
-        and paste the code here.
-      </p>
+      <div class="presets" id="presets">
+        <div class="presets-list" id="presets-list"></div>
+      </div>
 
       <div id="status" class="status"></div>
       <div id="progress" class="progress" aria-hidden="true">
