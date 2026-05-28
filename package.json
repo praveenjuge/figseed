@@ -7,11 +7,16 @@
     "build": "node scripts/build.mjs",
     "dev": "node scripts/build.mjs --watch",
     "watch": "node scripts/build.mjs --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.108.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "esbuild": "^0.24.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.9"
   }
 }
