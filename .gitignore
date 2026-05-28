@@ -1,0 +1,4 @@
+shadcn-ui/
+node_modules/
+dist/
+.DS_Store

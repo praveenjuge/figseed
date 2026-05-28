@@ -1,0 +1,16 @@
+{
+  "name": "figseed",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generate a shadcn/ui design system as Figma variables from a preset code.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.108.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.5.4"
+  }
+}

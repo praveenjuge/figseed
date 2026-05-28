@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Figseed</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: var(--figma-color-bg, #ffffff);
+        --fg: var(--figma-color-text, #1d1d1d);
+        --muted: var(--figma-color-text-secondary, #6f6f6f);
+        --border: var(--figma-color-border, #e5e5e5);
+        --accent: var(--figma-color-bg-brand, #0d99ff);
+        --accent-fg: var(--figma-color-text-onbrand, #ffffff);
+        --danger: var(--figma-color-text-danger, #b3261e);
+        --input-bg: var(--figma-color-bg-secondary, #f5f5f5);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        font-size: 12px;
+        color: var(--fg);
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+      }
+      main {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        flex: 1;
+      }
+      h1 {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      p.subtitle {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-weight: 500;
+      }
+      input[type="text"] {
+        height: 32px;
+        padding: 0 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--input-bg);
+        color: var(--fg);
+        font: inherit;
+        outline: none;
+      }
+      input[type="text"]:focus {
+        border-color: var(--accent);
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: auto;
+      }
+      button {
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--fg);
+        font: inherit;
+        cursor: pointer;
+      }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-fg);
+        flex: 1;
+      }
+      button.primary:disabled {
+        opacity: 0.6;
+        cursor: progress;
+      }
+      .status {
+        min-height: 16px;
+        color: var(--muted);
+        line-height: 1.4;
+        word-break: break-word;
+      }
+      .status.error {
+        color: var(--danger);
+      }
+      .status.done {
+        color: var(--fg);
+      }
+      .help {
+        color: var(--muted);
+        line-height: 1.4;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      ul {
+        margin: 4px 0 0;
+        padding-left: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Figseed</h1>
+        <p class="subtitle">
+          Paste a shadcn preset code to generate Tailwind colors, primitives,
+          and theme variables in this Figma file.
+        </p>
+      </header>
+
+      <label for="preset">
+        Preset code or command
+        <input
+          id="preset"
+          type="text"
+          placeholder="b3HGM2E529 or --preset b3HGM2E529"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </label>
+
+      <p class="help">
+        Build a preset at
+        <a href="https://ui.shadcn.com/create" target="_blank" rel="noopener"
+          >ui.shadcn.com/create</a
+        >
+        and paste the code here.
+      </p>
+
+      <div id="status" class="status"></div>
+
+      <div class="actions">
+        <button id="cancel" type="button">Close</button>
+        <button id="generate" class="primary" type="button" disabled>
+          Generate
+        </button>
+      </div>
+    </main>
+    <!-- INJECT_UI_SCRIPT -->
+  </body>
+</html>
