@@ -71,9 +71,13 @@ function buildAlertComponent(
   const comp = figma.createComponent();
   comp.name = `Variant=${variant}`;
   comp.layoutMode = "VERTICAL";
+  // Resize before declaring the sizing modes — calling resize() on an
+  // auto-layout frame pins both axes to FIXED, which would lock the height
+  // at the placeholder value below. Re-setting primaryAxisSizingMode to
+  // AUTO afterwards lets Figma hug the children vertically.
+  comp.resize(480, 10);
   comp.primaryAxisSizingMode = "AUTO";
   comp.counterAxisSizingMode = "FIXED";
-  comp.resize(480, 10);
   comp.paddingLeft = 16;
   comp.paddingRight = 16;
   comp.paddingTop = 12;

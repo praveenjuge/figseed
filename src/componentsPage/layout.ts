@@ -74,6 +74,7 @@ export function createVertical(parent: FrameNode, spacing: number): FrameNode {
 // canvas (Button, Badge, Avatar, etc).
 export function styleComponentSet(componentSet: ComponentSetNode) {
   componentSet.strokes = [solidPaint(0.9)];
+  componentSet.fills = [solidPaint(1)];
   componentSet.strokeWeight = 1;
   componentSet.paddingTop = 16;
   componentSet.paddingBottom = 16;

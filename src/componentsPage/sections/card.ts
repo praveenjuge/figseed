@@ -37,9 +37,13 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   const comp = figma.createComponent();
   comp.name = "Card";
   comp.layoutMode = "VERTICAL";
+  // Resize before declaring sizing modes — calling resize() on an
+  // auto-layout frame pins both axes to FIXED, which would lock the height
+  // at the placeholder. Re-setting primaryAxisSizingMode to AUTO lets
+  // Figma hug the children vertically.
+  comp.resize(360, 100);
   comp.primaryAxisSizingMode = "AUTO";
   comp.counterAxisSizingMode = "FIXED";
-  comp.resize(360, 100);
   comp.itemSpacing = 24;
   comp.paddingTop = 24;
   comp.paddingBottom = 24;
