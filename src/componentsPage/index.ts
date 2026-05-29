@@ -5,6 +5,7 @@
 // ComponentSet when there are multiple variants. The page only holds the
 // components themselves — no example frames or showcases.
 
+import { addAccordionSection } from "./sections/accordion";
 import { addAlertSection } from "./sections/alert";
 import { addAvatarSection } from "./sections/avatar";
 import { addBadgeSection } from "./sections/badge";
@@ -14,8 +15,12 @@ import { addCardSection } from "./sections/card";
 import { addCheckboxSection } from "./sections/checkbox";
 import { addHeader } from "./sections/header";
 import { addInputSection } from "./sections/input";
+import { addLabelSection } from "./sections/label";
+import { addPaginationSection } from "./sections/pagination";
 import { addProgressSection } from "./sections/progress";
 import { addRadioGroupSection } from "./sections/radioGroup";
+import { addSelectSection } from "./sections/select";
+import { addSeparatorSection } from "./sections/separator";
 import { addSkeletonSection } from "./sections/skeleton";
 import { addSliderSection } from "./sections/slider";
 import { addSwitchSection } from "./sections/switch";
@@ -40,16 +45,21 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Toggle", build: addToggleSection },
   { label: "Badge", build: addBadgeSection },
   { label: "Avatar", build: addAvatarSection },
+  { label: "Label", build: addLabelSection },
   { label: "Input", build: addInputSection },
   { label: "Textarea", build: addTextareaSection },
+  { label: "Select", build: addSelectSection },
   { label: "Checkbox", build: addCheckboxSection },
   { label: "Radio Group", build: addRadioGroupSection },
   { label: "Switch", build: addSwitchSection },
   { label: "Slider", build: addSliderSection },
   { label: "Progress", build: addProgressSection },
   { label: "Skeleton", build: addSkeletonSection },
+  { label: "Separator", build: addSeparatorSection },
   { label: "Tabs", build: addTabsSection },
+  { label: "Accordion", build: addAccordionSection },
   { label: "Breadcrumb", build: addBreadcrumbSection },
+  { label: "Pagination", build: addPaginationSection },
   { label: "Tooltip", build: addTooltipSection },
   { label: "Card", build: addCardSection },
   { label: "Alert", build: addAlertSection },
