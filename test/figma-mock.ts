@@ -7,10 +7,31 @@
 // and bound variables, which is enough for the generator and the page-builder
 // smoke tests.
 
-import { vi } from "vitest";
+// NOTE: this module must stay free of any `vitest` import. It is bundled
+// standalone (esbuild → IIFE → QuickJS) by the QuickJS harness test, where
+// `vitest` does not exist. Use the local `createSpy` below instead of `vi.fn`.
 
 let idCounter = 0;
 const nextId = (prefix: string) => `${prefix}-${++idCounter}`;
+
+// Minimal call-recording spy that mirrors the slice of vitest's mock surface
+// the suite actually reads (`fn.mock.calls`). Avoids a hard `vi` dependency so
+// the mock can run under QuickJS.
+export type Spy<A extends unknown[] = unknown[], R = unknown> = ((
+  ...args: A
+) => R) & { mock: { calls: A[] } };
+
+function createSpy<A extends unknown[] = unknown[], R = unknown>(
+  impl?: (...args: A) => R,
+): Spy<A, R> {
+  const calls: A[] = [];
+  const fn = ((...args: A): R => {
+    calls.push(args);
+    return impl ? impl(...args) : (undefined as unknown as R);
+  }) as Spy<A, R>;
+  fn.mock = { calls };
+  return fn;
+}
 
 export type AliasValue = { type: "VARIABLE_ALIAS"; id: string };
 export type ColorValue = { r: number; g: number; b: number; a?: number };
@@ -159,7 +180,10 @@ export function createFigmaMock() {
         node.height = h;
       },
       setBoundVariable(field: string, variable: { id: string }) {
-        node.boundVariables[field] = { type: "VARIABLE_ALIAS", id: variable.id };
+        node.boundVariables[field] = {
+          type: "VARIABLE_ALIAS",
+          id: variable.id,
+        };
       },
       remove() {
         detach(node);
@@ -258,18 +282,18 @@ export function createFigmaMock() {
       return set;
     },
 
-    loadFontAsync: vi.fn(() => Promise.resolve()),
-    loadAllPagesAsync: vi.fn(() => Promise.resolve()),
-    setCurrentPageAsync: vi.fn((page: FakeNode) => {
+    loadFontAsync: createSpy(() => Promise.resolve()),
+    loadAllPagesAsync: createSpy(() => Promise.resolve()),
+    setCurrentPageAsync: createSpy((page: FakeNode) => {
       figma.currentPage = page;
       return Promise.resolve();
     }),
 
-    notify: vi.fn(),
-    showUI: vi.fn(),
-    closePlugin: vi.fn(),
-    ui: { postMessage: vi.fn(), onmessage: null as unknown },
-    viewport: { scrollAndZoomIntoView: vi.fn() },
+    notify: createSpy(),
+    showUI: createSpy(),
+    closePlugin: createSpy(),
+    ui: { postMessage: createSpy(), onmessage: null as unknown },
+    viewport: { scrollAndZoomIntoView: createSpy() },
 
     root: { children: [] as FakeNode[] },
     currentPage: null as FakeNode | null,

@@ -2,6 +2,7 @@ import { build, context } from "esbuild";
 import { mkdirSync, copyFileSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { makeCodeOptions } from "./esbuild-config.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
@@ -11,21 +12,12 @@ mkdirSync(distDir, { recursive: true });
 const watch = process.argv.includes("--watch");
 
 // The plugin sandbox runs in QuickJS, which doesn't support optional chaining
-// or other ES2020 syntax. Target an older spec so esbuild downlevels it.
-const codeOptions = {
-  entryPoints: [resolve(root, "src/code.ts")],
-  bundle: true,
+// or other ES2020 syntax. Settings live in esbuild-config.mjs so the QuickJS
+// test harness can downlevel code.ts the exact same way.
+const codeOptions = makeCodeOptions({
+  entry: resolve(root, "src/code.ts"),
   outfile: resolve(distDir, "code.js"),
-  platform: "browser",
-  target: ["es2017"],
-  format: "iife",
-  logLevel: "info",
-  supported: {
-    "optional-chain": false,
-    "nullish-coalescing": false,
-    "logical-assignment": false,
-  },
-};
+});
 
 const uiOptions = {
   entryPoints: [resolve(root, "src/ui.ts")],

@@ -22,6 +22,21 @@ live in `test/` (Vitest), mirroring `src/`; the Figma plugin API is faked by
 is no linter. Load the plugin in Figma desktop via **Plugins → Development →
 Import plugin from manifest…** and pick `manifest.json`.
 
+### Test layers
+
+- **Logic (most tests).** Import `src/*.ts` directly and assert against the
+  in-memory `test/figma-mock.ts`. `test/generator/idempotency.test.ts` adds
+  re-run / golden-tree coverage via `test/helpers/snapshot.ts`, which strips
+  non-deterministic IDs so snapshots stay stable.
+- **QuickJS sandbox (`test/quickjs/`).** Compiles `src/code.ts` with the
+  production esbuild downlevel flags and runs the bundle inside a real QuickJS
+  engine (`quickjs-emscripten`), driving a `generate` message end to end. This
+  guards the ES2017 / QuickJS hard constraint — modern syntax or builtins that
+  slip past the downlevel step fail here, not in Figma. The sandbox esbuild
+  settings are shared via `scripts/esbuild-config.mjs` so the harness and the
+  production build can't drift. `test/figma-mock.ts` must stay free of any
+  `vitest` import (it is bundled into the VM); use its local `createSpy`.
+
 ## Layout
 
 ```
