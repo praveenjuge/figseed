@@ -38,4 +38,9 @@ describe("normalizeColorValue", () => {
   it("returns the lowered original when there are too few parts", () => {
     expect(normalizeColorValue("oklch(1 0)")).toBe("oklch(1 0)");
   });
+
+  it("emits empty channels for non-numeric values", () => {
+    // Each channel runs through normalizeNumber; a non-numeric one yields "".
+    expect(normalizeColorValue("oklch(abc def ghi)")).toBe("oklch(  )");
+  });
 });

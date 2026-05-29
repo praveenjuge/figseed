@@ -9,7 +9,10 @@ import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const RADIO_STATES = ["unchecked", "checked"] as const;
+// Boolean variant: shadcn / Radix RadioGroupItem exposes a `checked` state, so
+// we expose `Checked=True/False`. Figma promotes a property to a boolean toggle
+// in the inspector when its values are exactly `True`/`False`.
+const RADIO_STATES = ["False", "True"] as const;
 type RadioState = (typeof RADIO_STATES)[number];
 
 const SIZE = 16;
@@ -43,7 +46,7 @@ function buildRadioComponent(
   const p = inputs.primitives;
 
   const comp = figma.createComponent();
-  comp.name = `State=${state}`;
+  comp.name = `Checked=${state}`;
   // Absolute layout so the dot sits centred without auto-layout repositioning.
   comp.layoutMode = "NONE";
   comp.resize(SIZE, SIZE);
@@ -53,7 +56,7 @@ function buildRadioComponent(
   bindStrokeColor(comp, t.get("input"));
   comp.strokeWeight = 1;
 
-  if (state === "checked") {
+  if (state === "True") {
     const dot = figma.createEllipse();
     dot.name = "Indicator";
     dot.resize(DOT_SIZE, DOT_SIZE);

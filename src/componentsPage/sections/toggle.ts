@@ -18,7 +18,10 @@ import { countDescendants } from "../utils";
 const TOGGLE_VARIANTS = ["default", "outline"] as const;
 type ToggleVariant = (typeof TOGGLE_VARIANTS)[number];
 
-const TOGGLE_STATES = ["off", "on"] as const;
+// Boolean variant: shadcn / Radix Toggle exposes a `pressed` prop, so we
+// expose `Pressed=True/False`. Figma promotes a property to a boolean toggle
+// in the inspector when its values are exactly `True`/`False`.
+const TOGGLE_STATES = ["False", "True"] as const;
 type ToggleState = (typeof TOGGLE_STATES)[number];
 
 const SIZE = 36;
@@ -54,7 +57,7 @@ function buildToggleComponent(
   const p = inputs.primitives;
 
   const comp = figma.createComponent();
-  comp.name = `Variant=${variant}, State=${state}`;
+  comp.name = `Variant=${variant}, Pressed=${state}`;
   comp.layoutMode = "HORIZONTAL";
   comp.primaryAxisSizingMode = "FIXED";
   comp.counterAxisSizingMode = "FIXED";
@@ -65,7 +68,7 @@ function buildToggleComponent(
   bindCornerRadii(comp, p.get("radius/md"));
   comp.strokes = [];
 
-  if (state === "on") {
+  if (state === "True") {
     bindFill(comp, t.get("accent"));
   } else if (variant === "outline") {
     bindFill(comp, t.get("background"));
@@ -83,7 +86,7 @@ function buildToggleComponent(
   glyph.fontSize = 14;
   bindFontSize(glyph, p.get("font/size/sm"));
 
-  if (state === "on") {
+  if (state === "True") {
     bindFill(glyph, t.get("accent-foreground"));
   } else {
     bindFill(glyph, t.get("foreground"));

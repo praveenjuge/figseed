@@ -5,7 +5,10 @@ import { styleComponentSet } from "../layout";
 import { SECTION_WIDTH, type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const SWITCH_STATES = ["unchecked", "checked"] as const;
+// Boolean variant: shadcn / Radix Switch exposes a `checked` prop, so we
+// expose `Checked=True/False`. Figma promotes a property to a boolean toggle
+// in the inspector when its values are exactly `True`/`False`.
+const SWITCH_STATES = ["False", "True"] as const;
 type SwitchState = (typeof SWITCH_STATES)[number];
 
 const SWITCH_SIZES = ["sm", "default"] as const;
@@ -53,14 +56,14 @@ function buildSwitchComponent(
   const dims = SWITCH_DIMS[size];
 
   const comp = figma.createComponent();
-  comp.name = `Size=${size}, State=${state}`;
+  comp.name = `Size=${size}, Checked=${state}`;
   // Use absolute positioning for the thumb inside the track.
   comp.layoutMode = "NONE";
   comp.resize(dims.w, dims.h);
   comp.cornerRadius = 9999;
   bindCornerRadii(comp, p.get("radius/full"));
 
-  if (state === "checked") {
+  if (state === "True") {
     bindFill(comp, t.get("primary"));
   } else {
     bindFill(comp, t.get("input"));
@@ -73,7 +76,7 @@ function buildSwitchComponent(
   bindFill(thumb, t.get("background"));
   const yOffset = (dims.h - dims.thumb) / 2;
   thumb.y = yOffset;
-  if (state === "checked") {
+  if (state === "True") {
     thumb.x = dims.w - dims.thumb - 2;
   } else {
     thumb.x = 2;

@@ -62,6 +62,17 @@ describe("parseOklch", () => {
     expect(parseOklch("rgb(1,2,3)")).toBeNull();
     expect(parseOklch("oklch()")).toBeNull();
   });
+
+  it("rejects a non-numeric channel", () => {
+    // Non-percent NaN channel.
+    expect(parseOklch("oklch(abc 0 0)")).toBeNull();
+    // Percent NaN channel.
+    expect(parseOklch("oklch(abc% 0 0)")).toBeNull();
+  });
+
+  it("rejects a non-numeric alpha", () => {
+    expect(parseOklch("oklch(1 0 0 / xyz)")).toBeNull();
+  });
 });
 
 describe("parseColor", () => {

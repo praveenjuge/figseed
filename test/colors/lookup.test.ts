@@ -40,6 +40,11 @@ describe("findTailwindAlias", () => {
     expect(findTailwindAlias(undefined)).toBeNull();
     expect(findTailwindAlias("")).toBeNull();
   });
+
+  it("returns null when the alpha component isn't a number", () => {
+    // Normalizes to a blank alpha, which parses as NaN.
+    expect(findTailwindAlias("oklch(1 0 0 / abc)")).toBeNull();
+  });
 });
 
 describe("findTailwindColor", () => {

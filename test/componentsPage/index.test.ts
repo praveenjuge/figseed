@@ -21,15 +21,16 @@ describe("buildComponentsPage", () => {
   it("builds the Components page with nodes", async () => {
     const result = await buildComponentsPage(await makeInputs());
     expect(result.nodeCount).toBeGreaterThan(0);
-    const page = (globalThis as { figma: { root: { children: { name: string }[] } } })
-      .figma.root.children.find((c) => c.name === "Components");
+    const page = (
+      globalThis as { figma: { root: { children: { name: string }[] } } }
+    ).figma.root.children.find((c) => c.name === "Components");
     expect(page).toBeDefined();
   });
 
-  it("reports progress for all 13 sections plus Done", async () => {
+  it("reports progress for all 18 sections plus Done", async () => {
     const onProgress = vi.fn();
     await buildComponentsPage({ ...(await makeInputs()), onProgress });
-    expect(onProgress).toHaveBeenCalledTimes(14);
-    expect(onProgress).toHaveBeenLastCalledWith(13, 13, "Done");
+    expect(onProgress).toHaveBeenCalledTimes(19);
+    expect(onProgress).toHaveBeenLastCalledWith(18, 18, "Done");
   });
 });
