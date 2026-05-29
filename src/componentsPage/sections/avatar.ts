@@ -1,5 +1,11 @@
 // Avatar: circular initials/image placeholder. Three sizes × two kinds.
+//
+// The "image" variants use real photos bundled at build time, surfaced as
+// Figma paint styles (see ../avatarStyles). A designer can swap any avatar to a
+// different bundled face from the fill-style picker. The "fallback" variants
+// keep the initials-on-muted treatment from shadcn's AvatarFallback.
 
+import { ensureAvatarStyles, type AvatarStyleMap } from "../avatarStyles";
 import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
 import { styleComponentSet } from "../layout";
 import { SECTION_WIDTH, type ComponentsInputs } from "../types";
@@ -26,10 +32,16 @@ export async function addAvatarSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
+  const styles = await ensureAvatarStyles();
+
   const components: ComponentNode[] = [];
+  // Give each image variant a different bundled face so the set previews a
+  // range of avatars; designers can still swap any of them from the picker.
+  let imageSlot = 0;
   for (const size of AVATAR_SIZES) {
     for (const kind of AVATAR_KINDS) {
-      const comp = buildAvatarComponent(inputs, size, kind);
+      const slot = kind === "image" ? imageSlot++ : -1;
+      const comp = await buildAvatarComponent(inputs, size, kind, styles, slot);
       page.appendChild(comp);
       components.push(comp);
     }
@@ -52,7 +64,9 @@ function buildAvatarComponent(
   inputs: ComponentsInputs,
   size: AvatarSize,
   kind: AvatarKind,
-): ComponentNode {
+  styles: AvatarStyleMap,
+  imageSlot: number,
+): Promise<ComponentNode> {
   const t = inputs.theme.light;
   const p = inputs.primitives;
   const dims = AVATAR_DIMS[size];
@@ -70,23 +84,48 @@ function buildAvatarComponent(
   comp.clipsContent = true;
 
   if (kind === "image") {
+    // Prefer a real bundled photo via its paint style; fall back to a tinted
+    // fill + initials if no style is available (e.g. data module missing).
+    const styleId = imageSlot >= 0 ? styles.idAt(imageSlot) : undefined;
+    if (styleId) {
+      return applyImageStyle(comp, styleId).then(() => comp);
+    }
     bindFill(comp, t.get("chart-1"));
-  } else {
-    bindFill(comp, t.get("muted"));
+    appendInitials(comp, inputs, dims, "PJ", t.get("primary-foreground"));
+    return Promise.resolve(comp);
   }
 
+  bindFill(comp, t.get("muted"));
+  appendInitials(comp, inputs, dims, "JD", t.get("muted-foreground"));
+  return Promise.resolve(comp);
+}
+
+// Apply a bundled avatar photo to the component's fill via its paint style so
+// the image stays editable/swappable from the Figma styles picker.
+async function applyImageStyle(
+  comp: ComponentNode,
+  styleId: string,
+): Promise<void> {
+  try {
+    await comp.setFillStyleIdAsync(styleId);
+  } catch {
+    // ignore — leaves the component's default fill in place
+  }
+}
+
+function appendInitials(
+  comp: ComponentNode,
+  inputs: ComponentsInputs,
+  dims: { fontSize: number; fontToken: string },
+  characters: string,
+  fillVar: Variable | undefined,
+) {
+  const p = inputs.primitives;
   const initials = figma.createText();
   initials.fontName = { family: "Inter", style: "Regular" };
-  initials.characters = kind === "image" ? "PJ" : "JD";
+  initials.characters = characters;
   initials.fontSize = dims.fontSize;
   bindFontSize(initials, p.get(dims.fontToken));
-
-  if (kind === "image") {
-    bindFill(initials, t.get("primary-foreground"));
-  } else {
-    bindFill(initials, t.get("muted-foreground"));
-  }
-
+  bindFill(initials, fillVar);
   comp.appendChild(initials);
-  return comp;
 }

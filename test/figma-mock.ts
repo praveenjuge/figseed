@@ -59,15 +59,25 @@ export type FakeNode = {
   resize(w: number, h: number): void;
   resizeWithoutConstraints(w: number, h: number): void;
   setBoundVariable(field: string, variable: { id: string }): void;
+  setFillStyleIdAsync(styleId: string): Promise<void>;
   remove(): void;
   [key: string]: unknown;
 };
 
 export type FigmaMock = ReturnType<typeof createFigmaMock>;
 
+export type FakePaintStyle = {
+  id: string;
+  name: string;
+  type: "PAINT";
+  paints: unknown[];
+  remove(): void;
+};
+
 export function createFigmaMock() {
   const collections = new Map<string, FakeCollection>();
   const variables = new Map<string, FakeVariable>();
+  const paintStyles = new Map<string, FakePaintStyle>();
 
   class FakeVariable {
     id = nextId("var");
@@ -185,6 +195,10 @@ export function createFigmaMock() {
           id: variable.id,
         };
       },
+      setFillStyleIdAsync(styleId: string) {
+        node.fillStyleId = styleId;
+        return Promise.resolve();
+      },
       remove() {
         detach(node);
         const rootIdx = figma.root.children.indexOf(node);
@@ -267,6 +281,21 @@ export function createFigmaMock() {
     },
     createImage: (_bytes: Uint8Array) => ({ hash: nextId("img") }),
     base64Decode: (_value: string) => new Uint8Array(),
+
+    createPaintStyle: (): FakePaintStyle => {
+      const style: FakePaintStyle = {
+        id: nextId("style"),
+        name: "",
+        type: "PAINT",
+        paints: [],
+        remove() {
+          paintStyles.delete(style.id);
+        },
+      };
+      paintStyles.set(style.id, style);
+      return style;
+    },
+    getLocalPaintStylesAsync: () => Promise.resolve([...paintStyles.values()]),
 
     combineAsVariants: (components: FakeNode[], parent: FakeNode) => {
       const set = makeNode("COMPONENT_SET");

@@ -13,8 +13,11 @@ import { addBreadcrumbSection } from "./sections/breadcrumb";
 import { addButtonSection } from "./sections/button";
 import { addCardSection } from "./sections/card";
 import { addCheckboxSection } from "./sections/checkbox";
+import { addDialogSection } from "./sections/dialog";
 import { addHeader } from "./sections/header";
 import { addInputSection } from "./sections/input";
+import { addInputOtpSection } from "./sections/inputOtp";
+import { addKbdSection } from "./sections/kbd";
 import { addLabelSection } from "./sections/label";
 import { addPaginationSection } from "./sections/pagination";
 import { addProgressSection } from "./sections/progress";
@@ -24,9 +27,11 @@ import { addSeparatorSection } from "./sections/separator";
 import { addSkeletonSection } from "./sections/skeleton";
 import { addSliderSection } from "./sections/slider";
 import { addSwitchSection } from "./sections/switch";
+import { addTableSection } from "./sections/table";
 import { addTabsSection } from "./sections/tabs";
 import { addTextareaSection } from "./sections/textarea";
 import { addToggleSection } from "./sections/toggle";
+import { addToggleGroupSection } from "./sections/toggleGroup";
 import { addTooltipSection } from "./sections/tooltip";
 import {
   PAGE_NAME,
@@ -43,10 +48,12 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Header", build: addHeader },
   { label: "Button", build: addButtonSection },
   { label: "Toggle", build: addToggleSection },
+  { label: "Toggle Group", build: addToggleGroupSection },
   { label: "Badge", build: addBadgeSection },
   { label: "Avatar", build: addAvatarSection },
   { label: "Label", build: addLabelSection },
   { label: "Input", build: addInputSection },
+  { label: "Input OTP", build: addInputOtpSection },
   { label: "Textarea", build: addTextareaSection },
   { label: "Select", build: addSelectSection },
   { label: "Checkbox", build: addCheckboxSection },
@@ -60,8 +67,11 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Accordion", build: addAccordionSection },
   { label: "Breadcrumb", build: addBreadcrumbSection },
   { label: "Pagination", build: addPaginationSection },
+  { label: "Table", build: addTableSection },
   { label: "Tooltip", build: addTooltipSection },
+  { label: "Kbd", build: addKbdSection },
   { label: "Card", build: addCardSection },
+  { label: "Dialog", build: addDialogSection },
   { label: "Alert", build: addAlertSection },
 ];
 
