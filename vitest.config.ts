@@ -5,7 +5,7 @@ export default defineConfig({
     environment: "node",
     globals: true,
     setupFiles: ["./test/setup.ts"],
-    include: ["test/**/*.test.ts"],
+    include: ["test/**/*.test.ts", "!shadcn-ui/**/*.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],

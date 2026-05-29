@@ -8,16 +8,21 @@
 import { addAlertSection } from "./sections/alert";
 import { addAvatarSection } from "./sections/avatar";
 import { addBadgeSection } from "./sections/badge";
+import { addBreadcrumbSection } from "./sections/breadcrumb";
 import { addButtonSection } from "./sections/button";
 import { addCardSection } from "./sections/card";
 import { addCheckboxSection } from "./sections/checkbox";
 import { addHeader } from "./sections/header";
 import { addInputSection } from "./sections/input";
 import { addProgressSection } from "./sections/progress";
+import { addRadioGroupSection } from "./sections/radioGroup";
 import { addSkeletonSection } from "./sections/skeleton";
 import { addSliderSection } from "./sections/slider";
 import { addSwitchSection } from "./sections/switch";
+import { addTabsSection } from "./sections/tabs";
 import { addTextareaSection } from "./sections/textarea";
+import { addToggleSection } from "./sections/toggle";
+import { addTooltipSection } from "./sections/tooltip";
 import {
   PAGE_NAME,
   SECTION_GAP,
@@ -32,15 +37,20 @@ export type { ComponentsInputs, ComponentsResult } from "./types";
 const SECTIONS: SectionBuilder[] = [
   { label: "Header", build: addHeader },
   { label: "Button", build: addButtonSection },
+  { label: "Toggle", build: addToggleSection },
   { label: "Badge", build: addBadgeSection },
   { label: "Avatar", build: addAvatarSection },
   { label: "Input", build: addInputSection },
   { label: "Textarea", build: addTextareaSection },
   { label: "Checkbox", build: addCheckboxSection },
+  { label: "Radio Group", build: addRadioGroupSection },
   { label: "Switch", build: addSwitchSection },
   { label: "Slider", build: addSliderSection },
   { label: "Progress", build: addProgressSection },
   { label: "Skeleton", build: addSkeletonSection },
+  { label: "Tabs", build: addTabsSection },
+  { label: "Breadcrumb", build: addBreadcrumbSection },
+  { label: "Tooltip", build: addTooltipSection },
   { label: "Card", build: addCardSection },
   { label: "Alert", build: addAlertSection },
 ];
