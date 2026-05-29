@@ -1,10 +1,11 @@
 // Pagination: a row of page controls with previous/next, numbered pages,
 // an active page, and an ellipsis.
 //
-// Mirrors shadcn's Pagination: links rendered with button variants — the
-// active page uses the `outline` variant (border + background), the rest use
-// `ghost` (transparent). Previous/Next are labelled ghost buttons with a
-// chevron; the ellipsis is a non-interactive glyph.
+// Mirrors radix-nova's Pagination: links rendered with button variants —
+// the active page uses the `outline` variant (border + background), the
+// rest use `ghost`. Prev/Next render at default size (h-8) with a chevron;
+// the numbered pages use the icon size (size-8). The ellipsis is a
+// non-interactive glyph.
 
 import {
   bindCornerRadii,
@@ -30,7 +31,7 @@ const ITEMS: Item[] = [
   { kind: "next" },
 ];
 
-const CONTROL_HEIGHT = 36;
+const CONTROL_HEIGHT = 32;
 
 export async function addPaginationSection(
   page: PageNode,
@@ -89,8 +90,9 @@ function buildPageLink(
   link.primaryAxisAlignItems = "CENTER";
   link.counterAxisAlignItems = "CENTER";
   link.resize(CONTROL_HEIGHT, CONTROL_HEIGHT);
-  link.cornerRadius = 6;
-  bindCornerRadii(link, p.get("radius/md"));
+  // radix-nova page link uses the icon button: `size-8 rounded-lg`.
+  link.cornerRadius = 8;
+  bindCornerRadii(link, p.get("radius/lg"));
   link.strokes = [];
 
   if (active) {
@@ -129,11 +131,14 @@ function buildNavButton(
   button.primaryAxisAlignItems = "CENTER";
   button.counterAxisAlignItems = "CENTER";
   button.resize(button.width, CONTROL_HEIGHT);
-  button.itemSpacing = 4;
-  button.paddingLeft = 10;
-  button.paddingRight = 10;
-  button.cornerRadius = 6;
-  bindCornerRadii(button, p.get("radius/md"));
+  // radix-nova prev/next uses the default button size: `h-8 px-2.5
+  // rounded-lg gap-1.5`. Override left/right padding to 1.5 (`pl-1.5!` /
+  // `pr-1.5!`) on the chevron-side per the source.
+  button.itemSpacing = 6;
+  button.paddingLeft = direction === "prev" ? 6 : 10;
+  button.paddingRight = direction === "next" ? 6 : 10;
+  button.cornerRadius = 8;
+  bindCornerRadii(button, p.get("radius/lg"));
   button.fills = [];
   button.strokes = [];
 

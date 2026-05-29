@@ -1,7 +1,7 @@
 // Slider: track + range fill + thumb. Three representative values.
 //
-// Mirrors shadcn's Slider (radix-ui primitive): muted track, primary range,
-// circular thumb with primary border.
+// Mirrors radix-nova's Slider (radix-ui primitive): `h-1` muted track,
+// primary range, `size-3` (12px) circular thumb with `border-ring bg-white`.
 
 import { bindFill, bindStrokeColor } from "../bindings";
 import { styleComponentSet } from "../layout";
@@ -12,8 +12,8 @@ const SLIDER_VALUES = [25, 50, 75] as const;
 type SliderValue = (typeof SLIDER_VALUES)[number];
 
 const TRACK_WIDTH = 280;
-const TRACK_HEIGHT = 6;
-const THUMB_SIZE = 16;
+const TRACK_HEIGHT = 4;
+const THUMB_SIZE = 12;
 // Total component height — give the thumb room above and below the track.
 const COMP_HEIGHT = THUMB_SIZE;
 
@@ -42,6 +42,7 @@ function buildSliderComponent(
   value: SliderValue,
 ): ComponentNode {
   const t = inputs.theme.light;
+  const tw = inputs.tailwindColors;
 
   const comp = figma.createComponent();
   comp.name = `Value=${value}`;
@@ -72,14 +73,15 @@ function buildSliderComponent(
   bindFill(range, t.get("primary"));
   comp.appendChild(range);
 
-  // Thumb — circle, primary border on background fill, centred on range end.
+  // Thumb — circle, ring border on white fill (radix-nova: `border border-ring
+  // bg-white`), centred on the range end.
   const thumb = figma.createEllipse();
   thumb.name = "Thumb";
   thumb.resize(THUMB_SIZE, THUMB_SIZE);
   thumb.x = Math.max(0, rangeWidth - THUMB_SIZE / 2);
   thumb.y = (COMP_HEIGHT - THUMB_SIZE) / 2;
-  bindFill(thumb, t.get("background"));
-  bindStrokeColor(thumb, t.get("primary"));
+  bindFill(thumb, tw.get("white"));
+  bindStrokeColor(thumb, t.get("ring"));
   thumb.strokeWeight = 1;
   thumb.effects = [
     {

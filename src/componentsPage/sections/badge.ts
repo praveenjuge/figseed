@@ -1,4 +1,4 @@
-// Badge: pill-shaped labels for status, counts, and tags. Four variants.
+// Badge: pill-shaped labels for status, counts, and tags. Six variants.
 
 import {
   bindCornerRadii,
@@ -51,17 +51,21 @@ function buildBadgeComponent(
   comp.name = `Variant=${variant}`;
   comp.layoutMode = "HORIZONTAL";
   comp.primaryAxisSizingMode = "AUTO";
-  comp.counterAxisSizingMode = "AUTO";
+  // radix-nova badge has `h-5` (20px) — fix the height and let auto-layout
+  // hug the width.
+  comp.counterAxisSizingMode = "FIXED";
   comp.primaryAxisAlignItems = "CENTER";
   comp.counterAxisAlignItems = "CENTER";
-  // Mirrors shadcn's Badge: `px-2 py-0.5 text-xs font-medium rounded-full`.
+  // Mirrors radix-nova's Badge: `h-5 gap-1 px-2 py-0.5 text-xs font-medium
+  // rounded-4xl`. We use 32px ≈ rounded-4xl for the corner radius.
   comp.itemSpacing = 4;
   comp.paddingLeft = 8;
   comp.paddingRight = 8;
   comp.paddingTop = 2;
   comp.paddingBottom = 2;
-  comp.cornerRadius = 9999;
-  bindCornerRadii(comp, p.get("radius/full"));
+  comp.resize(comp.width, 20);
+  comp.cornerRadius = 32;
+  bindCornerRadii(comp, p.get("radius/4xl"));
   comp.fills = [];
   comp.strokes = [];
 
@@ -73,6 +77,7 @@ function buildBadgeComponent(
       bindFill(comp, t.get("secondary"));
       break;
     case "destructive":
+      // Solid destructive fill so the Tailwind white label reads against it.
       bindFill(comp, t.get("destructive"));
       break;
     case "outline":
@@ -100,7 +105,7 @@ function buildBadgeComponent(
       bindFill(label, t.get("secondary-foreground"));
       break;
     case "destructive":
-      // shadcn v4 uses `text-white` on destructive (not destructive-foreground).
+      // Tailwind `white` for legibility on the solid destructive surface.
       bindFill(label, inputs.tailwindColors.get("white"));
       break;
     case "outline":

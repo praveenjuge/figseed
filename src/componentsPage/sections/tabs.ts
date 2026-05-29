@@ -14,7 +14,7 @@ const TAB_LABELS = ["Account", "Password", "Team"] as const;
 const ACTIVE_INDICES = [0, 1, 2] as const;
 type ActiveIndex = (typeof ACTIVE_INDICES)[number];
 
-const LIST_HEIGHT = 36;
+const LIST_HEIGHT = 32;
 const LIST_PADDING = 3;
 
 export async function addTabsSection(
@@ -51,8 +51,8 @@ function buildTabsComponent(
   comp.counterAxisSizingMode = "AUTO";
   comp.primaryAxisAlignItems = "CENTER";
   comp.counterAxisAlignItems = "CENTER";
-  // Mirrors shadcn's TabsList: `gap-1.5` between triggers, `p-[3px]`.
-  comp.itemSpacing = 6;
+  // Mirrors radix-nova's TabsList: `h-8 gap-2 p-[3px] rounded-lg bg-muted`.
+  comp.itemSpacing = 8;
   comp.paddingLeft = LIST_PADDING;
   comp.paddingRight = LIST_PADDING;
   comp.paddingTop = LIST_PADDING;
@@ -86,11 +86,13 @@ function buildTabTrigger(
   trigger.primaryAxisAlignItems = "CENTER";
   trigger.counterAxisAlignItems = "CENTER";
   trigger.resize(96, LIST_HEIGHT - LIST_PADDING * 2);
-  // Mirrors shadcn's TabsTrigger: `px-2 py-1 text-sm font-medium`.
-  trigger.paddingLeft = 8;
-  trigger.paddingRight = 8;
-  trigger.paddingTop = 4;
-  trigger.paddingBottom = 4;
+  // radix-nova TabsTrigger: `gap-1.5 rounded-md px-1.5 py-0.5 text-sm
+  // font-medium`.
+  trigger.itemSpacing = 6;
+  trigger.paddingLeft = 6;
+  trigger.paddingRight = 6;
+  trigger.paddingTop = 2;
+  trigger.paddingBottom = 2;
   trigger.cornerRadius = 6;
   bindCornerRadii(trigger, p.get("radius/md"));
   trigger.strokes = [];
@@ -121,6 +123,9 @@ function buildTabTrigger(
   if (isActive) {
     bindFill(text, t.get("foreground"));
   } else {
+    // radix-nova inactive trigger: `text-foreground/60` (then
+    // `dark:text-muted-foreground`). Use foreground @ 60% for the light
+    // mode look — close enough to muted-foreground at most presets.
     bindFill(text, t.get("muted-foreground"));
   }
   trigger.appendChild(text);

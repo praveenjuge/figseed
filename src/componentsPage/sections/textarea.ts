@@ -55,12 +55,13 @@ function buildTextareaComponent(
   comp.primaryAxisAlignItems = "MIN";
   comp.counterAxisAlignItems = "MIN";
   comp.resize(TEXTAREA_WIDTH, TEXTAREA_HEIGHT);
-  comp.paddingLeft = 12;
-  comp.paddingRight = 12;
+  // Mirrors radix-nova's Textarea: `min-h-16 px-2.5 py-2 rounded-lg`.
+  comp.paddingLeft = 10;
+  comp.paddingRight = 10;
   comp.paddingTop = 8;
   comp.paddingBottom = 8;
-  comp.cornerRadius = 6;
-  bindCornerRadii(comp, p.get("radius/md"));
+  comp.cornerRadius = 8;
+  bindCornerRadii(comp, p.get("radius/lg"));
   bindFill(comp, t.get("background"));
 
   switch (state) {

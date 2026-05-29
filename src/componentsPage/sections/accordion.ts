@@ -82,7 +82,8 @@ function buildAccordionItem(
     item.strokeRightWeight = 0;
   }
 
-  // Trigger row: title + chevron.
+  // Trigger row: title + chevron. radix-nova: `py-2.5 rounded-lg
+  // text-sm font-medium`.
   const trigger = figma.createFrame();
   trigger.name = "Trigger";
   trigger.layoutMode = "HORIZONTAL";
@@ -91,8 +92,8 @@ function buildAccordionItem(
   trigger.primaryAxisAlignItems = "SPACE_BETWEEN";
   trigger.counterAxisAlignItems = "CENTER";
   trigger.itemSpacing = 16;
-  trigger.paddingTop = 16;
-  trigger.paddingBottom = 16;
+  trigger.paddingTop = 10;
+  trigger.paddingBottom = 10;
   trigger.fills = [];
   trigger.strokes = [];
   item.appendChild(trigger);
@@ -120,13 +121,13 @@ function buildAccordionItem(
     // root has no explicit colour either), which resolves to `foreground`.
     bindFill(content, t.get("foreground"));
     content.paragraphSpacing = 0;
-    // shadcn renders the open content with bottom padding (`pb-4`).
+    // shadcn renders the open content with bottom padding (`pb-2.5`).
     const wrapper = figma.createFrame();
     wrapper.name = "Content Wrapper";
     wrapper.layoutMode = "VERTICAL";
     wrapper.primaryAxisSizingMode = "AUTO";
     wrapper.counterAxisSizingMode = "FIXED";
-    wrapper.paddingBottom = 16;
+    wrapper.paddingBottom = 10;
     wrapper.fills = [];
     wrapper.strokes = [];
     item.appendChild(wrapper);

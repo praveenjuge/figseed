@@ -40,9 +40,19 @@ function buildCheckboxComponent(
 
   const comp = figma.createComponent();
   comp.name = `State=${state}`;
-  // Absolute positioning so the inner check / bar sit centred without
-  // auto-layout repositioning them.
-  comp.layoutMode = "NONE";
+  // HORIZONTAL auto-layout with CENTER alignment so the check / bar sit
+  // centred regardless of their intrinsic bounding box (Figma collapses
+  // vector nodes to their path bounds, so absolute positioning won't).
+  comp.layoutMode = "HORIZONTAL";
+  comp.primaryAxisSizingMode = "FIXED";
+  comp.counterAxisSizingMode = "FIXED";
+  comp.primaryAxisAlignItems = "CENTER";
+  comp.counterAxisAlignItems = "CENTER";
+  comp.paddingTop = 0;
+  comp.paddingBottom = 0;
+  comp.paddingLeft = 0;
+  comp.paddingRight = 0;
+  comp.itemSpacing = 0;
   comp.resize(16, 16);
   comp.cornerRadius = 4;
   bindCornerRadii(comp, p.get("radius/sm"));
@@ -58,14 +68,17 @@ function buildCheckboxComponent(
   }
 
   if (state === "checked") {
-    // Check-mark drawn as a vector polyline.
+    // Check-mark drawn as a vector polyline. Auto-layout centres the
+    // vector by its bounding box, so we only need to size the path.
     const check = figma.createVector();
     check.name = "Check";
     check.vectorPaths = [
       {
         windingRule: "NONZERO",
         // Two strokes forming a check: short up-left segment, long down-right.
-        data: "M 3 8 L 6.5 11.5 L 13 5",
+        // Coordinates sit inside a 10×7 bounding box that auto-layout
+        // centres within the 16×16 component.
+        data: "M 0 3 L 3.5 6.5 L 10 0",
       },
     ];
     check.strokeWeight = 1.75;
@@ -73,9 +86,6 @@ function buildCheckboxComponent(
     check.strokeJoin = "ROUND";
     check.fills = [];
     bindStrokeColor(check, t.get("primary-foreground"));
-    check.constraints = { horizontal: "SCALE", vertical: "SCALE" };
-    check.x = 0;
-    check.y = 0;
     comp.appendChild(check);
   } else if (state === "indeterminate") {
     // A short horizontal bar.
@@ -84,8 +94,6 @@ function buildCheckboxComponent(
     bar.resize(8, 1.75);
     bar.cornerRadius = 1;
     bindFill(bar, t.get("primary-foreground"));
-    bar.x = (16 - 8) / 2;
-    bar.y = (16 - 1.75) / 2;
     comp.appendChild(bar);
   }
 

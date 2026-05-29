@@ -1,5 +1,5 @@
-// Skeleton: loading placeholder shapes filled with the accent colour.
-// Mirrors shadcn's Skeleton: `bg-accent rounded-md`.
+// Skeleton: loading placeholder shapes filled with the muted colour.
+// Mirrors radix-nova's Skeleton: `bg-muted rounded-md`.
 //
 // We ship a few shapes that designers commonly need: an avatar circle,
 // short and full-width text rows, and a card-sized block.
@@ -60,6 +60,7 @@ function buildSkeletonComponent(
     bindCornerRadii(comp, p.get("radius/md"));
   }
 
-  bindFill(comp, t.get("accent"));
+  // radix-nova: `bg-muted rounded-md`.
+  bindFill(comp, t.get("muted"));
   return comp;
 }

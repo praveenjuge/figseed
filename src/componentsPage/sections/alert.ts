@@ -60,10 +60,11 @@ function buildAlertComponent(
   comp.resize(480, 10);
   comp.primaryAxisSizingMode = "AUTO";
   comp.counterAxisSizingMode = "FIXED";
-  comp.paddingLeft = 16;
-  comp.paddingRight = 16;
-  comp.paddingTop = 12;
-  comp.paddingBottom = 12;
+  // radix-nova Alert: `rounded-lg px-2.5 py-2 has-[>svg]:gap-x-2`.
+  comp.paddingLeft = 10;
+  comp.paddingRight = 10;
+  comp.paddingTop = 8;
+  comp.paddingBottom = 8;
   comp.itemSpacing = 0;
   comp.cornerRadius = 8;
   bindCornerRadii(comp, p.get("radius/lg"));
@@ -71,13 +72,14 @@ function buildAlertComponent(
   bindStrokeColor(comp, t.get("border"));
   comp.strokeWeight = 1;
 
-  // Row: icon + text column.
+  // Row: icon + text column. radix-nova has `gap-x-2` (8) between the SVG
+  // column and the text column.
   const row = figma.createFrame();
   row.name = "Content";
   row.layoutMode = "HORIZONTAL";
   row.primaryAxisSizingMode = "AUTO";
   row.counterAxisSizingMode = "AUTO";
-  row.itemSpacing = 12;
+  row.itemSpacing = 8;
   row.fills = [];
   comp.appendChild(row);
   row.layoutSizingHorizontal = "FILL";
@@ -97,13 +99,13 @@ function buildAlertComponent(
   }
   row.appendChild(icon);
 
-  // Text column.
+  // Text column. radix-nova `gap-0.5` between title and description.
   const textCol = figma.createFrame();
   textCol.name = "Text";
   textCol.layoutMode = "VERTICAL";
   textCol.primaryAxisSizingMode = "AUTO";
   textCol.counterAxisSizingMode = "AUTO";
-  textCol.itemSpacing = 4;
+  textCol.itemSpacing = 2;
   textCol.fills = [];
   row.appendChild(textCol);
   textCol.layoutSizingHorizontal = "FILL";

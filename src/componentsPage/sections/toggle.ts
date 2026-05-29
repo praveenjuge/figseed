@@ -1,9 +1,10 @@
 // Toggle: pressable square / pill that holds an "on" or "off" state.
 // Two variants × two states for a quick component-set picker.
 //
-// Mirrors shadcn's Toggle (radix-ui primitive): `bg-transparent` by default,
-// `bg-accent text-accent-foreground` when on; outline variant adds an
-// `input` border. Sized close to a default button (h-9 w-9).
+// Mirrors radix-nova's Toggle (radix-ui primitive): `bg-transparent` by
+// default, `aria-pressed:bg-muted` (or `data-[state=on]:bg-muted`) when on;
+// outline variant adds an `input` border. Default size is `h-8 min-w-8`
+// (32×32) with `rounded-lg`.
 
 import {
   bindCornerRadii,
@@ -24,7 +25,7 @@ type ToggleVariant = (typeof TOGGLE_VARIANTS)[number];
 const TOGGLE_STATES = ["False", "True"] as const;
 type ToggleState = (typeof TOGGLE_STATES)[number];
 
-const SIZE = 36;
+const SIZE = 32;
 
 export async function addToggleSection(
   page: PageNode,
@@ -64,13 +65,16 @@ function buildToggleComponent(
   comp.primaryAxisAlignItems = "CENTER";
   comp.counterAxisAlignItems = "CENTER";
   comp.resize(SIZE, SIZE);
-  comp.cornerRadius = 6;
-  bindCornerRadii(comp, p.get("radius/md"));
+  // Mirrors radix-nova's Toggle default size (`h-8 min-w-8 rounded-lg`).
+  comp.cornerRadius = 8;
+  bindCornerRadii(comp, p.get("radius/lg"));
   comp.strokes = [];
 
   if (state === "True") {
-    bindFill(comp, t.get("accent"));
+    // radix-nova: `aria-pressed:bg-muted` / `data-[state=on]:bg-muted`.
+    bindFill(comp, t.get("muted"));
   } else if (variant === "outline") {
+    // radix-nova outline: `border border-input bg-transparent`.
     bindFill(comp, t.get("background"));
     bindStrokeColor(comp, t.get("input"));
     comp.strokeWeight = 1;
@@ -86,11 +90,10 @@ function buildToggleComponent(
   glyph.fontSize = 14;
   bindFontSize(glyph, p.get("font/size/sm"));
 
-  if (state === "True") {
-    bindFill(glyph, t.get("accent-foreground"));
-  } else {
-    bindFill(glyph, t.get("foreground"));
-  }
+  // radix-nova doesn't change the text colour on press — both states use the
+  // hover colour `text-foreground` (default state has no explicit colour, so
+  // it inherits the surrounding `foreground`).
+  bindFill(glyph, t.get("foreground"));
   comp.appendChild(glyph);
 
   return comp;

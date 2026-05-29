@@ -1,8 +1,9 @@
 // Radio Group: 16x16 circular input with optional dot indicator.
 //
-// Mirrors shadcn's RadioGroup (radix-ui primitive): rounded-full size-4
-// with an `input` border in the unchecked state; checked state shows a
-// small filled inner circle in the primary colour.
+// Mirrors radix-nova's RadioGroup (radix-ui primitive): rounded-full size-4
+// with an `input` border in the unchecked state; checked state swaps the
+// background to `bg-primary` and shows a small inner circle in
+// `bg-primary-foreground`.
 
 import { bindCornerRadii, bindFill, bindStrokeColor } from "../bindings";
 import { styleComponentSet } from "../layout";
@@ -52,18 +53,24 @@ function buildRadioComponent(
   comp.resize(SIZE, SIZE);
   comp.cornerRadius = 9999;
   bindCornerRadii(comp, p.get("radius/full"));
-  bindFill(comp, t.get("background"));
-  bindStrokeColor(comp, t.get("input"));
-  comp.strokeWeight = 1;
 
   if (state === "True") {
+    // radix-nova: `data-checked:border-primary data-checked:bg-primary`.
+    bindFill(comp, t.get("primary"));
+    bindStrokeColor(comp, t.get("primary"));
+    comp.strokeWeight = 1;
+
     const dot = figma.createEllipse();
     dot.name = "Indicator";
     dot.resize(DOT_SIZE, DOT_SIZE);
     dot.x = (SIZE - DOT_SIZE) / 2;
     dot.y = (SIZE - DOT_SIZE) / 2;
-    bindFill(dot, t.get("primary"));
+    bindFill(dot, t.get("primary-foreground"));
     comp.appendChild(dot);
+  } else {
+    bindFill(comp, t.get("background"));
+    bindStrokeColor(comp, t.get("input"));
+    comp.strokeWeight = 1;
   }
 
   return comp;

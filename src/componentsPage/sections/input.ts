@@ -47,14 +47,14 @@ function buildInputComponent(
   comp.counterAxisSizingMode = "FIXED";
   comp.primaryAxisAlignItems = "MIN";
   comp.counterAxisAlignItems = "CENTER";
-  comp.resize(280, 36);
-  // Mirrors shadcn's Input: `h-9 px-3 py-1`.
-  comp.paddingLeft = 12;
-  comp.paddingRight = 12;
+  comp.resize(280, 32);
+  // Mirrors radix-nova's Input: `h-8 px-2.5 py-1 rounded-lg`.
+  comp.paddingLeft = 10;
+  comp.paddingRight = 10;
   comp.paddingTop = 4;
   comp.paddingBottom = 4;
-  comp.cornerRadius = 6;
-  bindCornerRadii(comp, p.get("radius/md"));
+  comp.cornerRadius = 8;
+  bindCornerRadii(comp, p.get("radius/lg"));
   bindFill(comp, t.get("background"));
 
   // Border per state. Focus uses a 1px ring border + the focus ring shadow;

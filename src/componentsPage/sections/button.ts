@@ -87,11 +87,11 @@ function buildButtonComponent(
   comp.layoutMode = "HORIZONTAL";
   comp.primaryAxisAlignItems = "CENTER";
   comp.counterAxisAlignItems = "CENTER";
-  // Mirrors shadcn's per-size gap: `gap-1` (xs), `gap-1.5` (sm), `gap-2`
-  // (default + lg).
-  comp.itemSpacing = size === "xs" ? 4 : size === "sm" ? 6 : 8;
   comp.fills = [];
   comp.strokes = [];
+  // Mirrors radix-nova's per-size gap:
+  //   xs/sm: gap-1 (4), default/lg: gap-1.5 (6)
+  comp.itemSpacing = size === "xs" || size === "sm" ? 4 : 6;
 
   if (isIconSize(size)) {
     comp.primaryAxisSizingMode = "FIXED";
@@ -106,8 +106,15 @@ function buildButtonComponent(
     comp.paddingBottom = dims.paddingY;
   }
 
-  comp.cornerRadius = 6;
-  bindCornerRadii(comp, p.get("radius/md"));
+  // radix-nova's button uses `rounded-lg` by default (8px at the default
+  // 10px radius), and `rounded-[min(var(--radius-md),10/12px)]` for the
+  // xs/sm and icon-xs/icon-sm sizes. Mapping:
+  //   xs / icon-xs / sm / icon-sm → radius/md (6px)
+  //   default / lg / icon / icon-lg → radius/lg (8px)
+  const useMdRadius =
+    size === "xs" || size === "sm" || size === "icon-xs" || size === "icon-sm";
+  comp.cornerRadius = useMdRadius ? 6 : 8;
+  bindCornerRadii(comp, p.get(useMdRadius ? "radius/md" : "radius/lg"));
 
   // Apply variant fill/stroke.
   applyButtonVariant(comp, variant, t);
@@ -135,25 +142,29 @@ function buildButtonComponent(
 type ButtonDims = { height: number; paddingX: number; paddingY: number };
 
 function buttonDimensions(size: ButtonSize): ButtonDims {
-  // Mirrors shadcn's button size CVA: heights map to Tailwind h-* utilities;
-  // the icon-* sizes are square (size-N).
+  // Mirrors radix-nova's button size CVA:
+  //   default: h-8 px-2.5 py-2 (32 / 10 / 8)
+  //   xs:      h-6 px-2 (24 / 8 / 4)
+  //   sm:      h-7 px-2.5 (28 / 10 / 6)
+  //   lg:      h-9 px-2.5 py-2 (36 / 10 / 8)
+  // Icon sizes are square (size-N).
   switch (size) {
     case "xs":
       return { height: 24, paddingX: 8, paddingY: 4 };
     case "sm":
-      return { height: 32, paddingX: 12, paddingY: 6 };
+      return { height: 28, paddingX: 10, paddingY: 6 };
     case "default":
-      return { height: 36, paddingX: 16, paddingY: 8 };
+      return { height: 32, paddingX: 10, paddingY: 8 };
     case "lg":
-      return { height: 40, paddingX: 24, paddingY: 8 };
+      return { height: 36, paddingX: 10, paddingY: 8 };
     case "icon-xs":
       return { height: 24, paddingX: 0, paddingY: 0 };
     case "icon-sm":
-      return { height: 32, paddingX: 0, paddingY: 0 };
+      return { height: 28, paddingX: 0, paddingY: 0 };
     case "icon":
-      return { height: 36, paddingX: 0, paddingY: 0 };
+      return { height: 32, paddingX: 0, paddingY: 0 };
     case "icon-lg":
-      return { height: 40, paddingX: 0, paddingY: 0 };
+      return { height: 36, paddingX: 0, paddingY: 0 };
   }
 }
 
@@ -170,6 +181,9 @@ function applyButtonVariant(
       bindFill(node, t.get("secondary"));
       break;
     case "destructive":
+      // Solid destructive fill so the Tailwind white label reads against it.
+      // (radix-nova's source uses `bg-destructive/10 text-destructive`, but
+      // we deliberately keep the readable solid + white pairing here.)
       bindFill(node, t.get("destructive"));
       break;
     case "outline":
@@ -200,8 +214,8 @@ function applyButtonLabelColor(
       bindFill(node, t.get("secondary-foreground"));
       break;
     case "destructive":
-      // shadcn v4 hard-codes `text-white` on destructive (it doesn't use
-      // destructive-foreground), so alias to the Tailwind white variable.
+      // Tailwind `white` so the label stays legible on the solid destructive
+      // surface regardless of the active preset.
       bindFill(node, tw.get("white"));
       break;
     case "outline":

@@ -32,28 +32,22 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   comp.resize(360, 100);
   comp.primaryAxisSizingMode = "AUTO";
   comp.counterAxisSizingMode = "FIXED";
-  comp.itemSpacing = 24;
-  comp.paddingTop = 24;
-  comp.paddingBottom = 24;
-  comp.paddingLeft = 24;
-  comp.paddingRight = 24;
+  // radix-nova Card: `gap-4 py-4 rounded-xl bg-card ring-1 ring-foreground/10`.
+  // Padding is on the inner sections (`px-4`), not the card itself, so the
+  // card frame has only vertical padding here.
+  comp.itemSpacing = 16;
+  comp.paddingTop = 16;
+  comp.paddingBottom = 16;
+  comp.paddingLeft = 0;
+  comp.paddingRight = 0;
   comp.cornerRadius = 12;
   bindCornerRadii(comp, p.get("radius/xl"));
   bindFill(comp, t.get("card"));
   bindStrokeColor(comp, t.get("border"));
   comp.strokeWeight = 1;
-  comp.effects = [
-    {
-      type: "DROP_SHADOW",
-      color: { r: 0, g: 0, b: 0, a: 0.05 },
-      offset: { x: 0, y: 1 },
-      radius: 3,
-      spread: 0,
-      visible: true,
-      blendMode: "NORMAL",
-      showShadowBehindNode: true,
-    },
-  ];
+  comp.strokeAlign = "INSIDE";
+  // radix-nova uses `ring-1 ring-foreground/10` instead of a drop shadow.
+  comp.effects = [];
 
   // Card Header.
   const header = figma.createFrame();
@@ -61,12 +55,14 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   header.layoutMode = "VERTICAL";
   header.primaryAxisSizingMode = "AUTO";
   header.counterAxisSizingMode = "AUTO";
-  // Mirrors shadcn's CardHeader: `grid gap-2`.
-  header.itemSpacing = 8;
+  // radix-nova CardHeader: `grid items-start gap-1 rounded-t-xl px-4`.
+  header.itemSpacing = 4;
+  header.paddingLeft = 16;
+  header.paddingRight = 16;
   header.fills = [];
 
   const title = figma.createText();
-  title.fontName = { family: "Inter", style: "Semi Bold" };
+  title.fontName = { family: "Inter", style: "Medium" };
   title.characters = "Card Title";
   title.fontSize = 16;
   bindFontSize(title, p.get("font/size/base"));
@@ -89,7 +85,10 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   content.layoutMode = "VERTICAL";
   content.primaryAxisSizingMode = "AUTO";
   content.counterAxisSizingMode = "AUTO";
+  // radix-nova CardContent: `px-4`.
   content.itemSpacing = 8;
+  content.paddingLeft = 16;
+  content.paddingRight = 16;
   content.fills = [];
 
   const body = figma.createText();
@@ -111,7 +110,11 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   footer.counterAxisSizingMode = "AUTO";
   footer.primaryAxisAlignItems = "MIN";
   footer.counterAxisAlignItems = "CENTER";
+  // radix-nova CardFooter: `flex items-center rounded-b-xl border-t
+  // bg-muted/50 p-4`. We approximate with foreground padding only.
   footer.itemSpacing = 8;
+  footer.paddingLeft = 16;
+  footer.paddingRight = 16;
   footer.fills = [];
 
   const footerText = figma.createText();

@@ -1,13 +1,8 @@
 // Progress: full-width track with a primary fill indicator. Four
 // representative values (0%, 33%, 66%, 100%).
 //
-// Mirrors shadcn's Progress (radix-ui primitive): h-2 rounded-full track
-// with `bg-primary/20`, indicator `bg-primary` translated by 100 - value%.
-//
-// The 20%-tint effect is achieved with `node.opacity` on a dedicated track
-// child rather than a paint-level opacity. Figma's
-// `setBoundVariableForPaint` ignores `SolidPaint.opacity` once a colour
-// variable is bound, so we layer two siblings instead.
+// Mirrors radix-nova's Progress (radix-ui primitive): `h-1 rounded-full
+// bg-muted` track with a `bg-primary` indicator translated by 100 - value%.
 
 import { bindCornerRadii, bindFill } from "../bindings";
 import { styleComponentSet } from "../layout";
@@ -18,7 +13,7 @@ const PROGRESS_VALUES = [0, 33, 66, 100] as const;
 type ProgressValue = (typeof PROGRESS_VALUES)[number];
 
 const TRACK_WIDTH = 320;
-const TRACK_HEIGHT = 8;
+const TRACK_HEIGHT = 4;
 
 export async function addProgressSection(
   page: PageNode,
@@ -58,14 +53,13 @@ function buildProgressComponent(
   comp.fills = [];
   comp.strokes = [];
 
-  // Track — primary at 20% via node.opacity.
+  // Track — `bg-muted` per radix-nova.
   const track = figma.createRectangle();
   track.name = "Track";
   track.resize(TRACK_WIDTH, TRACK_HEIGHT);
   track.x = 0;
   track.y = 0;
-  bindFill(track, t.get("primary"));
-  track.opacity = 0.2;
+  bindFill(track, t.get("muted"));
   comp.appendChild(track);
 
   // Indicator — primary at full opacity, sized to value%.

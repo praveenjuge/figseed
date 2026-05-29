@@ -18,8 +18,8 @@ const SELECT_SIZES = ["sm", "default"] as const;
 type SelectSize = (typeof SELECT_SIZES)[number];
 
 const SELECT_DIMS: Record<SelectSize, { height: number; width: number }> = {
-  sm: { height: 32, width: 180 },
-  default: { height: 36, width: 200 },
+  sm: { height: 28, width: 180 },
+  default: { height: 32, width: 200 },
 };
 
 export async function addSelectSection(
@@ -58,13 +58,20 @@ function buildSelectComponent(
   comp.primaryAxisAlignItems = "SPACE_BETWEEN";
   comp.counterAxisAlignItems = "CENTER";
   comp.resize(dims.width, dims.height);
-  comp.itemSpacing = 8;
-  comp.paddingLeft = 12;
-  comp.paddingRight = 12;
+  // Mirrors radix-nova's SelectTrigger: `gap-1.5 py-2 pr-2 pl-2.5
+  // rounded-lg`. Sm rounds with `radius-md` instead.
+  comp.itemSpacing = 6;
+  comp.paddingLeft = 10;
+  comp.paddingRight = 8;
   comp.paddingTop = 8;
   comp.paddingBottom = 8;
-  comp.cornerRadius = 6;
-  bindCornerRadii(comp, p.get("radius/md"));
+  if (size === "sm") {
+    comp.cornerRadius = 6;
+    bindCornerRadii(comp, p.get("radius/md"));
+  } else {
+    comp.cornerRadius = 8;
+    bindCornerRadii(comp, p.get("radius/lg"));
+  }
   bindFill(comp, t.get("background"));
   bindStrokeColor(comp, t.get("input"));
   comp.strokeWeight = 1;
