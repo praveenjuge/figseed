@@ -11,12 +11,16 @@ npm install
 npm run build      # one-shot esbuild → dist/code.js + dist/ui.html
 npm run watch      # rebuild on changes
 npm run typecheck  # tsc --noEmit
+npm test           # vitest run
+npm run test:coverage  # vitest run --coverage (enforces thresholds)
 node scripts/extract-themes.mjs  # regenerate src/data/themes.json from shadcn-ui/
 ```
 
-There are no tests and no linter. After changes, run `npm run typecheck` and
-`npm run build`. Load the plugin in Figma desktop via **Plugins → Development
-→ Import plugin from manifest…** and pick `manifest.json`.
+After changes, run `npm run typecheck`, `npm test`, and `npm run build`. Tests
+live in `test/` (Vitest), mirroring `src/`; the Figma plugin API is faked by
+`test/figma-mock.ts` so the generator and page builders run under Node. There
+is no linter. Load the plugin in Figma desktop via **Plugins → Development →
+Import plugin from manifest…** and pick `manifest.json`.
 
 ## Layout
 

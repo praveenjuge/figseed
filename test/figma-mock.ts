@@ -1,0 +1,279 @@
+// In-memory fake of the slice of the Figma plugin API that figseed touches.
+//
+// Fidelity goal: make assertions about *which* variables/collections exist,
+// their resolved type, their per-mode value, and variable aliasing meaningful.
+// Node geometry and auto-layout are NOT simulated — nodes accept any property
+// assignment and only track parent/child relationships, `resize()` dimensions,
+// and bound variables, which is enough for the generator and the page-builder
+// smoke tests.
+
+import { vi } from "vitest";
+
+let idCounter = 0;
+const nextId = (prefix: string) => `${prefix}-${++idCounter}`;
+
+export type AliasValue = { type: "VARIABLE_ALIAS"; id: string };
+export type ColorValue = { r: number; g: number; b: number; a?: number };
+export type ModeValue = number | string | boolean | ColorValue | AliasValue;
+
+// A permissive node. Any property assignment is accepted at runtime (the code
+// under test sees the real Figma node types via @figma/plugin-typings); we only
+// give real behavior to the handful of methods/relationships we assert on.
+export type FakeNode = {
+  type: string;
+  id: string;
+  name: string;
+  children: FakeNode[];
+  parent: FakeNode | null;
+  boundVariables: Record<string, AliasValue>;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  fills: unknown[];
+  strokes: unknown[];
+  effects: unknown[];
+  appendChild(child: FakeNode): void;
+  insertChild(index: number, child: FakeNode): void;
+  resize(w: number, h: number): void;
+  resizeWithoutConstraints(w: number, h: number): void;
+  setBoundVariable(field: string, variable: { id: string }): void;
+  remove(): void;
+  [key: string]: unknown;
+};
+
+export type FigmaMock = ReturnType<typeof createFigmaMock>;
+
+export function createFigmaMock() {
+  const collections = new Map<string, FakeCollection>();
+  const variables = new Map<string, FakeVariable>();
+
+  class FakeVariable {
+    id = nextId("var");
+    name: string;
+    resolvedType: string;
+    variableCollectionId: string;
+    valuesByMode: Record<string, ModeValue> = {};
+
+    constructor(name: string, type: string, collectionId: string) {
+      this.name = name;
+      this.resolvedType = type;
+      this.variableCollectionId = collectionId;
+    }
+
+    setValueForMode(modeId: string, value: ModeValue) {
+      this.valuesByMode[modeId] = value;
+    }
+
+    // Figma can't change a variable's type after creation, so the generator
+    // removes and recreates. Detach from the store + owning collection.
+    remove() {
+      variables.delete(this.id);
+      const coll = collections.get(this.variableCollectionId);
+      if (coll) {
+        coll.variableIds = coll.variableIds.filter((id) => id !== this.id);
+      }
+    }
+  }
+
+  class FakeCollection {
+    id = nextId("coll");
+    name: string;
+    modes = [{ modeId: nextId("mode"), name: "Mode 1" }];
+    variableIds: string[] = [];
+
+    constructor(name: string) {
+      this.name = name;
+    }
+
+    get defaultModeId() {
+      return this.modes[0]!.modeId;
+    }
+
+    renameMode(modeId: string, name: string) {
+      const mode = this.modes.find((m) => m.modeId === modeId);
+      if (mode) mode.name = name;
+    }
+
+    removeMode(modeId: string) {
+      if (this.modes.length <= 1) {
+        throw new Error("Cannot remove the last mode in a collection.");
+      }
+      this.modes = this.modes.filter((m) => m.modeId !== modeId);
+    }
+
+    // Production assumes the free tier (single mode) and never calls addMode;
+    // mirror that by throwing. Tests that need extra modes use the test-only
+    // helper below to exercise ensureSingleMode's trim branch.
+    addMode(_name: string): string {
+      throw new Error("addMode is not available on the free tier.");
+    }
+
+    __addModeForTest(name: string): string {
+      const mode = { modeId: nextId("mode"), name };
+      this.modes.push(mode);
+      return mode.modeId;
+    }
+  }
+
+  function detach(node: FakeNode) {
+    if (node.parent) {
+      const siblings = node.parent.children;
+      const idx = siblings.indexOf(node);
+      if (idx >= 0) siblings.splice(idx, 1);
+      node.parent = null;
+    }
+  }
+
+  function makeNode(type: string): FakeNode {
+    const node = {
+      type,
+      id: nextId("node"),
+      name: "",
+      children: [] as FakeNode[],
+      parent: null as FakeNode | null,
+      boundVariables: {} as Record<string, AliasValue>,
+      width: 0,
+      height: 0,
+      x: 0,
+      y: 0,
+      fills: [] as unknown[],
+      strokes: [] as unknown[],
+      effects: [] as unknown[],
+      appendChild(child: FakeNode) {
+        detach(child);
+        child.parent = node;
+        node.children.push(child);
+      },
+      insertChild(index: number, child: FakeNode) {
+        detach(child);
+        child.parent = node;
+        node.children.splice(index, 0, child);
+      },
+      resize(w: number, h: number) {
+        node.width = w;
+        node.height = h;
+      },
+      resizeWithoutConstraints(w: number, h: number) {
+        node.width = w;
+        node.height = h;
+      },
+      setBoundVariable(field: string, variable: { id: string }) {
+        node.boundVariables[field] = { type: "VARIABLE_ALIAS", id: variable.id };
+      },
+      remove() {
+        detach(node);
+        const rootIdx = figma.root.children.indexOf(node);
+        if (rootIdx >= 0) figma.root.children.splice(rootIdx, 1);
+      },
+    } as FakeNode;
+    return node;
+  }
+
+  function makeText(): FakeNode {
+    const node = makeNode("TEXT");
+    node.characters = "";
+    node.fontSize = 12;
+    node.fontName = { family: "Inter", style: "Regular" };
+    node.textDecoration = "NONE";
+    return node;
+  }
+
+  const figma = {
+    mixed: Symbol("figma.mixed"),
+
+    variables: {
+      getLocalVariableCollectionsAsync: () =>
+        Promise.resolve([...collections.values()]),
+      createVariableCollection: (name: string) => {
+        const collection = new FakeCollection(name);
+        collections.set(collection.id, collection);
+        return collection;
+      },
+      getVariableByIdAsync: (id: string) =>
+        Promise.resolve(variables.get(id) ?? null),
+      createVariable: (
+        name: string,
+        collection: FakeCollection,
+        type: string,
+      ) => {
+        const variable = new FakeVariable(name, type, collection.id);
+        variables.set(variable.id, variable);
+        collection.variableIds.push(variable.id);
+        return variable;
+      },
+      createVariableAlias: (target: { id: string }): AliasValue => ({
+        type: "VARIABLE_ALIAS",
+        id: target.id,
+      }),
+      setBoundVariableForPaint: (
+        paint: Record<string, unknown>,
+        field: string,
+        variable: { id: string },
+      ) => ({
+        ...paint,
+        boundVariables: {
+          ...((paint.boundVariables as object) ?? {}),
+          [field]: { type: "VARIABLE_ALIAS", id: variable.id },
+        },
+      }),
+      setBoundVariableForEffect: (
+        effect: Record<string, unknown>,
+        field: string,
+        variable: { id: string },
+      ) => ({
+        ...effect,
+        boundVariables: {
+          ...((effect.boundVariables as object) ?? {}),
+          [field]: { type: "VARIABLE_ALIAS", id: variable.id },
+        },
+      }),
+    },
+
+    createFrame: () => makeNode("FRAME"),
+    createText: () => makeText(),
+    createComponent: () => makeNode("COMPONENT"),
+    createRectangle: () => makeNode("RECTANGLE"),
+    createEllipse: () => makeNode("ELLIPSE"),
+    createVector: () => makeNode("VECTOR"),
+    createPage: () => {
+      const page = makeNode("PAGE");
+      figma.root.children.push(page);
+      return page;
+    },
+    createImage: (_bytes: Uint8Array) => ({ hash: nextId("img") }),
+    base64Decode: (_value: string) => new Uint8Array(),
+
+    combineAsVariants: (components: FakeNode[], parent: FakeNode) => {
+      const set = makeNode("COMPONENT_SET");
+      for (const component of components) {
+        detach(component);
+        component.parent = set;
+        set.children.push(component);
+      }
+      if (parent) {
+        set.parent = parent;
+        parent.children.push(set);
+      }
+      return set;
+    },
+
+    loadFontAsync: vi.fn(() => Promise.resolve()),
+    loadAllPagesAsync: vi.fn(() => Promise.resolve()),
+    setCurrentPageAsync: vi.fn((page: FakeNode) => {
+      figma.currentPage = page;
+      return Promise.resolve();
+    }),
+
+    notify: vi.fn(),
+    showUI: vi.fn(),
+    closePlugin: vi.fn(),
+    ui: { postMessage: vi.fn(), onmessage: null as unknown },
+    viewport: { scrollAndZoomIntoView: vi.fn() },
+
+    root: { children: [] as FakeNode[] },
+    currentPage: null as FakeNode | null,
+  };
+
+  return figma;
+}
