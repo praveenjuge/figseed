@@ -61,7 +61,8 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   header.layoutMode = "VERTICAL";
   header.primaryAxisSizingMode = "AUTO";
   header.counterAxisSizingMode = "AUTO";
-  header.itemSpacing = 6;
+  // Mirrors shadcn's CardHeader: `grid gap-2`.
+  header.itemSpacing = 8;
   header.fills = [];
 
   const title = figma.createText();

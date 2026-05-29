@@ -51,7 +51,8 @@ function buildTabsComponent(
   comp.counterAxisSizingMode = "AUTO";
   comp.primaryAxisAlignItems = "CENTER";
   comp.counterAxisAlignItems = "CENTER";
-  comp.itemSpacing = 0;
+  // Mirrors shadcn's TabsList: `gap-1.5` between triggers, `p-[3px]`.
+  comp.itemSpacing = 6;
   comp.paddingLeft = LIST_PADDING;
   comp.paddingRight = LIST_PADDING;
   comp.paddingTop = LIST_PADDING;
@@ -85,8 +86,9 @@ function buildTabTrigger(
   trigger.primaryAxisAlignItems = "CENTER";
   trigger.counterAxisAlignItems = "CENTER";
   trigger.resize(96, LIST_HEIGHT - LIST_PADDING * 2);
-  trigger.paddingLeft = 12;
-  trigger.paddingRight = 12;
+  // Mirrors shadcn's TabsTrigger: `px-2 py-1 text-sm font-medium`.
+  trigger.paddingLeft = 8;
+  trigger.paddingRight = 8;
   trigger.paddingTop = 4;
   trigger.paddingBottom = 4;
   trigger.cornerRadius = 6;

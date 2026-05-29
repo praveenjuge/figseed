@@ -1,6 +1,10 @@
 // Public types and shared layout constants for the Components page.
 
-import type { PrimitiveVariableMap, ThemeVariableMaps } from "../generator";
+import type {
+  PrimitiveVariableMap,
+  TailwindColorVarMap,
+  ThemeVariableMaps,
+} from "../generator";
 
 export const PAGE_NAME = "Components";
 export const SECTION_GAP = 32;
@@ -12,6 +16,7 @@ export type ComponentsInputs = {
   presetCode: string;
   presetSummary?: Record<string, string | undefined>;
   primitives: PrimitiveVariableMap;
+  tailwindColors: TailwindColorVarMap;
   theme: ThemeVariableMaps;
   onProgress?: (current: number, total: number, label: string) => void;
 };

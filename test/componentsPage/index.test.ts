@@ -13,6 +13,7 @@ async function makeInputs(code = "b2fA"): Promise<ComponentsInputs> {
   return {
     presetCode: code,
     primitives: generated.variables.primitives,
+    tailwindColors: generated.variables.tailwindColors,
     theme: generated.variables.theme,
   };
 }

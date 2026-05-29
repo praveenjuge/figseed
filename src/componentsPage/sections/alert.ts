@@ -82,7 +82,9 @@ function buildAlertComponent(
   comp.appendChild(row);
   row.layoutSizingHorizontal = "FILL";
 
-  // Icon placeholder — a small filled square.
+  // Icon placeholder — a small filled square. shadcn's alert SVG inherits
+  // the alert's `text-current` colour (card-foreground for default,
+  // destructive for destructive variant).
   const icon = figma.createFrame();
   icon.name = "Icon";
   icon.resize(16, 16);
@@ -91,7 +93,7 @@ function buildAlertComponent(
   if (variant === "destructive") {
     bindFill(icon, t.get("destructive"));
   } else {
-    bindFill(icon, t.get("foreground"));
+    bindFill(icon, t.get("card-foreground"));
   }
   row.appendChild(icon);
 

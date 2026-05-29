@@ -8,6 +8,7 @@ function emptyInputs(): ComponentsInputs {
   return {
     presetCode: "test",
     primitives: new Map(),
+    tailwindColors: new Map(),
     theme: { light: new Map(), dark: new Map() },
   };
 }
@@ -15,24 +16,26 @@ function emptyInputs(): ComponentsInputs {
 type FakeNode = { type: string; name: string; children: FakeNode[] };
 
 describe("addButtonSection", () => {
-  it("builds a 6x5 variant matrix combined into one component set", async () => {
-    const figma = (globalThis as { figma: { createPage: () => FakeNode } }).figma;
+  it("builds a 6x8 variant matrix combined into one component set", async () => {
+    const figma = (globalThis as { figma: { createPage: () => FakeNode } })
+      .figma;
     const page = figma.createPage();
 
     const count = await addButtonSection(page as never, emptyInputs());
 
-    // 30 components, each wrapping a label => 1 set + 30*(1 + 1) descendants.
-    expect(count).toBe(61);
+    // 48 components, each wrapping a label => 1 set + 48*(1 + 1) descendants.
+    expect(count).toBe(97);
 
     expect(page.children).toHaveLength(1);
     const set = page.children[0]!;
     expect(set.type).toBe("COMPONENT_SET");
     expect(set.name).toBe("Button");
-    expect(set.children).toHaveLength(30);
+    expect(set.children).toHaveLength(48);
   });
 
   it("names variants with the Figma Variant=…, Size=… convention", async () => {
-    const figma = (globalThis as { figma: { createPage: () => FakeNode } }).figma;
+    const figma = (globalThis as { figma: { createPage: () => FakeNode } })
+      .figma;
     const page = figma.createPage();
     await addButtonSection(page as never, emptyInputs());
 
@@ -40,5 +43,7 @@ describe("addButtonSection", () => {
     const names = set.children.map((c) => c.name);
     expect(names).toContain("Variant=default, Size=icon");
     expect(names).toContain("Variant=link, Size=lg");
+    expect(names).toContain("Variant=outline, Size=icon-xs");
+    expect(names).toContain("Variant=secondary, Size=icon-lg");
   });
 });

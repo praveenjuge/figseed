@@ -37,17 +37,17 @@ function buildBreadcrumbComponent(inputs: ComponentsInputs): ComponentNode {
   comp.counterAxisSizingMode = "AUTO";
   comp.primaryAxisAlignItems = "CENTER";
   comp.counterAxisAlignItems = "CENTER";
-  comp.itemSpacing = 8;
+  // Mirrors shadcn's BreadcrumbList: `flex items-center gap-1.5 text-sm`.
+  comp.itemSpacing = 6;
   comp.fills = [];
   comp.strokes = [];
 
   for (let i = 0; i < CRUMBS.length; i++) {
     const crumb = CRUMBS[i]!;
     const label = figma.createText();
-    label.fontName =
-      crumb.kind === "page"
-        ? { family: "Inter", style: "Medium" }
-        : { family: "Inter", style: "Regular" };
+    // Both links and the current page render as regular weight; only the
+    // colour distinguishes them (BreadcrumbPage is `font-normal text-foreground`).
+    label.fontName = { family: "Inter", style: "Regular" };
     label.characters = crumb.label;
     label.fontSize = 14;
     bindFontSize(label, p.get("font/size/sm"));

@@ -1,6 +1,6 @@
 // Avatar: circular initials/image placeholder. Three sizes × two kinds.
 
-import { bindCornerRadii, bindFill } from "../bindings";
+import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
 import { styleComponentSet } from "../layout";
 import { SECTION_WIDTH, type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -11,10 +11,15 @@ type AvatarSize = (typeof AVATAR_SIZES)[number];
 const AVATAR_KINDS = ["image", "fallback"] as const;
 type AvatarKind = (typeof AVATAR_KINDS)[number];
 
-const AVATAR_DIMS: Record<AvatarSize, { size: number; fontSize: number }> = {
-  sm: { size: 24, fontSize: 10 },
-  default: { size: 32, fontSize: 12 },
-  lg: { size: 40, fontSize: 14 },
+// Mirrors shadcn's Avatar (radix-ui primitive): size-8 default, size-6 sm,
+// size-10 lg. Fallback text uses text-sm by default (text-xs for sm).
+const AVATAR_DIMS: Record<
+  AvatarSize,
+  { size: number; fontSize: number; fontToken: string }
+> = {
+  sm: { size: 24, fontSize: 12, fontToken: "font/size/xs" },
+  default: { size: 32, fontSize: 14, fontToken: "font/size/sm" },
+  lg: { size: 40, fontSize: 14, fontToken: "font/size/sm" },
 };
 
 export async function addAvatarSection(
@@ -71,9 +76,10 @@ function buildAvatarComponent(
   }
 
   const initials = figma.createText();
-  initials.fontName = { family: "Inter", style: "Semi Bold" };
+  initials.fontName = { family: "Inter", style: "Regular" };
   initials.characters = kind === "image" ? "PJ" : "JD";
   initials.fontSize = dims.fontSize;
+  bindFontSize(initials, p.get(dims.fontToken));
 
   if (kind === "image") {
     bindFill(initials, t.get("primary-foreground"));

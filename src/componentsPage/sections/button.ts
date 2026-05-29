@@ -20,8 +20,26 @@ const BUTTON_VARIANTS = [
 ] as const;
 type ButtonVariant = (typeof BUTTON_VARIANTS)[number];
 
-const BUTTON_SIZES = ["xs", "sm", "default", "lg", "icon"] as const;
+const BUTTON_SIZES = [
+  "xs",
+  "sm",
+  "default",
+  "lg",
+  "icon-xs",
+  "icon-sm",
+  "icon",
+  "icon-lg",
+] as const;
 type ButtonSize = (typeof BUTTON_SIZES)[number];
+
+function isIconSize(size: ButtonSize): boolean {
+  return (
+    size === "icon" ||
+    size === "icon-xs" ||
+    size === "icon-sm" ||
+    size === "icon-lg"
+  );
+}
 
 export async function addButtonSection(
   page: PageNode,
@@ -69,11 +87,13 @@ function buildButtonComponent(
   comp.layoutMode = "HORIZONTAL";
   comp.primaryAxisAlignItems = "CENTER";
   comp.counterAxisAlignItems = "CENTER";
-  comp.itemSpacing = 8;
+  // Mirrors shadcn's per-size gap: `gap-1` (xs), `gap-1.5` (sm), `gap-2`
+  // (default + lg).
+  comp.itemSpacing = size === "xs" ? 4 : size === "sm" ? 6 : 8;
   comp.fills = [];
   comp.strokes = [];
 
-  if (size === "icon") {
+  if (isIconSize(size)) {
     comp.primaryAxisSizingMode = "FIXED";
     comp.counterAxisSizingMode = "FIXED";
     comp.resize(dims.height, dims.height);
@@ -95,13 +115,15 @@ function buildButtonComponent(
   // Label text.
   const label = figma.createText();
   label.fontName = { family: "Inter", style: "Medium" };
-  label.characters = size === "icon" ? "★" : "Button";
-  label.fontSize = size === "xs" ? 12 : 14;
+  label.characters = isIconSize(size) ? "★" : "Button";
+  label.fontSize = size === "xs" || size === "icon-xs" ? 12 : 14;
   bindFontSize(
     label,
-    size === "xs" ? p.get("font/size/xs") : p.get("font/size/sm"),
+    size === "xs" || size === "icon-xs"
+      ? p.get("font/size/xs")
+      : p.get("font/size/sm"),
   );
-  applyButtonLabelColor(label, variant, t);
+  applyButtonLabelColor(label, variant, t, inputs.tailwindColors);
   if (variant === "link") {
     label.textDecoration = "UNDERLINE";
   }
@@ -113,6 +135,8 @@ function buildButtonComponent(
 type ButtonDims = { height: number; paddingX: number; paddingY: number };
 
 function buttonDimensions(size: ButtonSize): ButtonDims {
+  // Mirrors shadcn's button size CVA: heights map to Tailwind h-* utilities;
+  // the icon-* sizes are square (size-N).
   switch (size) {
     case "xs":
       return { height: 24, paddingX: 8, paddingY: 4 };
@@ -122,8 +146,14 @@ function buttonDimensions(size: ButtonSize): ButtonDims {
       return { height: 36, paddingX: 16, paddingY: 8 };
     case "lg":
       return { height: 40, paddingX: 24, paddingY: 8 };
+    case "icon-xs":
+      return { height: 24, paddingX: 0, paddingY: 0 };
+    case "icon-sm":
+      return { height: 32, paddingX: 0, paddingY: 0 };
     case "icon":
       return { height: 36, paddingX: 0, paddingY: 0 };
+    case "icon-lg":
+      return { height: 40, paddingX: 0, paddingY: 0 };
   }
 }
 
@@ -160,6 +190,7 @@ function applyButtonLabelColor(
   node: TextNode,
   variant: ButtonVariant,
   t: Map<string, Variable>,
+  tw: Map<string, Variable>,
 ) {
   switch (variant) {
     case "default":
@@ -169,7 +200,9 @@ function applyButtonLabelColor(
       bindFill(node, t.get("secondary-foreground"));
       break;
     case "destructive":
-      bindFill(node, t.get("destructive-foreground"));
+      // shadcn v4 hard-codes `text-white` on destructive (it doesn't use
+      // destructive-foreground), so alias to the Tailwind white variable.
+      bindFill(node, tw.get("white"));
       break;
     case "outline":
     case "ghost":

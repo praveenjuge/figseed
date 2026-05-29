@@ -74,7 +74,9 @@ function buildSelectComponent(
   value.characters = "Select a fruit";
   value.fontSize = 14;
   bindFontSize(value, p.get("font/size/sm"));
-  bindFill(value, t.get("foreground"));
+  // Placeholder state in shadcn renders the value in muted-foreground via
+  // `data-[placeholder]:text-muted-foreground`.
+  bindFill(value, t.get("muted-foreground"));
   comp.appendChild(value);
 
   comp.appendChild(buildChevronDown(t));

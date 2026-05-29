@@ -77,6 +77,7 @@ async function handleGenerate(rawCode: string) {
     const components = await buildComponentsPage({
       presetCode: result.presetCode,
       presetSummary,
+      tailwindColors: result.variables.tailwindColors,
       primitives: result.variables.primitives,
       theme: result.variables.theme,
       onProgress: (current, total, label) => {

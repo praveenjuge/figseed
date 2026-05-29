@@ -49,7 +49,8 @@ function buildTooltipComponent(inputs: ComponentsInputs): ComponentNode {
   bubble.strokes = [];
 
   const text = figma.createText();
-  text.fontName = { family: "Inter", style: "Medium" };
+  // shadcn TooltipContent uses `text-xs` with no explicit weight (Regular).
+  text.fontName = { family: "Inter", style: "Regular" };
   text.characters = "Add to library";
   text.fontSize = 12;
   bindFontSize(text, p.get("font/size/xs"));

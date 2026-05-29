@@ -116,7 +116,9 @@ function buildAccordionItem(
     content.characters = data.body;
     content.fontSize = 14;
     bindFontSize(content, p.get("font/size/sm"));
-    bindFill(content, t.get("muted-foreground"));
+    // shadcn AccordionContent inherits text colour from its parent (the
+    // root has no explicit colour either), which resolves to `foreground`.
+    bindFill(content, t.get("foreground"));
     content.paragraphSpacing = 0;
     // shadcn renders the open content with bottom padding (`pb-4`).
     const wrapper = figma.createFrame();

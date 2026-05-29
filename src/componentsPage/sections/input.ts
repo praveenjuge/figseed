@@ -48,19 +48,21 @@ function buildInputComponent(
   comp.primaryAxisAlignItems = "MIN";
   comp.counterAxisAlignItems = "CENTER";
   comp.resize(280, 36);
+  // Mirrors shadcn's Input: `h-9 px-3 py-1`.
   comp.paddingLeft = 12;
   comp.paddingRight = 12;
-  comp.paddingTop = 8;
-  comp.paddingBottom = 8;
+  comp.paddingTop = 4;
+  comp.paddingBottom = 4;
   comp.cornerRadius = 6;
   bindCornerRadii(comp, p.get("radius/md"));
   bindFill(comp, t.get("background"));
 
-  // Border per state.
+  // Border per state. Focus uses a 1px ring border + the focus ring shadow;
+  // invalid keeps the 1px border and only swaps the colour to destructive.
   switch (state) {
     case "focused":
       bindStrokeColor(comp, t.get("ring"));
-      comp.strokeWeight = 2;
+      comp.strokeWeight = 1;
       comp.effects = [
         {
           type: "DROP_SHADOW",
@@ -76,7 +78,7 @@ function buildInputComponent(
       break;
     case "invalid":
       bindStrokeColor(comp, t.get("destructive"));
-      comp.strokeWeight = 2;
+      comp.strokeWeight = 1;
       break;
     default:
       bindStrokeColor(comp, t.get("input"));

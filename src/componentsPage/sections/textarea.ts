@@ -66,7 +66,7 @@ function buildTextareaComponent(
   switch (state) {
     case "focused":
       bindStrokeColor(comp, t.get("ring"));
-      comp.strokeWeight = 2;
+      comp.strokeWeight = 1;
       comp.effects = [
         {
           type: "DROP_SHADOW",
@@ -82,7 +82,7 @@ function buildTextareaComponent(
       break;
     case "invalid":
       bindStrokeColor(comp, t.get("destructive"));
-      comp.strokeWeight = 2;
+      comp.strokeWeight = 1;
       break;
     default:
       bindStrokeColor(comp, t.get("input"));

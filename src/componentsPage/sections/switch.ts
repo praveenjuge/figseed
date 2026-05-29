@@ -14,10 +14,12 @@ type SwitchState = (typeof SWITCH_STATES)[number];
 const SWITCH_SIZES = ["sm", "default"] as const;
 type SwitchSize = (typeof SWITCH_SIZES)[number];
 
+// Mirrors shadcn's Switch: default `w-8 h-[1.15rem]` (32×~18.4) with a
+// size-4 thumb; sm `w-6 h-3.5` (24×14) with a size-3 thumb.
 const SWITCH_DIMS: Record<SwitchSize, { w: number; h: number; thumb: number }> =
   {
-    sm: { w: 28, h: 16, thumb: 12 },
-    default: { w: 36, h: 20, thumb: 16 },
+    sm: { w: 24, h: 14, thumb: 12 },
+    default: { w: 32, h: 18, thumb: 16 },
   };
 
 export async function addSwitchSection(
@@ -76,10 +78,12 @@ function buildSwitchComponent(
   bindFill(thumb, t.get("background"));
   const yOffset = (dims.h - dims.thumb) / 2;
   thumb.y = yOffset;
+  // shadcn translates the thumb by `calc(100%-2px)` when checked and 0
+  // otherwise, leaving the thumb at the track's left edge in the off state.
   if (state === "True") {
     thumb.x = dims.w - dims.thumb - 2;
   } else {
-    thumb.x = 2;
+    thumb.x = 0;
   }
   thumb.effects = [
     {

@@ -15,6 +15,8 @@ const BADGE_VARIANTS = [
   "secondary",
   "destructive",
   "outline",
+  "ghost",
+  "link",
 ] as const;
 type BadgeVariant = (typeof BADGE_VARIANTS)[number];
 
@@ -52,11 +54,12 @@ function buildBadgeComponent(
   comp.counterAxisSizingMode = "AUTO";
   comp.primaryAxisAlignItems = "CENTER";
   comp.counterAxisAlignItems = "CENTER";
+  // Mirrors shadcn's Badge: `px-2 py-0.5 text-xs font-medium rounded-full`.
   comp.itemSpacing = 4;
-  comp.paddingLeft = 10;
-  comp.paddingRight = 10;
-  comp.paddingTop = 4;
-  comp.paddingBottom = 4;
+  comp.paddingLeft = 8;
+  comp.paddingRight = 8;
+  comp.paddingTop = 2;
+  comp.paddingBottom = 2;
   comp.cornerRadius = 9999;
   bindCornerRadii(comp, p.get("radius/full"));
   comp.fills = [];
@@ -76,6 +79,11 @@ function buildBadgeComponent(
       bindStrokeColor(comp, t.get("border"));
       comp.strokeWeight = 1;
       break;
+    case "ghost":
+    case "link":
+      // `ghost` and `link` have no resting background; they only differ in
+      // hover/underline behaviour, which doesn't translate to Figma.
+      break;
   }
 
   const label = figma.createText();
@@ -92,10 +100,16 @@ function buildBadgeComponent(
       bindFill(label, t.get("secondary-foreground"));
       break;
     case "destructive":
-      bindFill(label, t.get("destructive-foreground"));
+      // shadcn v4 uses `text-white` on destructive (not destructive-foreground).
+      bindFill(label, inputs.tailwindColors.get("white"));
       break;
     case "outline":
+    case "ghost":
       bindFill(label, t.get("foreground"));
+      break;
+    case "link":
+      bindFill(label, t.get("primary"));
+      label.textDecoration = "UNDERLINE";
       break;
   }
 
