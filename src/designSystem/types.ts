@@ -27,7 +27,10 @@ export type DesignSystemResult = { nodeCount: number };
 
 // Each entry corresponds to one top-level section frame on the page. Adding
 // a section here also extends the progress total reported to the UI.
+// `column` pins the section to a specific column in the two-column layout so
+// related sections (e.g. all the color sections) stay grouped together.
 export type SectionBuilder = {
   label: string;
+  column: 0 | 1;
   build: (page: PageNode, inputs: DesignSystemInputs) => Promise<number>;
 };

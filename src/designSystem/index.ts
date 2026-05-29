@@ -18,6 +18,7 @@ import { addTypography } from "./sections/typography";
 import {
   PAGE_NAME,
   SECTION_GAP,
+  SECTION_WIDTH,
   type DesignSystemInputs,
   type DesignSystemResult,
   type SectionBuilder,
@@ -27,19 +28,29 @@ import { loadCommonFonts } from "./utils";
 export type { DesignSystemInputs, DesignSystemResult } from "./types";
 
 const SECTIONS: SectionBuilder[] = [
-  { label: "Header", build: addHeader },
-  { label: "Theme · Light", build: (p, i) => addThemeSection(p, i, "light") },
-  { label: "Theme · Dark", build: (p, i) => addThemeSection(p, i, "dark") },
-  { label: "Tailwind palette", build: addTailwindPalette },
-  { label: "Border radius", build: addRadiusScale },
-  { label: "Spacing scale", build: addSpacingScale },
-  { label: "Border widths", build: addBorderWidthScale },
-  { label: "Box shadows", build: addBoxShadows },
-  { label: "Blur & backdrop", build: addBlurAndBackdrop },
-  { label: "Opacity scale", build: addOpacityScale },
+  // Left column: the color-related sections, grouped together.
+  { label: "Header", column: 0, build: addHeader },
+  {
+    label: "Theme · Light",
+    column: 0,
+    build: (p, i) => addThemeSection(p, i, "light"),
+  },
+  {
+    label: "Theme · Dark",
+    column: 0,
+    build: (p, i) => addThemeSection(p, i, "dark"),
+  },
+  { label: "Tailwind palette", column: 0, build: addTailwindPalette },
+  { label: "Spacing scale", column: 0, build: addSpacingScale },
+  // Right column: the non-color scales and tokens.
+  { label: "Border radius", column: 1, build: addRadiusScale },
+  { label: "Border widths", column: 1, build: addBorderWidthScale },
+  { label: "Box shadows", column: 1, build: addBoxShadows },
+  { label: "Blur & backdrop", column: 1, build: addBlurAndBackdrop },
+  { label: "Opacity scale", column: 1, build: addOpacityScale },
   // Typography last — its many subsections make it the tallest panel and
   // having it at the bottom keeps the rest of the page scannable.
-  { label: "Typography", build: addTypography },
+  { label: "Typography", column: 1, build: addTypography },
 ];
 
 export async function buildDesignSystem(
@@ -77,8 +88,9 @@ export async function buildDesignSystem(
   }
   inputs.onProgress?.(total, total, "Done");
 
-  // Lay out the section frames in a single vertical stack down the page.
-  layoutSectionsVertically(page);
+  // Lay out the section frames across two columns, keeping each section in
+  // its assigned column (all color sections stay together).
+  layoutSectionsInColumns(page);
 
   // Move the user to the page and frame the result.
   await figma.setCurrentPageAsync(page);
@@ -90,13 +102,29 @@ export async function buildDesignSystem(
   return { nodeCount: count };
 }
 
-function layoutSectionsVertically(page: PageNode) {
-  let y = 0;
-  for (const child of page.children) {
-    if (!("x" in child)) continue;
-    (child as SceneNode & { x: number; y: number }).x = 0;
-    (child as SceneNode & { x: number; y: number }).y = y;
-    const height = (child as SceneNode & { height: number }).height ?? 0;
-    y += height + SECTION_GAP;
-  }
+function layoutSectionsInColumns(page: PageNode) {
+  const COLUMN_COUNT = 2;
+  // Track the running height (next free y) of each column so sections stack
+  // top-to-bottom within their assigned column.
+  const columnHeights = new Array<number>(COLUMN_COUNT).fill(0);
+
+  // page.children mirrors the SECTIONS order, since each builder appends
+  // exactly one top-level frame in sequence. Use that to read each section's
+  // pinned column.
+  page.children.forEach((child, index) => {
+    if (!("x" in child)) return;
+    const node = child as SceneNode & {
+      x: number;
+      y: number;
+      height: number;
+    };
+
+    const target = SECTIONS[index]?.column ?? 0;
+
+    node.x = target * (SECTION_WIDTH + SECTION_GAP);
+    node.y = columnHeights[target]!;
+
+    const height = node.height ?? 0;
+    columnHeights[target] = columnHeights[target]! + height + SECTION_GAP;
+  });
 }
