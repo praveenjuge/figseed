@@ -19,11 +19,6 @@ post({ type: "ready", command: figma.command || undefined });
 figma.ui.onmessage = async (message: UiToPlugin) => {
   if (!message || typeof message !== "object") return;
 
-  if (message.type === "cancel") {
-    figma.closePlugin();
-    return;
-  }
-
   if (message.type === "generate") {
     await handleGenerate(message.presetCode);
   }

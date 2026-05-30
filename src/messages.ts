@@ -1,8 +1,6 @@
 // Message contract between the Figma plugin sandbox (code.ts) and UI (ui.ts).
 
-export type UiToPlugin =
-  | { type: "generate"; presetCode: string }
-  | { type: "cancel" };
+export type UiToPlugin = { type: "generate"; presetCode: string };
 
 export type PluginToUi =
   | { type: "ready"; command?: string }
