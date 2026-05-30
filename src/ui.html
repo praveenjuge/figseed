@@ -8,13 +8,15 @@
       :root {
         color-scheme: light dark;
         --bg: var(--figma-color-bg, #ffffff);
-        --fg: var(--figma-color-text, #1d1d1d);
-        --muted: var(--figma-color-text-secondary, #6f6f6f);
-        --border: var(--figma-color-border, #e5e5e5);
+        --bg-hover: var(--figma-color-bg-hover, rgba(0, 0, 0, 0.06));
+        --bg-secondary: var(--figma-color-bg-secondary, #f5f5f5);
+        --fg: var(--figma-color-text, #1e1e1e);
+        --muted: var(--figma-color-text-secondary, #8c8c8c);
+        --border: var(--figma-color-border, #e6e6e6);
+        --border-strong: var(--figma-color-border-strong, #cdcdcd);
         --accent: var(--figma-color-bg-brand, #0d99ff);
         --accent-fg: var(--figma-color-text-onbrand, #ffffff);
-        --danger: var(--figma-color-text-danger, #b3261e);
-        --input-bg: var(--figma-color-bg-secondary, #f5f5f5);
+        --danger: var(--figma-color-text-danger, #e03e3e);
       }
       * {
         box-sizing: border-box;
@@ -31,77 +33,147 @@
           BlinkMacSystemFont,
           "Segoe UI",
           sans-serif;
-        font-size: 12px;
+        font-size: 11px;
+        line-height: 16px;
         color: var(--fg);
         background: var(--bg);
         display: flex;
         flex-direction: column;
+        -webkit-font-smoothing: antialiased;
       }
       main {
-        padding: 16px;
+        padding: 12px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
         flex: 1;
+      }
+      header {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
       }
       h1 {
         margin: 0;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
       }
       p.subtitle {
         margin: 0;
         color: var(--muted);
-        line-height: 1.4;
       }
-      label {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        font-weight: 500;
-      }
+
+      /* Input */
       input[type="text"] {
-        height: 32px;
-        padding: 0 10px;
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        background: var(--input-bg);
+        width: 100%;
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid transparent;
+        border-radius: 5px;
+        background: var(--bg-secondary);
         color: var(--fg);
         font: inherit;
         outline: none;
+        transition: border-color 80ms ease;
+      }
+      input[type="text"]:hover {
+        border-color: var(--border-strong);
       }
       input[type="text"]:focus {
         border-color: var(--accent);
+        background: var(--bg);
       }
-      .actions {
+      input[type="text"]::placeholder {
+        color: var(--muted);
+      }
+
+      /* Section blocks */
+      .field {
         display: flex;
-        gap: 8px;
-        margin-top: auto;
+        flex-direction: column;
+        gap: 6px;
       }
-      button {
-        height: 32px;
-        padding: 0 12px;
-        border-radius: 6px;
+      .field-label {
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .field-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* Icon button (shuffle) */
+      .icon-button {
+        appearance: none;
+        height: 22px;
+        padding: 0 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         border: 1px solid var(--border);
-        background: transparent;
+        border-radius: 5px;
+        background: var(--bg);
         color: var(--fg);
         font: inherit;
+        font-weight: 500;
         cursor: pointer;
+        transition:
+          background 80ms ease,
+          border-color 80ms ease;
       }
-      button.primary {
-        background: var(--accent);
-        border-color: var(--accent);
-        color: var(--accent-fg);
-        flex: 1;
+      .icon-button:hover:not(:disabled) {
+        background: var(--bg-hover);
+        border-color: var(--border-strong);
       }
-      button.primary:disabled {
-        opacity: 0.6;
-        cursor: progress;
+      .icon-button:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+
+      /* Preset chips */
+      .presets-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .preset-badge {
+        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--fg);
+        font: inherit;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+          border-color 80ms ease,
+          background 80ms ease;
+      }
+      .preset-badge:hover:not(:disabled) {
+        border-color: var(--border-strong);
+        background: var(--bg-hover);
+      }
+      .preset-badge:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+
+      /* Footer / actions */
+      footer {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
       }
       .status {
         min-height: 16px;
         color: var(--muted);
-        line-height: 1.4;
         word-break: break-word;
       }
       .status.error {
@@ -111,8 +183,8 @@
         color: var(--fg);
       }
       .progress {
-        height: 4px;
-        background: var(--input-bg);
+        height: 2px;
+        background: var(--bg-secondary);
         border-radius: 999px;
         overflow: hidden;
         opacity: 0;
@@ -141,71 +213,47 @@
           transform: translateX(300%);
         }
       }
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+      button.btn {
+        appearance: none;
+        height: 32px;
+        padding: 0 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border-strong);
+        background: var(--bg);
+        color: var(--fg);
+        font: inherit;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 80ms ease;
+      }
+      button.btn:hover:not(:disabled) {
+        background: var(--bg-hover);
+      }
+      button.btn.primary {
+        flex: 1;
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-fg);
+      }
+      button.btn.primary:hover:not(:disabled) {
+        filter: brightness(0.94);
+        background: var(--accent);
+      }
+      button.btn.primary:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+
       a {
         color: var(--accent);
         text-decoration: none;
       }
       a:hover {
         text-decoration: underline;
-      }
-      .presets {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      .presets-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-      .presets-label {
-        font-weight: 500;
-        color: var(--fg);
-      }
-      .shuffle {
-        height: 24px;
-        padding: 0 10px;
-        font-size: 11px;
-        font-weight: 600;
-        line-height: 1;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-      }
-      .shuffle:hover:not(:disabled) {
-        border-color: var(--accent);
-      }
-      .shuffle:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-      .presets-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-      .preset-badge {
-        display: inline-flex;
-        align-items: center;
-        height: 20px;
-        padding: 0 8px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: var(--input-bg);
-        color: var(--fg);
-        font: inherit;
-        font-size: 11px;
-        font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-      }
-      .preset-badge:hover:not(:disabled) {
-        border-color: var(--accent);
-      }
-      .preset-badge:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
       }
     </style>
   </head>
@@ -218,12 +266,11 @@
           <a href="https://ui.shadcn.com/create" target="_blank" rel="noopener"
             >shadcn preset</a
           >
-          code to generate Tailwind colors, primitives, and theme variables.
+          code to generate theme variables.
         </p>
       </header>
 
-      <label for="preset">
-        Preset code
+      <div class="field">
         <input
           id="preset"
           type="text"
@@ -231,27 +278,29 @@
           autocomplete="off"
           spellcheck="false"
         />
-      </label>
+      </div>
 
-      <div class="presets" id="presets">
-        <div class="presets-header">
-          <span class="presets-label">Presets</span>
-          <button id="shuffle" type="button" class="shuffle">🎲 Shuffle</button>
+      <div class="field" id="presets">
+        <div class="field-head">
+          <span class="field-label">Presets</span>
+          <button id="shuffle" type="button" class="icon-button">
+            🎲 Shuffle
+          </button>
         </div>
         <div class="presets-list" id="presets-list"></div>
       </div>
 
-      <div id="status" class="status"></div>
-      <div id="progress" class="progress" aria-hidden="true">
-        <span class="bar"></span>
-      </div>
-
-      <div class="actions">
-        <button id="cancel" type="button">Close</button>
-        <button id="generate" class="primary" type="button" disabled>
-          Generate
-        </button>
-      </div>
+      <footer>
+        <div id="status" class="status"></div>
+        <div id="progress" class="progress" aria-hidden="true">
+          <span class="bar"></span>
+        </div>
+        <div class="actions">
+          <button id="generate" class="btn primary" type="button" disabled>
+            Generate
+          </button>
+        </div>
+      </footer>
     </main>
     <!-- INJECT_UI_SCRIPT -->
   </body>

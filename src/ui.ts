@@ -8,7 +8,6 @@ import type { PluginToUi, UiToPlugin } from "./messages";
 
 const input = document.getElementById("preset") as HTMLInputElement;
 const generateButton = document.getElementById("generate") as HTMLButtonElement;
-const cancelButton = document.getElementById("cancel") as HTMLButtonElement;
 const shuffleButton = document.getElementById("shuffle") as HTMLButtonElement;
 const status = document.getElementById("status") as HTMLDivElement;
 const progress = document.getElementById("progress") as HTMLDivElement;
@@ -121,10 +120,6 @@ generateButton.addEventListener("click", () => {
     return;
   }
   runPreset(presetCode);
-});
-
-cancelButton.addEventListener("click", () => {
-  postToPlugin({ type: "cancel" });
 });
 
 shuffleButton.addEventListener("click", () => {
