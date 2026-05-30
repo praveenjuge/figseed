@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { applyFont, loadPresetFonts, resetActiveFonts } from "../src/fonts";
+import {
+  applyFont,
+  loadFontFamilies,
+  loadPresetFonts,
+  resetActiveFonts,
+  setActiveFonts,
+  type FontContext,
+} from "../src/fonts";
 
 type Spy = { mock: { calls: Array<[{ family: string; style: string }]> } };
 
@@ -19,6 +26,44 @@ function makeVar(): Variable {
 
 afterEach(() => {
   resetActiveFonts();
+});
+
+describe("loadFontFamilies", () => {
+  it("records only the families/weights that load successfully", async () => {
+    // Make Inter fail to load but Geist succeed; the failure callback (skip)
+    // must keep Inter out of the result without rejecting the whole load.
+    const original = figma.loadFontAsync;
+    (figma as unknown as { loadFontAsync: unknown }).loadFontAsync = (font: {
+      family: string;
+      style: string;
+    }) =>
+      font.family === "Inter"
+        ? Promise.reject(new Error("unavailable"))
+        : Promise.resolve();
+    try {
+      const loaded = await loadFontFamilies(["Geist", "Inter", ""]);
+      expect(loaded.has("Geist\u0000Regular")).toBe(true);
+      expect(loaded.has("Inter\u0000Regular")).toBe(false);
+    } finally {
+      (figma as unknown as { loadFontAsync: unknown }).loadFontAsync = original;
+    }
+  });
+});
+
+describe("setActiveFonts", () => {
+  it("activates a context that applyFont then reads", () => {
+    const context: FontContext = {
+      body: "Geist",
+      heading: "Geist",
+      bodyVar: undefined,
+      headingVar: undefined,
+      loaded: new Set(["Geist\u0000Regular"]),
+    };
+    setActiveFonts(context);
+    const node = figma.createText();
+    applyFont(node, "body", "Regular");
+    expect(node.fontName).toEqual({ family: "Geist", style: "Regular" });
+  });
 });
 
 describe("loadPresetFonts", () => {
@@ -133,5 +178,26 @@ describe("applyFont", () => {
       }
     ).boundVariables;
     expect(bound.fontFamily).toBeUndefined();
+  });
+
+  it("swallows a setBoundVariable error and keeps the literal font", () => {
+    const bodyVar = makeVar();
+    const node = figma.createText();
+    // Some hosts reject fontFamily binding — simulate a throw and assert the
+    // literal font survives (the catch leaves node.fontName in place).
+    (node as unknown as { setBoundVariable: () => void }).setBoundVariable =
+      () => {
+        throw new Error("binding rejected");
+      };
+    expect(() =>
+      applyFont(node, "body", "Regular", {
+        body: "Geist",
+        heading: "Geist",
+        bodyVar,
+        headingVar: undefined,
+        loaded: new Set(["Geist\u0000Regular"]),
+      }),
+    ).not.toThrow();
+    expect(node.fontName).toEqual({ family: "Geist", style: "Regular" });
   });
 });

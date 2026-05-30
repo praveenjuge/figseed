@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   generateRandomResolvablePreset,
   isBaseColor,
@@ -7,6 +7,8 @@ import {
   resolvePreset,
 } from "../src/registry";
 import { decodePreset } from "../src/preset";
+import * as presetModule from "../src/preset";
+import type { PresetConfig } from "../src/preset";
 import {
   CHART_OVERRIDE_CODE,
   MENU_BOLD_CODE,
@@ -153,6 +155,44 @@ describe("generateRandomResolvablePreset", () => {
       const code = generateRandomResolvablePreset();
       const result = resolvePreset(code);
       expect(result.ok, code).toBe(true);
+    }
+  });
+
+  it("pins color fields when every random roll is unresolvable", () => {
+    // Force the rare fallback path: stub the shuffle so it only ever returns a
+    // config whose colors (baseColor/theme/chartColor) all land on the missing
+    // "gray" family. After MAX_ATTEMPTS failed rolls the function must pin the
+    // color fields to known-good values and still emit a resolvable code.
+    const grayConfig: PresetConfig = {
+      style: "nova",
+      baseColor: "gray",
+      theme: "gray",
+      chartColor: "gray",
+      iconLibrary: "lucide",
+      font: "inter",
+      fontHeading: "inherit",
+      radius: "default",
+      menuAccent: "subtle",
+      menuColor: "default",
+    };
+    const spy = vi
+      .spyOn(presetModule, "generateRandomConfig")
+      .mockReturnValue({ ...grayConfig });
+    try {
+      const code = generateRandomResolvablePreset();
+      // It re-rolled 20 times (all gray), then fell back.
+      expect(spy.mock.calls.length).toBeGreaterThanOrEqual(20);
+      const result = resolvePreset(code);
+      expect(result.ok, code).toBe(true);
+      if (result.ok) {
+        // baseColor/theme pinned to the first resolvable family (neutral),
+        // and the unresolvable gray chartColor was rewritten to the theme.
+        expect(result.data.config.baseColor).toBe("neutral");
+        expect(result.data.config.theme).toBe("neutral");
+        expect(result.data.config.chartColor).toBe("neutral");
+      }
+    } finally {
+      spy.mockRestore();
     }
   });
 });

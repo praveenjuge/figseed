@@ -65,6 +65,35 @@ describe("ensureThemeCollection", () => {
     expect(soleValue(result.maps.light.get("radius"))).toBe(10); // 0.625 * 16
   });
 
+  it("parses a px radius as a literal pixel FLOAT", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const registry = makeRegistry();
+    registry.cssVars.light.radius = "12px";
+    const result = await ensureThemeCollection(registry, tw);
+    expect(soleValue(result.maps.light.get("radius"))).toBe(12);
+  });
+
+  it("parses a unitless radius as a plain number", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const registry = makeRegistry();
+    registry.cssVars.light.radius = "8";
+    const result = await ensureThemeCollection(registry, tw);
+    expect(soleValue(result.maps.light.get("radius"))).toBe(8);
+  });
+
+  it("leaves a non-numeric radius unset (parseLengthRem returns null)", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const registry = makeRegistry();
+    registry.cssVars.light.radius = "not-a-length";
+    const result = await ensureThemeCollection(registry, tw);
+    // The FLOAT variable is created but no value is written for the mode.
+    const radius = result.maps.light.get("radius") as unknown as {
+      valuesByMode: Record<string, unknown>;
+    };
+    expect(radius).toBeDefined();
+    expect(Object.keys(radius.valuesByMode)).toHaveLength(0);
+  });
+
   it("emits dark values as a separate dark-prefixed variable", async () => {
     const tw = await ensureTailwindColorCollection();
     const result = await ensureThemeCollection(makeRegistry(), tw);

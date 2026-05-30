@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { addAvatarSection } from "../../src/componentsPage/sections/avatar";
 import type { ComponentsInputs } from "../../src/componentsPage";
 import { AVATAR_IMAGES } from "../../src/data/avatars";
@@ -83,5 +83,42 @@ describe("addAvatarSection", () => {
     const avatarStyles = styles.filter((s) => s.name.indexOf("Avatar/") === 0);
     // No duplicates: still one style per bundled avatar after re-running.
     expect(avatarStyles).toHaveLength(AVATAR_IMAGES.length);
+  });
+
+  it("falls back to a tinted fill + initials when no image style is available", async () => {
+    // Simulate the data module being absent: ensureAvatarStyles yields a map
+    // whose idAt always returns undefined, so the image variants take the
+    // tinted-fill + "PJ" initials fallback branch instead of a paint style.
+    vi.resetModules();
+    vi.doMock("../../src/componentsPage/avatarStyles", () => ({
+      ensureAvatarStyles: () =>
+        Promise.resolve({ idAt: () => undefined, count: 0 }),
+    }));
+    const { addAvatarSection: addWithoutStyles } =
+      await import("../../src/componentsPage/sections/avatar");
+
+    const figma = getFigma();
+    const page = figma.createPage();
+    await addWithoutStyles(page as unknown as PageNode, await makeInputs());
+
+    const componentSet = (page as unknown as NodeLike).children.find(
+      (c) => c.name === "Avatar",
+    );
+    expect(componentSet).toBeDefined();
+    const imageVariants = componentSet!.children.filter((c) =>
+      c.name.includes("Kind=image"),
+    );
+    expect(imageVariants.length).toBeGreaterThan(0);
+    for (const variant of imageVariants) {
+      // No paint style attached — the fallback uses a bound color fill, and
+      // appends an initials text node ("PJ").
+      expect(variant.fillStyleId).toBeUndefined();
+      const initials = variant.children.find(
+        (child) => (child as { characters?: string }).characters === "PJ",
+      );
+      expect(initials).toBeDefined();
+    }
+    vi.doUnmock("../../src/componentsPage/avatarStyles");
+    vi.resetModules();
   });
 });

@@ -34,4 +34,17 @@ describe("buildComponentsPage", () => {
     expect(onProgress).toHaveBeenCalledTimes(29);
     expect(onProgress).toHaveBeenLastCalledWith(28, 28, "Done");
   });
+
+  it("reuses and clears an existing Components page on rebuild", async () => {
+    const inputs = await makeInputs();
+    await buildComponentsPage(inputs);
+    await buildComponentsPage(inputs);
+
+    const pages = (
+      globalThis as { figma: { root: { children: { name: string }[] } } }
+    ).figma.root.children.filter((c) => c.name === "Components");
+    // The second build clears the existing page's children rather than minting
+    // a duplicate page (idempotent rebuild).
+    expect(pages).toHaveLength(1);
+  });
 });

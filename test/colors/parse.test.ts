@@ -57,6 +57,18 @@ describe("parseOklch", () => {
     }
   });
 
+  it("accepts a percentage on the chroma/hue channels", () => {
+    // parseChannel divides any percent value by 100 regardless of channel, so
+    // a percent chroma is read as its unit value. Exercises the
+    // percentToUnit=false percent branch.
+    const withPercentChroma = parseOklch("oklch(0.7 50% 30)")!;
+    const withUnitChroma = parseOklch("oklch(0.7 0.5 30)")!;
+    expect(withPercentChroma).not.toBeNull();
+    expect(withPercentChroma.r).toBeCloseTo(withUnitChroma.r, 6);
+    expect(withPercentChroma.g).toBeCloseTo(withUnitChroma.g, 6);
+    expect(withPercentChroma.b).toBeCloseTo(withUnitChroma.b, 6);
+  });
+
   it("rejects malformed oklch", () => {
     expect(parseOklch("oklch(1 0)")).toBeNull(); // fewer than 3 parts
     expect(parseOklch("rgb(1,2,3)")).toBeNull();

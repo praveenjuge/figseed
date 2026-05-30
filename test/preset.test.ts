@@ -132,6 +132,13 @@ describe("decodePreset", () => {
     expect(decodePreset(OUT_OF_RANGE_CODE)).toBeNull();
   });
 
+  it("rejects a code whose packed value exceeds the total field width", () => {
+    // OUT_OF_RANGE_CODE trips the per-field index guard; a longer all-"z" body
+    // overshoots the *total* bit width (51 bits) and must be rejected by the
+    // earlier `bits >= 2 ** totalBits` check.
+    expect(decodePreset("bzzzzzzzzz")).toBeNull();
+  });
+
   it("rejects malformed codes", () => {
     expect(decodePreset("")).toBeNull();
     expect(decodePreset("nope!")).toBeNull();
@@ -172,6 +179,18 @@ describe("encodePreset", () => {
 
   it("ignores undefined values when merging", () => {
     expect(encodePreset({ style: undefined })).toBe(encodePreset({}));
+  });
+
+  it("treats an unknown field value as index 0", () => {
+    // A value that isn't in the field catalogue (indexOf === -1) is encoded as
+    // index 0, so it round-trips to the field's default rather than corrupting
+    // neighbouring fields.
+    const code = encodePreset({
+      font: "not-a-real-font" as unknown as PresetConfig["font"],
+    });
+    const config = decodePreset(code);
+    expect(config).not.toBeNull();
+    expect(config!.font).toBe("inter"); // PRESET_FONTS[0]
   });
 });
 

@@ -30,6 +30,13 @@ describe("normalizeColorValue", () => {
     expect(normalizeColorValue("Red")).toBe("red");
   });
 
+  it("converts a percentage on a non-lightness channel too", () => {
+    // The `else if (endsWith("%"))` branch: chroma/hue carrying a percent are
+    // also divided by 100 (defensive — real values rarely do this).
+    expect(normalizeColorValue("oklch(0.5 50% 0)")).toBe("oklch(0.5 0.5 0)");
+    expect(normalizeColorValue("oklch(0.5 0 50%)")).toBe("oklch(0.5 0 0.5)");
+  });
+
   it("returns empty string for empty input", () => {
     expect(normalizeColorValue(undefined)).toBe("");
     expect(normalizeColorValue("")).toBe("");
