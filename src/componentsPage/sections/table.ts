@@ -72,13 +72,16 @@ function buildTableComponent(inputs: ComponentsInputs): ComponentNode {
   header.layoutSizingHorizontal = "FILL";
 
   // Body rows. The last row drops its bottom border (`[&_tr:last-child]:
-  // border-0`).
+  // border-0`). The second row is shown in the selected state
+  // (`data-[state=selected]:bg-muted`) so designers can see the row-selection
+  // treatment without building it by hand.
   for (let i = 0; i < ROWS.length; i++) {
     const row = buildRow(inputs, ROWS[i]!, {
       bold: false,
       height: ROW_HEIGHT,
       withBorder: i < ROWS.length - 1,
       foreground: "foreground",
+      selected: i === 1,
     });
     comp.appendChild(row);
     row.layoutSizingHorizontal = "FILL";
@@ -106,6 +109,7 @@ type RowOptions = {
   topBorder?: boolean;
   foreground: string;
   muted?: boolean;
+  selected?: boolean;
 };
 
 function buildRow(
@@ -128,6 +132,9 @@ function buildRow(
   if (opts.muted) {
     // radix-nova footer: `bg-muted/50`. We approximate with the solid muted
     // surface (binding a variable fill can't carry a 50% alpha cleanly).
+    bindFill(row, t.get("muted"));
+  } else if (opts.selected) {
+    // radix-nova row: `data-[state=selected]:bg-muted`.
     bindFill(row, t.get("muted"));
   } else {
     row.fills = [];

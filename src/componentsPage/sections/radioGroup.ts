@@ -16,6 +16,11 @@ import { countDescendants } from "../utils";
 const RADIO_STATES = ["False", "True"] as const;
 type RadioState = (typeof RADIO_STATES)[number];
 
+// Disabled twin. shadcn radio uses `disabled:opacity-50`; expose it as a
+// boolean property alongside the checked state.
+const RADIO_DISABLED = ["False", "True"] as const;
+type RadioDisabled = (typeof RADIO_DISABLED)[number];
+
 const SIZE = 16;
 const DOT_SIZE = 8;
 
@@ -25,9 +30,11 @@ export async function addRadioGroupSection(
 ): Promise<number> {
   const components: ComponentNode[] = [];
   for (const state of RADIO_STATES) {
-    const comp = buildRadioComponent(inputs, state);
-    page.appendChild(comp);
-    components.push(comp);
+    for (const disabled of RADIO_DISABLED) {
+      const comp = buildRadioComponent(inputs, state, disabled);
+      page.appendChild(comp);
+      components.push(comp);
+    }
   }
 
   const componentSet = figma.combineAsVariants(components, page);
@@ -42,12 +49,13 @@ export async function addRadioGroupSection(
 function buildRadioComponent(
   inputs: ComponentsInputs,
   state: RadioState,
+  disabled: RadioDisabled,
 ): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
   const comp = figma.createComponent();
-  comp.name = `Checked=${state}`;
+  comp.name = `Checked=${state}, Disabled=${disabled}`;
   // Absolute layout so the dot sits centred without auto-layout repositioning.
   comp.layoutMode = "NONE";
   comp.resize(SIZE, SIZE);
@@ -71,6 +79,10 @@ function buildRadioComponent(
     bindFill(comp, t.get("background"));
     bindStrokeColor(comp, t.get("input"));
     comp.strokeWeight = 1;
+  }
+
+  if (disabled === "True") {
+    comp.opacity = 0.5;
   }
 
   return comp;

@@ -12,7 +12,12 @@ import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const ALERT_VARIANTS = ["default", "destructive"] as const;
+const ALERT_VARIANTS = [
+  "default",
+  "success",
+  "warning",
+  "destructive",
+] as const;
 type AlertVariant = (typeof ALERT_VARIANTS)[number];
 
 export async function addAlertSection(
@@ -87,14 +92,14 @@ function buildAlertComponent(
   row.layoutSizingHorizontal = "FILL";
 
   // Icon — a real icon from the preset's icon library, inheriting the alert's
-  // `text-current` colour (card-foreground for default, destructive for the
-  // destructive variant). Falls back to a small filled square when the active
-  // library has no candidate for the semantic icon.
-  const iconColor =
-    variant === "destructive" ? t.get("destructive") : t.get("card-foreground");
+  // `text-current` colour (card-foreground for default, a Tailwind accent for
+  // success/warning, destructive for the destructive variant). Falls back to a
+  // small filled square when the active library has no candidate.
+  const accent = alertAccentVar(variant, t, inputs.tailwindColors);
+  const iconColor = accent;
   const icon = createIcon({
     library: resolveIconLibrary(inputs.presetSummary),
-    name: variant === "destructive" ? "warning" : "info",
+    name: alertIconName(variant),
     size: 16,
     color: iconColor,
   });
@@ -126,13 +131,8 @@ function buildAlertComponent(
   applyFont(title, "heading", "Medium");
   title.fontSize = 14;
   bindFontSize(title, p.get("font/size/sm"));
-  if (variant === "destructive") {
-    title.characters = "Error";
-    bindFill(title, t.get("destructive"));
-  } else {
-    title.characters = "Heads up!";
-    bindFill(title, t.get("card-foreground"));
-  }
+  title.characters = alertTitle(variant);
+  bindFill(title, accent ?? t.get("card-foreground"));
   textCol.appendChild(title);
   title.layoutSizingHorizontal = "FILL";
 
@@ -140,18 +140,75 @@ function buildAlertComponent(
   applyFont(desc, "body", "Regular");
   desc.fontSize = 14;
   bindFontSize(desc, p.get("font/size/sm"));
-  desc.characters =
-    variant === "destructive"
-      ? "Your session has expired. Please sign in again."
-      : "You can add components to your app using the CLI.";
-  if (variant === "destructive") {
-    bindFill(desc, t.get("destructive"));
-    desc.opacity = 0.9;
-  } else {
+  desc.characters = alertDescription(variant);
+  if (variant === "default") {
     bindFill(desc, t.get("muted-foreground"));
+  } else {
+    // Non-default variants tint the description with the accent and soften it
+    // slightly so the title still leads.
+    bindFill(desc, accent ?? t.get("muted-foreground"));
+    desc.opacity = 0.9;
   }
   textCol.appendChild(desc);
   desc.layoutSizingHorizontal = "FILL";
 
   return comp;
+}
+
+// Accent colour shared by the icon, title, and description of a non-default
+// alert. `default` returns undefined so callers fall back to the neutral
+// card-foreground / muted-foreground pairing.
+function alertAccentVar(
+  variant: AlertVariant,
+  t: Map<string, Variable>,
+  tw: Map<string, Variable>,
+): Variable | undefined {
+  switch (variant) {
+    case "default":
+      return t.get("card-foreground");
+    case "success":
+      return tw.get("green/600");
+    case "warning":
+      return tw.get("amber/600");
+    case "destructive":
+      return t.get("destructive");
+  }
+}
+
+function alertIconName(variant: AlertVariant): "info" | "success" | "warning" {
+  switch (variant) {
+    case "default":
+      return "info";
+    case "success":
+      return "success";
+    case "warning":
+    case "destructive":
+      return "warning";
+  }
+}
+
+function alertTitle(variant: AlertVariant): string {
+  switch (variant) {
+    case "default":
+      return "Heads up!";
+    case "success":
+      return "Success";
+    case "warning":
+      return "Warning";
+    case "destructive":
+      return "Error";
+  }
+}
+
+function alertDescription(variant: AlertVariant): string {
+  switch (variant) {
+    case "default":
+      return "You can add components to your app using the CLI.";
+    case "success":
+      return "Your changes have been saved successfully.";
+    case "warning":
+      return "Your trial ends in 3 days. Upgrade to keep your data.";
+    case "destructive":
+      return "Your session has expired. Please sign in again.";
+  }
 }

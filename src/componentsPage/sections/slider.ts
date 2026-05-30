@@ -17,6 +17,10 @@ type SliderOrientation = (typeof SLIDER_ORIENTATIONS)[number];
 const SLIDER_VALUES = [25, 50, 75] as const;
 type SliderValue = (typeof SLIDER_VALUES)[number];
 
+// Disabled twin. radix-nova slider uses `disabled:opacity-50`.
+const SLIDER_DISABLED = ["False", "True"] as const;
+type SliderDisabled = (typeof SLIDER_DISABLED)[number];
+
 const TRACK_LENGTH = 280;
 // radix-nova vertical track has `min-h-40` (160px).
 const VERTICAL_LENGTH = 160;
@@ -30,9 +34,16 @@ export async function addSliderSection(
   const components: ComponentNode[] = [];
   for (const orientation of SLIDER_ORIENTATIONS) {
     for (const value of SLIDER_VALUES) {
-      const comp = await buildSliderComponent(inputs, orientation, value);
-      page.appendChild(comp);
-      components.push(comp);
+      for (const disabled of SLIDER_DISABLED) {
+        const comp = await buildSliderComponent(
+          inputs,
+          orientation,
+          value,
+          disabled,
+        );
+        page.appendChild(comp);
+        components.push(comp);
+      }
     }
   }
 
@@ -49,6 +60,7 @@ function buildSliderComponent(
   inputs: ComponentsInputs,
   orientation: SliderOrientation,
   value: SliderValue,
+  disabled: SliderDisabled,
 ): Promise<ComponentNode> {
   const t = inputs.theme.light;
   const tw = inputs.tailwindColors;
@@ -56,7 +68,7 @@ function buildSliderComponent(
   const length = horizontal ? TRACK_LENGTH : VERTICAL_LENGTH;
 
   const comp = figma.createComponent();
-  comp.name = `Orientation=${orientation}, Value=${value}`;
+  comp.name = `Orientation=${orientation}, Value=${value}, Disabled=${disabled}`;
   // Absolute layout so the track, range, and thumb stack precisely.
   comp.layoutMode = "NONE";
   if (horizontal) {
@@ -132,6 +144,10 @@ function buildSliderComponent(
     },
   ];
   comp.appendChild(thumb);
+
+  if (disabled === "True") {
+    comp.opacity = 0.5;
+  }
 
   return applyEffectStyle(thumb, inputs.effectStyles?.idFor("Shadow/sm")).then(
     () => comp,

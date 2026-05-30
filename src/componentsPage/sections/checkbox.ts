@@ -11,15 +11,23 @@ import { countDescendants } from "../utils";
 const CHECKBOX_STATES = ["unchecked", "checked", "indeterminate"] as const;
 type CheckboxState = (typeof CHECKBOX_STATES)[number];
 
+// Disabled twin for each check state. shadcn renders `disabled:opacity-50
+// disabled:cursor-not-allowed`; we surface a boolean `Disabled` property so
+// designers can drop the dimmed treatment without a manual override.
+const CHECKBOX_DISABLED = ["False", "True"] as const;
+type CheckboxDisabled = (typeof CHECKBOX_DISABLED)[number];
+
 export async function addCheckboxSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
   const components: ComponentNode[] = [];
   for (const state of CHECKBOX_STATES) {
-    const comp = buildCheckboxComponent(inputs, state);
-    page.appendChild(comp);
-    components.push(comp);
+    for (const disabled of CHECKBOX_DISABLED) {
+      const comp = buildCheckboxComponent(inputs, state, disabled);
+      page.appendChild(comp);
+      components.push(comp);
+    }
   }
 
   const componentSet = figma.combineAsVariants(components, page);
@@ -34,12 +42,13 @@ export async function addCheckboxSection(
 function buildCheckboxComponent(
   inputs: ComponentsInputs,
   state: CheckboxState,
+  disabled: CheckboxDisabled,
 ): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
   const comp = figma.createComponent();
-  comp.name = `State=${state}`;
+  comp.name = `State=${state}, Disabled=${disabled}`;
   // HORIZONTAL auto-layout with CENTER alignment so the check / bar sit
   // centred regardless of their intrinsic bounding box (Figma collapses
   // vector nodes to their path bounds, so absolute positioning won't).
@@ -95,6 +104,10 @@ function buildCheckboxComponent(
     bar.cornerRadius = 1;
     bindFill(bar, t.get("primary-foreground"));
     comp.appendChild(bar);
+  }
+
+  if (disabled === "True") {
+    comp.opacity = 0.5;
   }
 
   return comp;

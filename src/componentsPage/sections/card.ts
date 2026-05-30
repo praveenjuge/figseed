@@ -1,4 +1,6 @@
-// Card: composable container with header, content, and footer slots.
+// Card: composable container with header, content, and footer slots. Exposed
+// as a small variant set: the default resting card, an interactive card with a
+// hover ring + shadow, and a body-only card without the footer.
 
 import {
   bindCornerRadii,
@@ -7,26 +9,47 @@ import {
   bindStrokeColor,
 } from "../bindings";
 import { applyFont } from "../../fonts";
-import { wrapInSectionCard } from "../layout";
+import { applyEffectStyle } from "../../effectStyles";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
+
+const CARD_VARIANTS = ["default", "interactive", "simple"] as const;
+type CardVariant = (typeof CARD_VARIANTS)[number];
 
 export async function addCardSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const comp = buildCardComponent(inputs);
-  const card = wrapInSectionCard(comp);
-  page.appendChild(card);
-  return countDescendants(card);
+  const components: ComponentNode[] = [];
+  for (const variant of CARD_VARIANTS) {
+    const comp = buildCardComponent(inputs, variant);
+    // The interactive card lifts on hover; reference the shared sm shadow.
+    if (variant === "interactive") {
+      await applyEffectStyle(comp, inputs.effectStyles?.idFor("Shadow/sm"));
+    }
+    page.appendChild(comp);
+    components.push(comp);
+  }
+
+  const componentSet = figma.combineAsVariants(components, page);
+  componentSet.name = "Card";
+  componentSet.layoutMode = "VERTICAL";
+  componentSet.itemSpacing = 16;
+  styleComponentSet(componentSet);
+
+  return countDescendants(componentSet);
 }
 
-function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
+function buildCardComponent(
+  inputs: ComponentsInputs,
+  variant: CardVariant,
+): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
   const comp = figma.createComponent();
-  comp.name = "Card";
+  comp.name = `Variant=${variant}`;
   comp.layoutMode = "VERTICAL";
   // Resize before declaring sizing modes — calling resize() on an
   // auto-layout frame pins both axes to FIXED, which would lock the height
@@ -46,11 +69,17 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   comp.cornerRadius = 12;
   bindCornerRadii(comp, p.get("radius/xl"));
   bindFill(comp, t.get("card"));
-  bindStrokeColor(comp, t.get("border"));
+  // The interactive variant previews the hover affordance: a ring-coloured
+  // border + lifted shadow (applied by the caller). The others keep the
+  // resting `ring-1 ring-foreground/10` border with no shadow.
+  if (variant === "interactive") {
+    bindStrokeColor(comp, t.get("ring"));
+  } else {
+    bindStrokeColor(comp, t.get("border"));
+    comp.effects = [];
+  }
   comp.strokeWeight = 1;
   comp.strokeAlign = "INSIDE";
-  // radix-nova uses `ring-1 ring-foreground/10` instead of a drop shadow.
-  comp.effects = [];
 
   // Card Header.
   const header = figma.createFrame();
@@ -105,30 +134,32 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
 
   comp.appendChild(content);
 
-  // Card Footer.
-  const footer = figma.createFrame();
-  footer.name = "Card Footer";
-  footer.layoutMode = "HORIZONTAL";
-  footer.primaryAxisSizingMode = "AUTO";
-  footer.counterAxisSizingMode = "AUTO";
-  footer.primaryAxisAlignItems = "MIN";
-  footer.counterAxisAlignItems = "CENTER";
-  // radix-nova CardFooter: `flex items-center rounded-b-xl border-t
-  // bg-muted/50 p-4`. We approximate with foreground padding only.
-  footer.itemSpacing = 8;
-  footer.paddingLeft = 16;
-  footer.paddingRight = 16;
-  footer.fills = [];
+  // Card Footer — omitted for the body-only `simple` variant.
+  if (variant !== "simple") {
+    const footer = figma.createFrame();
+    footer.name = "Card Footer";
+    footer.layoutMode = "HORIZONTAL";
+    footer.primaryAxisSizingMode = "AUTO";
+    footer.counterAxisSizingMode = "AUTO";
+    footer.primaryAxisAlignItems = "MIN";
+    footer.counterAxisAlignItems = "CENTER";
+    // radix-nova CardFooter: `flex items-center rounded-b-xl border-t
+    // bg-muted/50 p-4`. We approximate with foreground padding only.
+    footer.itemSpacing = 8;
+    footer.paddingLeft = 16;
+    footer.paddingRight = 16;
+    footer.fills = [];
 
-  const footerText = figma.createText();
-  applyFont(footerText, "body", "Regular");
-  footerText.characters = "Card footer";
-  footerText.fontSize = 12;
-  bindFontSize(footerText, p.get("font/size/xs"));
-  bindFill(footerText, t.get("muted-foreground"));
-  footer.appendChild(footerText);
+    const footerText = figma.createText();
+    applyFont(footerText, "body", "Regular");
+    footerText.characters = "Card footer";
+    footerText.fontSize = 12;
+    bindFontSize(footerText, p.get("font/size/xs"));
+    bindFill(footerText, t.get("muted-foreground"));
+    footer.appendChild(footerText);
 
-  comp.appendChild(footer);
+    comp.appendChild(footer);
+  }
 
   return comp;
 }

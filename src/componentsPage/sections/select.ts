@@ -18,6 +18,12 @@ import { countDescendants } from "../utils";
 const SELECT_SIZES = ["sm", "default"] as const;
 type SelectSize = (typeof SELECT_SIZES)[number];
 
+// Trigger interaction state. shadcn renders the focus ring via
+// `focus-visible:ring-[3px]` and dims disabled triggers with
+// `disabled:opacity-50`; surface both as a pickable `State` axis.
+const SELECT_STATES = ["default", "focus", "disabled"] as const;
+type SelectState = (typeof SELECT_STATES)[number];
+
 const SELECT_DIMS: Record<SelectSize, { height: number; width: number }> = {
   sm: { height: 28, width: 180 },
   default: { height: 32, width: 200 },
@@ -29,9 +35,11 @@ export async function addSelectSection(
 ): Promise<number> {
   const components: ComponentNode[] = [];
   for (const size of SELECT_SIZES) {
-    const comp = buildSelectComponent(inputs, size);
-    page.appendChild(comp);
-    components.push(comp);
+    for (const state of SELECT_STATES) {
+      const comp = buildSelectComponent(inputs, size, state);
+      page.appendChild(comp);
+      components.push(comp);
+    }
   }
 
   const componentSet = figma.combineAsVariants(components, page);
@@ -46,13 +54,14 @@ export async function addSelectSection(
 function buildSelectComponent(
   inputs: ComponentsInputs,
   size: SelectSize,
+  state: SelectState,
 ): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
   const dims = SELECT_DIMS[size];
 
   const comp = figma.createComponent();
-  comp.name = `Size=${size}`;
+  comp.name = `Size=${size}, State=${state}`;
   comp.layoutMode = "HORIZONTAL";
   comp.primaryAxisSizingMode = "FIXED";
   comp.counterAxisSizingMode = "FIXED";
@@ -74,8 +83,28 @@ function buildSelectComponent(
     bindCornerRadii(comp, p.get("radius/lg"));
   }
   bindFill(comp, t.get("background"));
-  bindStrokeColor(comp, t.get("input"));
-  comp.strokeWeight = 1;
+  // State-driven border + ring. Focus swaps the border to `ring` and adds the
+  // 3px focus ring shadow; disabled keeps the resting border and dims the
+  // whole trigger.
+  if (state === "focus") {
+    bindStrokeColor(comp, t.get("ring"));
+    comp.strokeWeight = 1;
+    comp.effects = [
+      {
+        type: "DROP_SHADOW",
+        color: { r: 0, g: 0, b: 0, a: 0.08 },
+        offset: { x: 0, y: 0 },
+        radius: 0,
+        spread: 3,
+        visible: true,
+        blendMode: "NORMAL",
+        showShadowBehindNode: true,
+      },
+    ];
+  } else {
+    bindStrokeColor(comp, t.get("input"));
+    comp.strokeWeight = 1;
+  }
 
   const value = figma.createText();
   applyFont(value, "body", "Regular");
@@ -88,6 +117,10 @@ function buildSelectComponent(
   comp.appendChild(value);
 
   comp.appendChild(buildChevronDown(t));
+
+  if (state === "disabled") {
+    comp.opacity = 0.5;
+  }
 
   return comp;
 }

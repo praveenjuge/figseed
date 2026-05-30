@@ -214,6 +214,28 @@ export function createFigmaMock() {
         node.width = w;
         node.height = h;
       },
+      // Mirror Figma's constraint: a node can only be set to ABSOLUTE layout
+      // positioning once it is a child of an auto-layout frame (parent
+      // layoutMode !== "NONE"). Real Figma throws otherwise; the permissive
+      // mock would silently accept it and let the bug reach the plugin, so we
+      // validate here. Stored under a backing key the index signature exposes.
+      get layoutPositioning() {
+        return (node.__layoutPositioning as string | undefined) ?? "AUTO";
+      },
+      set layoutPositioning(value: string) {
+        if (value === "ABSOLUTE") {
+          const parent = node.parent;
+          const parentMode = parent
+            ? (parent.layoutMode as string | undefined)
+            : undefined;
+          if (!parent || parentMode === undefined || parentMode === "NONE") {
+            throw new Error(
+              "in set_layoutPositioning: Can only set layoutPositioning = ABSOLUTE if the parent node has layoutMode !== NONE",
+            );
+          }
+        }
+        node.__layoutPositioning = value;
+      },
       setBoundVariable(field: string, variable: { id: string }) {
         node.boundVariables[field] = {
           type: "VARIABLE_ALIAS",

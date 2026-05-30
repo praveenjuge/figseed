@@ -1,4 +1,4 @@
-// Input: text field in four states (default, focused, disabled, invalid).
+// Input: text field across four states, optionally with a leading icon.
 
 import {
   bindCornerRadii,
@@ -7,6 +7,7 @@ import {
   bindStrokeColor,
 } from "../bindings";
 import { applyFont } from "../../fonts";
+import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -14,15 +15,23 @@ import { countDescendants } from "../utils";
 const INPUT_STATES = ["default", "focused", "disabled", "invalid"] as const;
 type InputState = (typeof INPUT_STATES)[number];
 
+// Whether the field carries a leading icon (e.g. a search field). shadcn
+// doesn't ship an icon input primitive, but it's one of the most common
+// compositions designers build on top of Input.
+const INPUT_LEADING = ["none", "icon"] as const;
+type InputLeading = (typeof INPUT_LEADING)[number];
+
 export async function addInputSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
   const components: ComponentNode[] = [];
-  for (const state of INPUT_STATES) {
-    const comp = buildInputComponent(inputs, state);
-    page.appendChild(comp);
-    components.push(comp);
+  for (const leading of INPUT_LEADING) {
+    for (const state of INPUT_STATES) {
+      const comp = buildInputComponent(inputs, state, leading);
+      page.appendChild(comp);
+      components.push(comp);
+    }
   }
 
   const componentSet = figma.combineAsVariants(components, page);
@@ -37,12 +46,13 @@ export async function addInputSection(
 function buildInputComponent(
   inputs: ComponentsInputs,
   state: InputState,
+  leading: InputLeading,
 ): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
   const comp = figma.createComponent();
-  comp.name = `State=${state}`;
+  comp.name = `State=${state}, Leading=${leading}`;
   comp.layoutMode = "HORIZONTAL";
   comp.primaryAxisSizingMode = "FIXED";
   comp.counterAxisSizingMode = "FIXED";
@@ -54,6 +64,7 @@ function buildInputComponent(
   comp.paddingRight = 10;
   comp.paddingTop = 4;
   comp.paddingBottom = 4;
+  comp.itemSpacing = 6;
   comp.cornerRadius = 8;
   bindCornerRadii(comp, p.get("radius/lg"));
   bindFill(comp, t.get("background"));
@@ -91,6 +102,43 @@ function buildInputComponent(
   applyFont(text, "body", "Regular");
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));
+
+  // Leading icon (search glyph) for the icon variant, tinted muted-foreground
+  // and placed before the text so auto-layout lays them in a row.
+  if (leading === "icon") {
+    const icon = createIcon({
+      library: resolveIconLibrary(inputs.presetSummary),
+      name: "search",
+      size: 16,
+      color: t.get("muted-foreground"),
+    });
+    if (icon) {
+      icon.name = "Icon";
+      comp.appendChild(icon);
+    }
+  }
+
+  // The icon variant reads as a search field; the plain variant keeps the
+  // email-style sample content that signals each state.
+  if (leading === "icon") {
+    switch (state) {
+      case "focused":
+        text.characters = "Wireframe kit";
+        bindFill(text, t.get("foreground"));
+        break;
+      case "invalid":
+        text.characters = "No results";
+        bindFill(text, t.get("foreground"));
+        break;
+      default:
+        text.characters = "Search components";
+        bindFill(text, t.get("muted-foreground"));
+        break;
+    }
+    comp.appendChild(text);
+    if (state === "disabled") comp.opacity = 0.5;
+    return comp;
+  }
 
   switch (state) {
     case "default":

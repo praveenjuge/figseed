@@ -15,6 +15,11 @@ type SwitchState = (typeof SWITCH_STATES)[number];
 const SWITCH_SIZES = ["sm", "default"] as const;
 type SwitchSize = (typeof SWITCH_SIZES)[number];
 
+// Disabled twin. shadcn Switch uses `disabled:opacity-50`; expose it as a
+// boolean property alongside size + checked.
+const SWITCH_DISABLED = ["False", "True"] as const;
+type SwitchDisabled = (typeof SWITCH_DISABLED)[number];
+
 // Mirrors shadcn's Switch: default `w-8 h-[1.15rem]` (32×~18.4) with a
 // size-4 thumb; sm `w-6 h-3.5` (24×14) with a size-3 thumb.
 const SWITCH_DIMS: Record<SwitchSize, { w: number; h: number; thumb: number }> =
@@ -30,9 +35,11 @@ export async function addSwitchSection(
   const components: ComponentNode[] = [];
   for (const size of SWITCH_SIZES) {
     for (const state of SWITCH_STATES) {
-      const comp = await buildSwitchComponent(inputs, size, state);
-      page.appendChild(comp);
-      components.push(comp);
+      for (const disabled of SWITCH_DISABLED) {
+        const comp = await buildSwitchComponent(inputs, size, state, disabled);
+        page.appendChild(comp);
+        components.push(comp);
+      }
     }
   }
 
@@ -49,13 +56,14 @@ function buildSwitchComponent(
   inputs: ComponentsInputs,
   size: SwitchSize,
   state: SwitchState,
+  disabled: SwitchDisabled,
 ): Promise<ComponentNode> {
   const t = inputs.theme.light;
   const p = inputs.primitives;
   const dims = SWITCH_DIMS[size];
 
   const comp = figma.createComponent();
-  comp.name = `Size=${size}, Checked=${state}`;
+  comp.name = `Size=${size}, Checked=${state}, Disabled=${disabled}`;
   // Use absolute positioning for the thumb inside the track.
   comp.layoutMode = "NONE";
   comp.resize(dims.w, dims.h);
@@ -95,6 +103,10 @@ function buildSwitchComponent(
     },
   ];
   comp.appendChild(thumb);
+
+  if (disabled === "True") {
+    comp.opacity = 0.5;
+  }
 
   return applyEffectStyle(thumb, inputs.effectStyles?.idFor("Shadow/xs")).then(
     () => comp,

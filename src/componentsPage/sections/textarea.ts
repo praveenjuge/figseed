@@ -15,7 +15,7 @@ import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const TEXTAREA_STATES = ["default", "focused", "invalid"] as const;
+const TEXTAREA_STATES = ["default", "focused", "disabled", "invalid"] as const;
 type TextareaState = (typeof TEXTAREA_STATES)[number];
 
 const TEXTAREA_WIDTH = 320;
@@ -91,7 +91,6 @@ function buildTextareaComponent(
       comp.strokeWeight = 1;
       break;
   }
-
   const text = figma.createText();
   applyFont(text, "body", "Regular");
   text.fontSize = 14;
@@ -111,6 +110,10 @@ function buildTextareaComponent(
         "Loving the new components page so far. A few thoughts on the layout…";
       bindFill(text, t.get("foreground"));
       break;
+    case "disabled":
+      text.characters = "Type your message here.";
+      bindFill(text, t.get("muted-foreground"));
+      break;
     case "invalid":
       text.characters = "Message must be at least 20 characters.";
       bindFill(text, t.get("foreground"));
@@ -121,6 +124,11 @@ function buildTextareaComponent(
   // After appending, let auto-layout manage the text width (FILL).
   if ("layoutSizingHorizontal" in text) {
     (text as TextNode).layoutSizingHorizontal = "FILL";
+  }
+
+  // shadcn: `disabled:opacity-50 disabled:cursor-not-allowed`.
+  if (state === "disabled") {
+    comp.opacity = 0.5;
   }
   return comp;
 }

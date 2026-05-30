@@ -16,28 +16,30 @@ function emptyInputs(): ComponentsInputs {
 type FakeNode = { type: string; name: string; children: FakeNode[] };
 
 describe("addButtonSection", () => {
-  it("builds a 6x8 variant matrix combined into one component set", async () => {
+  it("builds a 6×8×4 variant matrix combined into one component set", async () => {
     const figma = (globalThis as { figma: { createPage: () => FakeNode } })
       .figma;
     const page = figma.createPage();
 
     const count = await addButtonSection(page as never, emptyInputs());
 
-    // 48 components in one set. The 24 text buttons (6 variants × 4 non-icon
-    // sizes) each wrap a single label node; the 24 icon buttons (6 × 4 icon
-    // sizes) each wrap a rendered icon (mock createNodeFromSvg → frame + vector).
-    //   1 (set) + 24*(1 comp + 1 label) + 24*(1 comp + 1 frame + 1 vector)
-    //   = 1 + 48 + 72 = 121.
-    expect(count).toBe(121);
+    // 6 variants × 8 sizes × 4 states = 192 components in one set.
+    //   48 text buttons (6 × 4 non-icon sizes) × 4 states = 96 comps, each
+    //     wrapping a single label node → 96 × 2 = 192 nodes.
+    //   48 icon buttons (6 × 4 icon sizes) × 4 states = 96 comps, each
+    //     wrapping a rendered icon (mock createNodeFromSvg → frame + vector)
+    //     → 96 × 3 = 288 nodes.
+    //   1 (set) + 192 + 288 = 481.
+    expect(count).toBe(481);
 
     expect(page.children).toHaveLength(1);
     const set = page.children[0]!;
     expect(set.type).toBe("COMPONENT_SET");
     expect(set.name).toBe("Button");
-    expect(set.children).toHaveLength(48);
+    expect(set.children).toHaveLength(192);
   });
 
-  it("names variants with the Figma Variant=…, Size=… convention", async () => {
+  it("names variants with the Figma Variant=…, Size=…, State=… convention", async () => {
     const figma = (globalThis as { figma: { createPage: () => FakeNode } })
       .figma;
     const page = figma.createPage();
@@ -45,9 +47,9 @@ describe("addButtonSection", () => {
 
     const set = page.children[0]!;
     const names = set.children.map((c) => c.name);
-    expect(names).toContain("Variant=default, Size=icon");
-    expect(names).toContain("Variant=link, Size=lg");
-    expect(names).toContain("Variant=outline, Size=icon-xs");
-    expect(names).toContain("Variant=secondary, Size=icon-lg");
+    expect(names).toContain("Variant=default, Size=icon, State=default");
+    expect(names).toContain("Variant=link, Size=lg, State=hover");
+    expect(names).toContain("Variant=outline, Size=icon-xs, State=focus");
+    expect(names).toContain("Variant=secondary, Size=icon-lg, State=disabled");
   });
 });

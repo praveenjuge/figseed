@@ -9,11 +9,13 @@ import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const PROGRESS_VALUES = [0, 33, 66, 100] as const;
+const PROGRESS_VALUES = [0, 33, 66, 100, "indeterminate"] as const;
 type ProgressValue = (typeof PROGRESS_VALUES)[number];
 
 const TRACK_WIDTH = 320;
 const TRACK_HEIGHT = 4;
+// Width of the moving indicator used for the indeterminate state.
+const INDETERMINATE_WIDTH = TRACK_WIDTH * 0.4;
 
 export async function addProgressSection(
   page: PageNode,
@@ -61,6 +63,20 @@ function buildProgressComponent(
   track.y = 0;
   bindFill(track, t.get("muted"));
   comp.appendChild(track);
+
+  if (value === "indeterminate") {
+    // A short pill parked partway along the track to suggest the looping
+    // animation sonner/radix render when the total is unknown.
+    const indicator = figma.createRectangle();
+    indicator.name = "Indicator";
+    indicator.resize(INDETERMINATE_WIDTH, TRACK_HEIGHT);
+    indicator.x = TRACK_WIDTH * 0.3;
+    indicator.y = 0;
+    indicator.cornerRadius = TRACK_HEIGHT / 2;
+    bindFill(indicator, t.get("primary"));
+    comp.appendChild(indicator);
+    return comp;
+  }
 
   // Indicator — primary at full opacity, sized to value%.
   if (value > 0) {

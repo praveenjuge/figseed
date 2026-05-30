@@ -17,39 +17,64 @@ import {
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { createIcon, resolveIconLibrary } from "../../icons";
-import { wrapInSectionCard } from "../layout";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
 const SHEET_WIDTH = 384; // sm:max-w-sm
 const SHEET_HEIGHT = 420; // representative panel height (data-[side]:h-full).
+// Top/bottom sheets span a wider, shorter panel.
+const SHEET_HORIZONTAL_WIDTH = 480;
+const SHEET_HORIZONTAL_HEIGHT = 260;
+
+// shadcn's Sheet `side` prop: which edge the panel slides in from. Left/right
+// are tall side panels; top/bottom are wide horizontal panels. The side also
+// drives which edge carries the divider border.
+const SHEET_SIDES = ["right", "left", "top", "bottom"] as const;
+type SheetSide = (typeof SHEET_SIDES)[number];
 
 export async function addSheetSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const comp = buildSheetComponent(inputs);
-  // radix-nova SheetContent uses `shadow-lg`; reference the published style.
-  await applyEffectStyle(comp, inputs.effectStyles?.idFor("Shadow/lg"));
-  const card = wrapInSectionCard(comp);
-  page.appendChild(card);
-  return countDescendants(card);
+  const components: ComponentNode[] = [];
+  for (const side of SHEET_SIDES) {
+    const comp = buildSheetComponent(inputs, side);
+    // radix-nova SheetContent uses `shadow-lg`; reference the published style.
+    await applyEffectStyle(comp, inputs.effectStyles?.idFor("Shadow/lg"));
+    page.appendChild(comp);
+    components.push(comp);
+  }
+
+  const componentSet = figma.combineAsVariants(components, page);
+  componentSet.name = "Sheet";
+  componentSet.layoutMode = "VERTICAL";
+  componentSet.itemSpacing = 16;
+  styleComponentSet(componentSet);
+
+  return countDescendants(componentSet);
 }
 
-function buildSheetComponent(inputs: ComponentsInputs): ComponentNode {
+function buildSheetComponent(
+  inputs: ComponentsInputs,
+  side: SheetSide,
+): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
+  const horizontal = side === "top" || side === "bottom";
+  const width = horizontal ? SHEET_HORIZONTAL_WIDTH : SHEET_WIDTH;
+  const height = horizontal ? SHEET_HORIZONTAL_HEIGHT : SHEET_HEIGHT;
 
   const comp = figma.createComponent();
-  comp.name = "Sheet";
+  comp.name = `Side=${side}`;
   comp.layoutMode = "VERTICAL";
-  // resize() pins both axes to FIXED; the sheet is a fixed-height side panel,
-  // so we keep both axes fixed (it does not hug its content vertically).
-  comp.resize(SHEET_WIDTH, SHEET_HEIGHT);
+  // resize() pins both axes to FIXED; the sheet is a fixed-size panel, so we
+  // keep both axes fixed (it does not hug its content).
+  comp.resize(width, height);
   comp.primaryAxisSizingMode = "FIXED";
   comp.counterAxisSizingMode = "FIXED";
-  // `flex flex-col gap-4`. The left border (`data-[side=right]:border-l`)
-  // reads as a 1px stroke; padding lives on the inner sections.
+  // `flex flex-col gap-4`. The divider border sits on the edge the panel
+  // slides from: right→border-l, left→border-r, top→border-b, bottom→border-t.
   comp.itemSpacing = 16;
   comp.paddingTop = 0;
   comp.paddingBottom = 0;
@@ -59,6 +84,11 @@ function buildSheetComponent(inputs: ComponentsInputs): ComponentNode {
   bindStrokeColor(comp, t.get("border"));
   comp.strokeWeight = 1;
   comp.strokeAlign = "INSIDE";
+  // Only the edge the sheet docks against carries the divider border.
+  comp.strokeTopWeight = side === "bottom" ? 1 : 0;
+  comp.strokeBottomWeight = side === "top" ? 1 : 0;
+  comp.strokeLeftWeight = side === "right" ? 1 : 0;
+  comp.strokeRightWeight = side === "left" ? 1 : 0;
   comp.clipsContent = true;
 
   // Header: `flex flex-col gap-0.5 p-4`, with a trailing close button laid out

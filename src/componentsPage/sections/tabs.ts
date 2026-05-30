@@ -23,6 +23,12 @@ type TabVariant = (typeof TAB_VARIANTS)[number];
 const ACTIVE_INDICES = [0, 1, 2] as const;
 type ActiveIndex = (typeof ACTIVE_INDICES)[number];
 
+// Whether the trailing tab is disabled. shadcn renders disabled triggers with
+// `disabled:opacity-50 disabled:pointer-events-none`; expose it as a boolean
+// axis so designers can preview a partially-disabled tab strip.
+const TAB_DISABLED = ["False", "True"] as const;
+type TabDisabled = (typeof TAB_DISABLED)[number];
+
 const LIST_HEIGHT = 32;
 const LIST_PADDING = 3;
 const UNDERLINE_HEIGHT = 2;
@@ -34,9 +40,16 @@ export async function addTabsSection(
   const components: ComponentNode[] = [];
   for (const variant of TAB_VARIANTS) {
     for (const active of ACTIVE_INDICES) {
-      const comp = await buildTabsComponent(inputs, variant, active);
-      page.appendChild(comp);
-      components.push(comp);
+      for (const disabled of TAB_DISABLED) {
+        const comp = await buildTabsComponent(
+          inputs,
+          variant,
+          active,
+          disabled,
+        );
+        page.appendChild(comp);
+        components.push(comp);
+      }
     }
   }
 
@@ -53,13 +66,14 @@ async function buildTabsComponent(
   inputs: ComponentsInputs,
   variant: TabVariant,
   active: ActiveIndex,
+  disabled: TabDisabled,
 ): Promise<ComponentNode> {
   const t = inputs.theme.light;
   const p = inputs.primitives;
   const isLine = variant === "line";
 
   const comp = figma.createComponent();
-  comp.name = `Variant=${variant}, Active=${TAB_LABELS[active]}`;
+  comp.name = `Variant=${variant}, Active=${TAB_LABELS[active]}, Disabled=${disabled}`;
   comp.layoutMode = "HORIZONTAL";
   comp.primaryAxisSizingMode = "AUTO";
   comp.counterAxisSizingMode = "AUTO";
@@ -89,6 +103,12 @@ async function buildTabsComponent(
       i === active,
       variant,
     );
+    // When disabled, dim the trailing tab (and never the active one) so the
+    // strip shows a realistic "this tab is unavailable" state.
+    if (disabled === "True" && i === TAB_LABELS.length - 1 && i !== active) {
+      trigger.opacity = 0.5;
+      trigger.name = "Trigger (disabled)";
+    }
     comp.appendChild(trigger);
   }
 

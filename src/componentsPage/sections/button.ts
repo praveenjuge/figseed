@@ -34,6 +34,14 @@ const BUTTON_SIZES = [
 ] as const;
 type ButtonSize = (typeof BUTTON_SIZES)[number];
 
+// Interaction-state axis. shadcn encodes these in `hover:`, `focus-visible:`,
+// and `disabled:` utilities that never survive into Figma, so we surface them
+// as a pickable `State` property. They are visual deltas only (opacity, an
+// accent background, or the focus ring) so the per-variant node count is
+// unchanged across states.
+const BUTTON_STATES = ["default", "hover", "focus", "disabled"] as const;
+type ButtonState = (typeof BUTTON_STATES)[number];
+
 function isIconSize(size: ButtonSize): boolean {
   return (
     size === "icon" ||
@@ -47,15 +55,17 @@ export async function addButtonSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  // Build one ComponentNode per (variant, size) combination, then group
+  // Build one ComponentNode per (variant, size, state) combination, then group
   // them into a ComponentSet so Figma shows a variant picker.
   const components: ComponentNode[] = [];
 
   for (const variant of BUTTON_VARIANTS) {
     for (const size of BUTTON_SIZES) {
-      const comp = buildButtonComponent(inputs, variant, size);
-      page.appendChild(comp);
-      components.push(comp);
+      for (const state of BUTTON_STATES) {
+        const comp = buildButtonComponent(inputs, variant, size, state);
+        page.appendChild(comp);
+        components.push(comp);
+      }
     }
   }
 
@@ -74,13 +84,14 @@ function buildButtonComponent(
   inputs: ComponentsInputs,
   variant: ButtonVariant,
   size: ButtonSize,
+  state: ButtonState,
 ): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
   const dims = buttonDimensions(size);
 
   const comp = figma.createComponent();
-  comp.name = `Variant=${variant}, Size=${size}`;
+  comp.name = `Variant=${variant}, Size=${size}, State=${state}`;
   comp.layoutMode = "HORIZONTAL";
   comp.primaryAxisAlignItems = "CENTER";
   comp.counterAxisAlignItems = "CENTER";
@@ -115,8 +126,14 @@ function buildButtonComponent(
 
   // Apply variant fill/stroke.
   applyButtonVariant(comp, variant, t);
+  // Layer the interaction-state delta on top (hover accent / focus ring /
+  // disabled opacity). Returns the label colour override for hover on the
+  // ghost + outline variants, which shift to accent-foreground.
+  const stateLabelOverride = applyButtonState(comp, variant, state, t);
 
-  const labelColor = buttonLabelColorVar(variant, t, inputs.tailwindColors);
+  const labelColor =
+    stateLabelOverride ??
+    buttonLabelColorVar(variant, t, inputs.tailwindColors);
 
   if (isIconSize(size)) {
     // Icon-only button: render a real icon from the preset's icon library,
@@ -238,4 +255,66 @@ function buttonLabelColorVar(
     case "link":
       return t.get("primary");
   }
+}
+
+// Layer an interaction-state delta on top of the resting variant styling.
+// shadcn expresses these via `hover:`, `focus-visible:`, and `disabled:`
+// utilities; in Figma we bake one frame per state so designers can preview
+// them. Returns an optional label-colour override (hover flips ghost/outline
+// labels to accent-foreground); otherwise the caller keeps the variant colour.
+function applyButtonState(
+  node: ComponentNode,
+  variant: ButtonVariant,
+  state: ButtonState,
+  t: Map<string, Variable>,
+): Variable | undefined {
+  if (state === "disabled") {
+    // shadcn: `disabled:opacity-50 disabled:pointer-events-none`.
+    node.opacity = 0.5;
+    return undefined;
+  }
+
+  if (state === "focus") {
+    // `focus-visible:ring-[3px] focus-visible:ring-ring/50` — a 3px spread
+    // ring drawn as a zero-radius drop shadow, matching the Input focus look.
+    node.effects = [
+      {
+        type: "DROP_SHADOW",
+        color: { r: 0, g: 0, b: 0, a: 0.08 },
+        offset: { x: 0, y: 0 },
+        radius: 0,
+        spread: 3,
+        visible: true,
+        blendMode: "NORMAL",
+        showShadowBehindNode: true,
+      },
+    ];
+    return undefined;
+  }
+
+  if (state === "hover") {
+    switch (variant) {
+      case "default":
+        // `hover:bg-primary/90` — approximate the alpha dip with opacity.
+        node.opacity = 0.9;
+        return undefined;
+      case "secondary":
+        node.opacity = 0.8;
+        return undefined;
+      case "destructive":
+        node.opacity = 0.9;
+        return undefined;
+      case "outline":
+      case "ghost":
+        // `hover:bg-accent hover:text-accent-foreground`.
+        bindFill(node, t.get("accent"));
+        return t.get("accent-foreground");
+      case "link":
+        // Link only gains an underline on hover, handled by the resting
+        // underline already applied; nothing else changes.
+        return undefined;
+    }
+  }
+
+  return undefined;
 }
