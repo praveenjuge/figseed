@@ -23,8 +23,12 @@ describe("addButtonSection", () => {
 
     const count = await addButtonSection(page as never, emptyInputs());
 
-    // 48 components, each wrapping a label => 1 set + 48*(1 + 1) descendants.
-    expect(count).toBe(97);
+    // 48 components in one set. The 24 text buttons (6 variants × 4 non-icon
+    // sizes) each wrap a single label node; the 24 icon buttons (6 × 4 icon
+    // sizes) each wrap a rendered icon (mock createNodeFromSvg → frame + vector).
+    //   1 (set) + 24*(1 comp + 1 label) + 24*(1 comp + 1 frame + 1 vector)
+    //   = 1 + 48 + 72 = 121.
+    expect(count).toBe(121);
 
     expect(page.children).toHaveLength(1);
     const set = page.children[0]!;

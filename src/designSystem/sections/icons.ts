@@ -12,7 +12,7 @@
 // the theme `foreground` variable so icons follow the theme.
 
 import { ICON_LIBRARIES, type IconLibraryName } from "../../data/icons";
-import { bindFill, bindStrokeColor } from "../bindings";
+import { recolorIcon, resolveIconLibrary } from "../../icons";
 import { createSectionFrame, sectionContentWidth } from "../layout";
 import { solidPaint } from "../paints";
 import type { DesignSystemInputs } from "../types";
@@ -30,68 +30,12 @@ const LIBRARY_LABELS: Record<IconLibraryName, string> = {
 const ICON_SIZE = 24;
 const GRID_GAP = 16;
 
-function isIconLibrary(value: string | undefined): value is IconLibraryName {
-  return value !== undefined && value in ICON_LIBRARIES;
-}
-
 // createNodeFromSvg returns a wrapper FRAME (with its own background fill) that
 // holds the icon geometry as vector/shape leaves, and resolves `currentColor`
-// to a literal black paint. Two things to fix per node:
-//   - Container nodes (the wrapper frame, nested <g> groups) must stay
-//     transparent. Their background fill would otherwise paint a solid square
-//     over the icon. Clear it.
-//   - Shape leaves carry the actual icon paint — stroke for the stroke-based
-//     libraries (lucide/tabler/hugeicons), fill for the fill-based ones
-//     (phosphor/remixicon). Rebind whichever they use to the theme foreground.
-const CONTAINER_TYPES: Record<string, true> = {
-  FRAME: true,
-  GROUP: true,
-  COMPONENT: true,
-  INSTANCE: true,
-  SECTION: true,
-};
-
-function recolorToForeground(
-  node: SceneNode,
-  foreground: Variable | undefined,
-): void {
-  if (CONTAINER_TYPES[node.type]) {
-    // Drop any background fill so only the geometry shows through.
-    const withFills = node as SceneNode & { fills?: unknown };
-    if ("fills" in node && withFills.fills !== figma.mixed) {
-      (node as unknown as { fills: Paint[] }).fills = [];
-    }
-  } else {
-    const withFills = node as SceneNode & {
-      fills?: ReadonlyArray<Paint> | typeof figma.mixed;
-    };
-    if (Array.isArray(withFills.fills) && withFills.fills.length > 0) {
-      bindFill(
-        node as SceneNode & {
-          fills: ReadonlyArray<Paint> | typeof figma.mixed;
-        },
-        foreground,
-      );
-    }
-
-    const withStrokes = node as SceneNode & {
-      strokes?: ReadonlyArray<Paint>;
-    };
-    if (Array.isArray(withStrokes.strokes) && withStrokes.strokes.length > 0) {
-      bindStrokeColor(
-        node as SceneNode & { strokes: ReadonlyArray<Paint> },
-        foreground,
-      );
-    }
-  }
-
-  if ("children" in node) {
-    for (const child of (node as ChildrenMixin).children as SceneNode[]) {
-      recolorToForeground(child, foreground);
-    }
-  }
-}
-
+// to a literal black paint. The recolor pass (shared via src/icons.ts) clears
+// container background fills and rebinds the shape leaves' paint — stroke for
+// the stroke-based libraries (lucide/tabler/hugeicons), fill for the fill-based
+// ones (phosphor/remixicon) — to the theme foreground variable.
 function buildIconComponent(
   name: string,
   svg: string,
@@ -105,7 +49,7 @@ function buildIconComponent(
 
   const node = figma.createNodeFromSvg(svg);
   node.name = "icon";
-  recolorToForeground(node, foreground);
+  recolorIcon(node, foreground);
   node.x = 0;
   node.y = 0;
   comp.appendChild(node);
@@ -119,11 +63,7 @@ export async function addIconLibrary(
 ): Promise<number> {
   // shadcn's default icon library is lucide; fall back to it when the preset
   // summary doesn't carry a (valid) icon library.
-  const libraryName: IconLibraryName = isIconLibrary(
-    inputs.presetSummary?.["iconLibrary"],
-  )
-    ? (inputs.presetSummary!["iconLibrary"] as IconLibraryName)
-    : "lucide";
+  const libraryName: IconLibraryName = resolveIconLibrary(inputs.presetSummary);
 
   const library = ICON_LIBRARIES[libraryName];
   const names = Object.keys(library.icons).sort();

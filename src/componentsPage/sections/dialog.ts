@@ -14,6 +14,7 @@ import {
   bindStrokeColor,
 } from "../bindings";
 import { applyFont } from "../../fonts";
+import { createIcon, resolveIconLibrary } from "../../icons";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -153,6 +154,22 @@ function buildCloseButton(inputs: ComponentsInputs): FrameNode {
   bindCornerRadii(btn, p.get("radius/md"));
   btn.fills = [];
   btn.strokes = [];
+
+  // Close button glyph: a real `close` icon from the preset's icon library,
+  // tinted muted-foreground. Falls back to a "✕" text glyph when the active
+  // library has no candidate (the glyph forces a symbol-font substitution, so
+  // prefer the icon).
+  const icon = createIcon({
+    library: resolveIconLibrary(inputs.presetSummary),
+    name: "close",
+    size: 16,
+    color: t.get("muted-foreground"),
+  });
+  if (icon) {
+    icon.name = "Icon";
+    btn.appendChild(icon);
+    return btn;
+  }
 
   const glyph = figma.createText();
   applyFont(glyph, "body", "Regular");

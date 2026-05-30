@@ -7,6 +7,7 @@ import {
   bindStrokeColor,
 } from "../bindings";
 import { applyFont } from "../../fonts";
+import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import { SECTION_WIDTH, type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -120,10 +121,31 @@ function buildButtonComponent(
   // Apply variant fill/stroke.
   applyButtonVariant(comp, variant, t);
 
-  // Label text.
+  const labelColor = buttonLabelColorVar(variant, t, inputs.tailwindColors);
+
+  if (isIconSize(size)) {
+    // Icon-only button: render a real icon from the preset's icon library,
+    // tinted to match the variant's label colour. Falls back to a `★` glyph
+    // when the active library has no candidate for the semantic icon.
+    const icon = createIcon({
+      library: resolveIconLibrary(inputs.presetSummary),
+      name: "plus",
+      size: size === "icon-xs" ? 14 : 16,
+      color: labelColor,
+    });
+    if (icon) {
+      icon.name = "Icon";
+      comp.appendChild(icon);
+      return comp;
+    }
+  }
+
+  // Label text (also the fallback glyph for icon sizes without a match — use
+  // a plain "+" rather than a symbol glyph so it stays within the preset font
+  // and never triggers an unloaded symbol-font substitution).
   const label = figma.createText();
   applyFont(label, "body", "Medium");
-  label.characters = isIconSize(size) ? "★" : "Button";
+  label.characters = isIconSize(size) ? "+" : "Button";
   label.fontSize = size === "xs" || size === "icon-xs" ? 12 : 14;
   bindFontSize(
     label,
@@ -131,7 +153,7 @@ function buildButtonComponent(
       ? p.get("font/size/xs")
       : p.get("font/size/sm"),
   );
-  applyButtonLabelColor(label, variant, t, inputs.tailwindColors);
+  bindFill(label, labelColor);
   if (variant === "link") {
     label.textDecoration = "UNDERLINE";
   }
@@ -201,30 +223,24 @@ function applyButtonVariant(
   }
 }
 
-function applyButtonLabelColor(
-  node: TextNode,
+function buttonLabelColorVar(
   variant: ButtonVariant,
   t: Map<string, Variable>,
   tw: Map<string, Variable>,
-) {
+): Variable | undefined {
   switch (variant) {
     case "default":
-      bindFill(node, t.get("primary-foreground"));
-      break;
+      return t.get("primary-foreground");
     case "secondary":
-      bindFill(node, t.get("secondary-foreground"));
-      break;
+      return t.get("secondary-foreground");
     case "destructive":
       // Tailwind `white` so the label stays legible on the solid destructive
       // surface regardless of the active preset.
-      bindFill(node, tw.get("white"));
-      break;
+      return tw.get("white");
     case "outline":
     case "ghost":
-      bindFill(node, t.get("foreground"));
-      break;
+      return t.get("foreground");
     case "link":
-      bindFill(node, t.get("primary"));
-      break;
+      return t.get("primary");
   }
 }

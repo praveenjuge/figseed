@@ -7,6 +7,7 @@
 
 import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
 import { applyFont } from "../../fonts";
+import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -55,16 +56,35 @@ function buildKbdComponent(
   comp.strokes = [];
 
   if (kind === "single") {
-    comp.appendChild(buildCap(inputs, "⌘"));
+    comp.appendChild(buildCommandCap(inputs));
   } else {
-    comp.appendChild(buildCap(inputs, "⌘"));
+    comp.appendChild(buildCommandCap(inputs));
     comp.appendChild(buildCap(inputs, "K"));
   }
 
   return comp;
 }
 
-function buildCap(inputs: ComponentsInputs, glyph: string): FrameNode {
+// A key cap rendering the ⌘ command key. Prefers a real `command` icon from
+// the preset's icon library (the ⌘ glyph isn't in most preset fonts and forces
+// an unloaded symbol-font substitution); falls back to the glyph when no
+// candidate exists.
+function buildCommandCap(inputs: ComponentsInputs): FrameNode {
+  const icon = createIcon({
+    library: resolveIconLibrary(inputs.presetSummary),
+    name: "command",
+    size: 12,
+    color: inputs.theme.light.get("muted-foreground"),
+  });
+  if (!icon) return buildCap(inputs, "⌘");
+
+  const cap = buildEmptyCap(inputs);
+  icon.name = "Icon";
+  cap.appendChild(icon);
+  return cap;
+}
+
+function buildEmptyCap(inputs: ComponentsInputs): FrameNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
@@ -87,6 +107,15 @@ function buildCap(inputs: ComponentsInputs, glyph: string): FrameNode {
   bindCornerRadii(cap, p.get("radius/sm"));
   bindFill(cap, t.get("muted"));
   cap.strokes = [];
+
+  return cap;
+}
+
+function buildCap(inputs: ComponentsInputs, glyph: string): FrameNode {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
+
+  const cap = buildEmptyCap(inputs);
 
   const text = figma.createText();
   applyFont(text, "body", "Medium");

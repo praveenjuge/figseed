@@ -7,6 +7,7 @@ import {
   bindStrokeColor,
 } from "../bindings";
 import { applyFont } from "../../fonts";
+import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -85,20 +86,30 @@ function buildAlertComponent(
   comp.appendChild(row);
   row.layoutSizingHorizontal = "FILL";
 
-  // Icon placeholder — a small filled square. shadcn's alert SVG inherits
-  // the alert's `text-current` colour (card-foreground for default,
-  // destructive for destructive variant).
-  const icon = figma.createFrame();
-  icon.name = "Icon";
-  icon.resize(16, 16);
-  icon.cornerRadius = 4;
-  bindCornerRadii(icon, p.get("radius/sm"));
-  if (variant === "destructive") {
-    bindFill(icon, t.get("destructive"));
+  // Icon — a real icon from the preset's icon library, inheriting the alert's
+  // `text-current` colour (card-foreground for default, destructive for the
+  // destructive variant). Falls back to a small filled square when the active
+  // library has no candidate for the semantic icon.
+  const iconColor =
+    variant === "destructive" ? t.get("destructive") : t.get("card-foreground");
+  const icon = createIcon({
+    library: resolveIconLibrary(inputs.presetSummary),
+    name: variant === "destructive" ? "warning" : "info",
+    size: 16,
+    color: iconColor,
+  });
+  if (icon) {
+    icon.name = "Icon";
+    row.appendChild(icon);
   } else {
-    bindFill(icon, t.get("card-foreground"));
+    const fallback = figma.createFrame();
+    fallback.name = "Icon";
+    fallback.resize(16, 16);
+    fallback.cornerRadius = 4;
+    bindCornerRadii(fallback, p.get("radius/sm"));
+    bindFill(fallback, iconColor);
+    row.appendChild(fallback);
   }
-  row.appendChild(icon);
 
   // Text column. radix-nova `gap-0.5` between title and description.
   const textCol = figma.createFrame();
