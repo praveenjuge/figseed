@@ -143,6 +143,10 @@ const BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 const VALID_VERSIONS = ["a", "b"] as const;
 
+// Codes we mint here always use the current v2 ("b") format, matching
+// shadcn's encodePreset().
+const CURRENT_VERSION = "b";
+
 function fromBase62(str: string): number {
   let result = 0;
   for (const ch of str) {
@@ -151,6 +155,28 @@ function fromBase62(str: string): number {
     result = result * 62 + idx;
   }
   return result;
+}
+
+function toBase62(num: number): string {
+  if (num === 0) return "0";
+  let result = "";
+  let n = num;
+  while (n > 0) {
+    result = BASE62[n % 62]! + result;
+    n = Math.floor(n / 62);
+  }
+  return result;
+}
+
+// Default config = the first value of every field, mirroring shadcn's
+// DEFAULT_PRESET_CONFIG. Used to backfill missing keys when encoding a
+// partial config.
+function defaultPresetConfig(): PresetConfig {
+  const out: Record<string, string> = {};
+  for (const field of PRESET_FIELDS_V2) {
+    out[field.key] = field.values[0]!;
+  }
+  return out as unknown as PresetConfig;
 }
 
 export function isPresetCode(value: string): boolean {
@@ -227,4 +253,43 @@ export function decodePreset(code: string): PresetConfig | null {
     out.chartColor = out.theme!;
   }
   return out as unknown as PresetConfig;
+}
+
+// Encode a (possibly partial) PresetConfig into a short v2 ("b") code.
+// Mirrors shadcn's encodePreset(): multiplication is used instead of bitwise
+// ops because JS bitwise truncates to 32 bits and the packed value is wider.
+export function encodePreset(config: Partial<PresetConfig>): string {
+  const merged: Record<string, string> =
+    defaultPresetConfig() as unknown as Record<string, string>;
+  for (const key of Object.keys(config)) {
+    const value = (config as Record<string, string | undefined>)[key];
+    if (value !== undefined) merged[key] = value;
+  }
+
+  let bits = 0;
+  let offset = 0;
+  for (const field of PRESET_FIELDS_V2) {
+    const values = field.values as readonly string[];
+    const idx = values.indexOf(merged[field.key]!);
+    bits += (idx === -1 ? 0 : idx) * 2 ** offset;
+    offset += field.bits;
+  }
+
+  return CURRENT_VERSION + toBase62(bits);
+}
+
+// Pick a uniformly random PresetConfig across every encoded field.
+export function generateRandomConfig(): PresetConfig {
+  const out: Record<string, string> = {};
+  for (const field of PRESET_FIELDS_V2) {
+    const values = field.values as readonly string[];
+    out[field.key] = values[Math.floor(Math.random() * values.length)]!;
+  }
+  return out as unknown as PresetConfig;
+}
+
+// Generate a random, valid v2 preset code. Mirrors shadcn's
+// generateRandomPreset() — the shuffle button in ui.shadcn.com/create.
+export function generateRandomPreset(): string {
+  return encodePreset(generateRandomConfig());
 }

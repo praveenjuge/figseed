@@ -162,9 +162,32 @@
         flex-direction: column;
         gap: 6px;
       }
+      .presets-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
       .presets-label {
         font-weight: 500;
         color: var(--fg);
+      }
+      .shuffle {
+        height: 24px;
+        padding: 0 10px;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .shuffle:hover:not(:disabled) {
+        border-color: var(--accent);
+      }
+      .shuffle:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
       .presets-list {
         display: flex;
@@ -225,6 +248,10 @@
       </label>
 
       <div class="presets" id="presets">
+        <div class="presets-header">
+          <span class="presets-label">Presets</span>
+          <button id="shuffle" type="button" class="shuffle">🎲 Shuffle</button>
+        </div>
         <div class="presets-list" id="presets-list"></div>
       </div>
 

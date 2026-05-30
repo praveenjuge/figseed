@@ -2,12 +2,14 @@
 // parent.postMessage and receives them via window.message events.
 
 import { extractPresetCode } from "./preset";
+import { generateRandomResolvablePreset } from "./registry";
 import { POPULAR_PRESETS } from "./popularPresets";
 import type { PluginToUi, UiToPlugin } from "./messages";
 
 const input = document.getElementById("preset") as HTMLInputElement;
 const generateButton = document.getElementById("generate") as HTMLButtonElement;
 const cancelButton = document.getElementById("cancel") as HTMLButtonElement;
+const shuffleButton = document.getElementById("shuffle") as HTMLButtonElement;
 const status = document.getElementById("status") as HTMLDivElement;
 const progress = document.getElementById("progress") as HTMLDivElement;
 const progressBar = progress.querySelector(".bar") as HTMLSpanElement;
@@ -58,10 +60,12 @@ function resetProgress() {
 function syncGenerateButton() {
   if (busy) {
     generateButton.disabled = true;
+    shuffleButton.disabled = true;
     setPresetButtonsDisabled(true);
     return;
   }
   generateButton.disabled = extractPresetCode(input.value) === null;
+  shuffleButton.disabled = false;
   setPresetButtonsDisabled(false);
 }
 
@@ -121,6 +125,13 @@ generateButton.addEventListener("click", () => {
 
 cancelButton.addEventListener("click", () => {
   postToPlugin({ type: "cancel" });
+});
+
+shuffleButton.addEventListener("click", () => {
+  if (busy) return;
+  const presetCode = generateRandomResolvablePreset();
+  input.value = presetCode;
+  runPreset(presetCode);
 });
 
 window.addEventListener("message", (event: MessageEvent) => {

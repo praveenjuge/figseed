@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   decodePreset,
+  encodePreset,
   extractPresetCode,
+  generateRandomConfig,
+  generateRandomPreset,
   isPresetCode,
   PRESET_FONTS,
 } from "../src/preset";
@@ -56,9 +59,9 @@ describe("extractPresetCode", () => {
     expect(extractPresetCode("npx shadcn@latest init --preset b2fA")).toBe(
       "b2fA",
     );
-    expect(
-      extractPresetCode("pnpm dlx shadcn@latest init --preset=b2fA"),
-    ).toBe("b2fA");
+    expect(extractPresetCode("pnpm dlx shadcn@latest init --preset=b2fA")).toBe(
+      "b2fA",
+    );
   });
 
   it("pulls the code off a query param", () => {
@@ -140,5 +143,56 @@ describe("decodePreset", () => {
     // every decoded font index.
     expect(PRESET_FONTS[0]).toBe("inter");
     expect(PRESET_FONTS).toContain("geist");
+  });
+});
+
+describe("encodePreset", () => {
+  it("round-trips every real preset through decode", () => {
+    for (const preset of REAL_PRESETS) {
+      const config = decodePreset(preset.code);
+      expect(config, preset.name).not.toBeNull();
+      // Re-encoding a decoded config reproduces the original code exactly.
+      expect(encodePreset(config!), preset.name).toBe(preset.code);
+    }
+  });
+
+  it("always emits a v2 ('b') code", () => {
+    expect(encodePreset({})[0]).toBe("b");
+  });
+
+  it("fills defaults for a partial config", () => {
+    const code = encodePreset({ style: "lyra" });
+    const config = decodePreset(code);
+    expect(config).not.toBeNull();
+    expect(config!.style).toBe("lyra");
+    // Unspecified fields fall back to the first value of each field.
+    expect(config!.baseColor).toBe("neutral");
+    expect(config!.theme).toBe("neutral");
+  });
+
+  it("ignores undefined values when merging", () => {
+    expect(encodePreset({ style: undefined })).toBe(encodePreset({}));
+  });
+});
+
+describe("generateRandomConfig / generateRandomPreset", () => {
+  it("produces a valid, decodable preset code", () => {
+    const code = generateRandomPreset();
+    expect(isPresetCode(code)).toBe(true);
+    expect(decodePreset(code)).not.toBeNull();
+  });
+
+  it("round-trips the random code through decode/encode", () => {
+    const code = generateRandomPreset();
+    const config = decodePreset(code);
+    expect(config).not.toBeNull();
+    expect(encodePreset(config!)).toBe(code);
+  });
+
+  it("only picks values from the known field catalogues", () => {
+    const config = generateRandomConfig();
+    expect(PRESET_FONTS).toContain(config.font);
+    // A round-trip re-encode must succeed for any random config.
+    expect(decodePreset(encodePreset(config))).not.toBeNull();
   });
 });

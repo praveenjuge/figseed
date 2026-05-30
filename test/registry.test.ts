@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  generateRandomResolvablePreset,
   isBaseColor,
+  isResolvablePreset,
   listAvailableThemes,
   resolvePreset,
 } from "../src/registry";
+import { decodePreset } from "../src/preset";
 import {
   CHART_OVERRIDE_CODE,
   MENU_BOLD_CODE,
@@ -111,15 +114,46 @@ describe("listAvailableThemes / isBaseColor", () => {
   });
 });
 
-describe("known gap: gray theme is missing from the catalogue", () => {
-  it("throws when a preset resolves to the gray family", () => {
+describe("gray theme is missing from the catalogue", () => {
+  it("returns a friendly error instead of throwing", () => {
     // "gray" is a valid PRESET_BASE_COLOR / PRESET_THEME index but has no entry
-    // in src/data/themes.json, so buildRegistry throws. This documents current
-    // behavior; see the PR description for the suggested fix.
+    // in src/data/themes.json. resolvePreset must surface this as an error
+    // rather than throwing — an uncaught throw hangs the UI on "Resolving…".
     //
-    // Code below decodes to baseColor=gray, theme=gray.
+    // encodeGray() decodes to baseColor=gray, theme=gray.
     const grayCode = encodeGray();
-    expect(() => resolvePreset(grayCode)).toThrow(/Missing theme entry/);
+    expect(() => resolvePreset(grayCode)).not.toThrow();
+    const result = resolvePreset(grayCode);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/gray/);
+    }
+  });
+});
+
+describe("isResolvablePreset", () => {
+  it("accepts a config whose colors are all bundled", () => {
+    const config = decodePreset("b2fA"); // neutral/neutral
+    expect(config).not.toBeNull();
+    expect(isResolvablePreset(config!)).toBe(true);
+  });
+
+  it("rejects a config that lands on the missing gray family", () => {
+    const config = decodePreset(encodeGray());
+    expect(config).not.toBeNull();
+    expect(isResolvablePreset(config!)).toBe(false);
+  });
+});
+
+describe("generateRandomResolvablePreset", () => {
+  it("always produces a code that resolves cleanly", () => {
+    // The generator re-rolls unresolvable configs (e.g. gray), so every code
+    // it returns must build without error.
+    for (let i = 0; i < 200; i++) {
+      const code = generateRandomResolvablePreset();
+      const result = resolvePreset(code);
+      expect(result.ok, code).toBe(true);
+    }
   });
 });
 
@@ -130,7 +164,10 @@ function encodeGray(): string {
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   // Field bit widths, in order: menuColor(3) menuAccent(3) radius(4) font(6)
   // iconLibrary(6) theme(6) baseColor(6) style(6) chartColor(6) fontHeading(5)
-  const offsets = { theme: 3 + 3 + 4 + 6 + 6, baseColor: 3 + 3 + 4 + 6 + 6 + 6 };
+  const offsets = {
+    theme: 3 + 3 + 4 + 6 + 6,
+    baseColor: 3 + 3 + 4 + 6 + 6 + 6,
+  };
   let bits = 0;
   bits += 3 * 2 ** offsets.theme; // theme = gray (index 3)
   bits += 3 * 2 ** offsets.baseColor; // baseColor = gray (index 3)
