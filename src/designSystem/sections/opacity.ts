@@ -14,20 +14,20 @@ export async function addOpacityScale(
 ): Promise<number> {
   const section = createSectionFrame("Opacity scale");
 
-  const row = createWrappingRow(section, 8);
+  const row = createWrappingRow(section, 6);
 
   for (const token of OPACITY_TOKENS) {
     const cell = figma.createFrame();
     cell.layoutMode = "VERTICAL";
-    cell.itemSpacing = 6;
+    cell.itemSpacing = 4;
     cell.counterAxisAlignItems = "CENTER";
     cell.fills = [];
-    cell.resize(56, 80);
+    cell.resize(44, 56);
     cell.primaryAxisSizingMode = "FIXED";
     cell.counterAxisSizingMode = "FIXED";
 
     const tile = figma.createFrame();
-    tile.resize(48, 48);
+    tile.resize(36, 36);
     tile.cornerRadius = 4;
     bindFill(tile, inputs.theme.light.get("primary"));
     tile.opacity = Math.max(0.0001, token.value / 100);

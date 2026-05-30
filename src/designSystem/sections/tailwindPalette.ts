@@ -19,10 +19,10 @@ export async function addTailwindPalette(
 ): Promise<number> {
   const section = createSectionFrame("Tailwind palette");
 
-  const stack = createVertical(section, 8);
+  const stack = createVertical(section, 2);
   const rowWidth = sectionContentWidth();
-  const labelWidth = 64;
-  const rowHeight = 36; // each scale row is exactly this tall
+  const labelWidth = 56;
+  const rowHeight = 24; // each scale row is exactly this tall
 
   for (const family of TAILWIND_COLOR_FAMILIES) {
     const row = figma.createFrame();
@@ -49,10 +49,10 @@ export async function addTailwindPalette(
       swatch.layoutMode = "VERTICAL";
       swatch.primaryAxisAlignItems = "MAX";
       swatch.counterAxisAlignItems = "MIN";
-      swatch.paddingLeft = 4;
-      swatch.paddingRight = 4;
-      swatch.paddingTop = 4;
-      swatch.paddingBottom = 4;
+      swatch.paddingLeft = 3;
+      swatch.paddingRight = 3;
+      swatch.paddingTop = 2;
+      swatch.paddingBottom = 2;
       // Grow horizontally to share the remaining row width and stretch
       // vertically to match the row height. Together these keep the swatch
       // a real rectangle instead of collapsing onto its label.
@@ -84,7 +84,7 @@ export async function addTailwindPalette(
   for (const name of ["white", "black", "transparent"]) {
     const cell = createVertical(neutralRow, 4);
     const swatch = figma.createFrame();
-    swatch.resize(64, 36);
+    swatch.resize(56, 24);
     swatch.cornerRadius = 4;
     swatch.strokeWeight = 1;
     swatch.strokes = [solidPaint(0.85)];
