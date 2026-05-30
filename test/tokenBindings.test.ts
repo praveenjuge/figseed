@@ -296,4 +296,30 @@ describe("applyTokenBindings", () => {
     const bound = effect.boundVariables as Record<string, { id: string }>;
     expect(bound.radius!.id).toBe(primitives.get("blur/md")!.id);
   });
+
+  it("skips effect-radius binding on nodes that reference an effect style", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const frame = figma.createFrame();
+    // The node references a published effect style, so the style owns the
+    // effects. The pass must leave the literal effect untouched.
+    (frame as unknown as Record<string, unknown>).effectStyleId = "style-1";
+    frame.effects = [
+      {
+        type: "DROP_SHADOW",
+        radius: 12,
+        color: { r: 0, g: 0, b: 0, a: 0.1 },
+        offset: { x: 0, y: 2 },
+        spread: 0,
+        visible: true,
+        blendMode: "NORMAL",
+      },
+    ];
+
+    applyTokenBindings(frame as never, primitives);
+
+    const effect = (frame.effects as Array<Record<string, unknown>>)[0]!;
+    expect(effect.boundVariables).toBeUndefined();
+  });
 });

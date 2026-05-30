@@ -52,6 +52,8 @@ src/
   fonts.ts           # loads preset body/heading fonts, applies + binds them
   colors/            # Tailwind table, OKLCH→sRGB, alias matcher
   primitives.ts      # radius/spacing/typography token tables
+  effects.ts         # Tailwind shadow + blur effect token tables
+  effectStyles.ts    # idempotent Figma effect styles (shadows, blur, backdrop)
   generator/         # builds Figma collections, modes, variables
   designSystem/      # rebuilds the "Design System" page
   componentsPage/    # rebuilds the "Components" page (shadcn primitives)

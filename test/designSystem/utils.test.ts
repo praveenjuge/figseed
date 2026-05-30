@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   countDescendants,
   loadCommonFonts,
+  shortTokenName,
   summarizePreset,
   weightStyleName,
 } from "../../src/designSystem/utils";
@@ -75,6 +76,21 @@ describe("loadCommonFonts", () => {
     expect(families).toContain("Thin");
     expect(families).toContain("Black");
     expect(families.length).toBeGreaterThanOrEqual(9);
+  });
+});
+
+describe("shortTokenName", () => {
+  it("strips the group prefix from a slash-namespaced name", () => {
+    expect(shortTokenName("Shadow/sm")).toBe("sm");
+    expect(shortTokenName("Backdrop Blur/xl")).toBe("xl");
+  });
+
+  it("returns the name unchanged when there is no slash", () => {
+    expect(shortTokenName("none")).toBe("none");
+  });
+
+  it("keeps only the segment after the last slash", () => {
+    expect(shortTokenName("a/b/c")).toBe("c");
   });
 });
 

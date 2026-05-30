@@ -41,6 +41,7 @@ import {
   type SectionBuilder,
 } from "./types";
 import { loadComponentsFonts } from "./utils";
+import { ensureEffectStyles } from "../effectStyles";
 import { applyTokenBindings } from "../tokenBindings";
 
 export type { ComponentsInputs, ComponentsResult } from "./types";
@@ -94,13 +95,19 @@ export async function buildComponentsPage(
 
   await loadComponentsFonts(inputs);
 
+  // Publish/refresh the shadow + blur effect styles (idempotent) so component
+  // sections can reference real styles instead of literal effects.
+  const effectStyles =
+    inputs.effectStyles ?? (await ensureEffectStyles(inputs.primitives));
+  const inputsWithStyles: ComponentsInputs = { ...inputs, effectStyles };
+
   const total = SECTIONS.length;
   let count = 0;
 
   for (let i = 0; i < SECTIONS.length; i++) {
     const section = SECTIONS[i]!;
     inputs.onProgress?.(i, total, section.label);
-    count += await section.build(page, inputs);
+    count += await section.build(page, inputsWithStyles);
     await Promise.resolve();
   }
   inputs.onProgress?.(total, total, "Done");

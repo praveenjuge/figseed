@@ -10,6 +10,7 @@ import {
 import { ensurePrimitivesCollection, resolveFontFamily } from "./primitives";
 import { ensureTailwindColorCollection } from "./tailwindColors";
 import { ensureThemeCollection } from "./theme";
+import { ensureEffectStyles } from "../effectStyles";
 import type {
   GenerateOptions,
   GenerateResult,
@@ -24,6 +25,7 @@ export type {
   ThemeFontVars,
   ThemeVariableMaps,
 } from "./types";
+export type { EffectStyleMap } from "../effectStyles";
 
 export async function generateFromRegistry(
   data: ResolvedRegistry,
@@ -34,6 +36,10 @@ export async function generateFromRegistry(
     fontFamily: resolveFontFamily(options.presetSummary?.["font"]),
   });
   const themeResult = await ensureThemeCollection(data, colorVars);
+
+  // Publish the shadow + blur effect styles. Their blur radii bind to the
+  // `blur/*` primitives created just above, so the styles stay in sync.
+  const effectStyles = await ensureEffectStyles(primitives);
 
   return {
     presetCode: options.presetCode,
@@ -47,6 +53,7 @@ export async function generateFromRegistry(
     ],
     fallbackThemeColors: themeResult.unaliasedCount,
     fonts: themeResult.fonts,
+    effectStyles,
     variables: {
       tailwindColors: colorVars,
       primitives,

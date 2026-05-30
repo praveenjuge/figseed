@@ -65,6 +65,7 @@ async function handleGenerate(rawCode: string) {
       theme: result.variables.theme,
       fonts: result.fonts,
       fontVars: result.variables.fonts,
+      effectStyles: result.effectStyles,
       onProgress: (current, total, label) => {
         post({
           type: "progress",
@@ -85,6 +86,7 @@ async function handleGenerate(rawCode: string) {
       theme: result.variables.theme,
       fonts: result.fonts,
       fontVars: result.variables.fonts,
+      effectStyles: result.effectStyles,
       onProgress: (current, total, label) => {
         post({
           type: "progress",

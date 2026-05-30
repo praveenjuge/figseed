@@ -1,26 +1,34 @@
-// Blur scale: each token rendered as a frosted overlay on a colorful stage,
-// with the overlay's backdrop blur radius bound to the matching primitive.
+// Blur scale: layer blur + backdrop blur, each token published as a Figma
+// effect style (Blur/* and Backdrop Blur/* — see src/effectStyles.ts). Tiles
+// reference the matching style so editing the style (or the `blur/*` primitive
+// the style's radius binds to) reflows every blurred node.
 
 import { BLUR_BG_BASE64 } from "../../data/blurBackground";
-import { BLUR_TOKENS } from "../../primitives";
+import {
+  BACKDROP_BLUR_STYLE_SPECS,
+  BLUR_STYLE_SPECS,
+  type BlurStyleSpec,
+} from "../../effects";
+import { applyEffectStyle } from "../../effectStyles";
 import { applyFont } from "../../fonts";
 import { bindEffectRadius, bindFill } from "../bindings";
 import {
   createSectionFrame,
-  createVertical,
+  createSubSection,
   createWrappingRow,
+  sectionContentWidth,
 } from "../layout";
 import { solidPaintRgba } from "../paints";
 import type { DesignSystemInputs } from "../types";
-import { countDescendants } from "../utils";
+import { countDescendants, shortTokenName } from "../utils";
+
+const TILE = 64; // compact stage size
 
 export async function addBlurAndBackdrop(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
   const section = createSectionFrame("Blur & backdrop");
-
-  const row = createWrappingRow(section, 16);
 
   // Decode the bundled background once and reuse the same image hash for
   // every tile. Figma deduplicates by hash, so this is safe across runs.
@@ -31,26 +39,78 @@ export async function addBlurAndBackdrop(
     imageHash: bgImage.hash,
   };
 
-  for (const token of BLUR_TOKENS) {
-    const cell = createVertical(row, 8);
+  await addLayerBlurGroup(section, inputs, bgPaint);
+  await addBackdropBlurGroup(section, inputs, bgPaint);
 
-    // Stage holds the bundled image as backdrop plus a frosted overlay on
-    // top. A photo-style image gives the backdrop blur richer color
-    // information to dissolve than the previous flat circles.
+  page.appendChild(section);
+  return countDescendants(section);
+}
+
+// A left-to-right wrapping row sized to the section content width, so the
+// tiles flow horizontally and wrap like the opacity scale.
+function blurRow(group: FrameNode): FrameNode {
+  const row = createWrappingRow(group, 12);
+  row.resize(sectionContentWidth(), 1);
+  return row;
+}
+
+// Layer blur blurs the node's own pixels. We render the bundled photo in each
+// tile and apply the matching Blur/* style.
+async function addLayerBlurGroup(
+  section: FrameNode,
+  inputs: DesignSystemInputs,
+  bgPaint: ImagePaint,
+): Promise<void> {
+  const row = blurRow(createSubSection(section, "Layer blur"));
+
+  for (const spec of BLUR_STYLE_SPECS) {
+    const cell = blurCell();
+
+    const tile = figma.createFrame();
+    tile.resize(TILE, TILE);
+    tile.cornerRadius = 8;
+    tile.clipsContent = true;
+    tile.fills = [bgPaint];
+    tile.effects = [
+      {
+        type: "LAYER_BLUR",
+        blurType: "NORMAL",
+        radius: spec.radius,
+        visible: true,
+      },
+    ];
+    bindEffectRadius(tile, 0, inputs.primitives.get(`blur/${spec.tokenName}`));
+    await applyEffectStyle(tile, inputs.effectStyles?.idFor(spec.name));
+
+    cell.appendChild(tile);
+    cell.appendChild(blurLabel(spec, inputs));
+    row.appendChild(cell);
+  }
+}
+
+// Backdrop blur dissolves whatever sits behind a translucent overlay. We stack
+// a frosted overlay over the bundled photo and apply the Backdrop Blur/* style.
+async function addBackdropBlurGroup(
+  section: FrameNode,
+  inputs: DesignSystemInputs,
+  bgPaint: ImagePaint,
+): Promise<void> {
+  const row = blurRow(createSubSection(section, "Backdrop blur"));
+
+  for (const spec of BACKDROP_BLUR_STYLE_SPECS) {
+    const cell = blurCell();
+
     const stage = figma.createFrame();
-    stage.resize(112, 112);
-    stage.cornerRadius = 12;
+    stage.resize(TILE, TILE);
+    stage.cornerRadius = 8;
     stage.clipsContent = true; // blur should stay within the tile
     stage.fills = [bgPaint];
 
-    // Frosted overlay with a backdrop blur. We give it a non-zero radius
-    // even at "blur/none" so Figma keeps the effect on the node and the
-    // bound variable continues to drive it.
     const overlay = figma.createFrame();
-    overlay.resize(88, 56);
-    overlay.x = 12;
-    overlay.y = 28;
-    overlay.cornerRadius = 8;
+    overlay.resize(TILE - 16, TILE - 28);
+    overlay.x = 8;
+    overlay.y = 14;
+    overlay.cornerRadius = 6;
     overlay.fills = [solidPaintRgba({ r: 1, g: 1, b: 1, a: 0.4 })];
     overlay.strokes = [solidPaintRgba({ r: 1, g: 1, b: 1, a: 0.5 })];
     overlay.strokeWeight = 1;
@@ -58,30 +118,40 @@ export async function addBlurAndBackdrop(
       {
         type: "BACKGROUND_BLUR",
         blurType: "NORMAL",
-        radius: Math.max(token.value, 0.01),
+        radius: spec.radius,
         visible: true,
       },
     ];
-    bindEffectRadius(overlay, 0, inputs.primitives.get(`blur/${token.name}`));
+    bindEffectRadius(
+      overlay,
+      0,
+      inputs.primitives.get(`blur/${spec.tokenName}`),
+    );
+    await applyEffectStyle(overlay, inputs.effectStyles?.idFor(spec.name));
     stage.appendChild(overlay);
 
-    const label = figma.createText();
-    label.characters = `blur/${token.name}`;
-    label.fontSize = 11;
-    applyFont(label, "body", "Medium");
-    bindFill(label, inputs.theme.light.get("foreground"));
-
-    const sub = figma.createText();
-    sub.characters = `${token.value}px`;
-    sub.fontSize = 10;
-    applyFont(sub, "body", "Regular");
-    bindFill(sub, inputs.theme.light.get("muted-foreground"));
-
     cell.appendChild(stage);
-    cell.appendChild(label);
-    cell.appendChild(sub);
+    cell.appendChild(blurLabel(spec, inputs));
+    row.appendChild(cell);
   }
+}
 
-  page.appendChild(section);
-  return countDescendants(section);
+function blurCell(): FrameNode {
+  const cell = figma.createFrame();
+  cell.layoutMode = "VERTICAL";
+  cell.itemSpacing = 6;
+  cell.counterAxisAlignItems = "CENTER";
+  cell.fills = [];
+  cell.primaryAxisSizingMode = "AUTO";
+  cell.counterAxisSizingMode = "AUTO";
+  return cell;
+}
+
+function blurLabel(spec: BlurStyleSpec, inputs: DesignSystemInputs): TextNode {
+  const label = figma.createText();
+  label.characters = `${shortTokenName(spec.name)} · ${spec.radius}`;
+  label.fontSize = 10;
+  applyFont(label, "body", "Medium");
+  bindFill(label, inputs.theme.light.get("muted-foreground"));
+  return label;
 }

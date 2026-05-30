@@ -6,6 +6,7 @@ import type {
   ThemeFontVars,
   ThemeVariableMaps,
 } from "../generator";
+import type { EffectStyleMap } from "../effectStyles";
 import type { ResolvedFonts } from "../primitives";
 
 export const PAGE_NAME = "Components";
@@ -24,6 +25,9 @@ export type ComponentsInputs = {
   // callers/tests keep working; the builder falls back to Inter when absent.
   fonts?: ResolvedFonts;
   fontVars?: ThemeFontVars;
+  // Shadow + blur effect styles. Populated by the builder when absent so
+  // sections can reference published styles instead of literal effects.
+  effectStyles?: EffectStyleMap;
   onProgress?: (current: number, total: number, label: string) => void;
 };
 

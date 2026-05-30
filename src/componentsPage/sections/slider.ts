@@ -4,6 +4,7 @@
 // primary range, `size-3` (12px) circular thumb with `border-ring bg-white`.
 
 import { bindFill, bindStrokeColor } from "../bindings";
+import { applyEffectStyle } from "../../effectStyles";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -23,7 +24,7 @@ export async function addSliderSection(
 ): Promise<number> {
   const components: ComponentNode[] = [];
   for (const value of SLIDER_VALUES) {
-    const comp = buildSliderComponent(inputs, value);
+    const comp = await buildSliderComponent(inputs, value);
     page.appendChild(comp);
     components.push(comp);
   }
@@ -40,7 +41,7 @@ export async function addSliderSection(
 function buildSliderComponent(
   inputs: ComponentsInputs,
   value: SliderValue,
-): ComponentNode {
+): Promise<ComponentNode> {
   const t = inputs.theme.light;
   const tw = inputs.tailwindColors;
 
@@ -97,5 +98,7 @@ function buildSliderComponent(
   ];
   comp.appendChild(thumb);
 
-  return comp;
+  return applyEffectStyle(thumb, inputs.effectStyles?.idFor("Shadow/sm")).then(
+    () => comp,
+  );
 }

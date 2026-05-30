@@ -6,6 +6,7 @@
 
 import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
 import { applyFont } from "../../fonts";
+import { applyEffectStyle } from "../../effectStyles";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -24,7 +25,7 @@ export async function addTabsSection(
 ): Promise<number> {
   const components: ComponentNode[] = [];
   for (const active of ACTIVE_INDICES) {
-    const comp = buildTabsComponent(inputs, active);
+    const comp = await buildTabsComponent(inputs, active);
     page.appendChild(comp);
     components.push(comp);
   }
@@ -38,10 +39,10 @@ export async function addTabsSection(
   return countDescendants(componentSet);
 }
 
-function buildTabsComponent(
+async function buildTabsComponent(
   inputs: ComponentsInputs,
   active: ActiveIndex,
-): ComponentNode {
+): Promise<ComponentNode> {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
@@ -64,18 +65,18 @@ function buildTabsComponent(
   comp.strokes = [];
 
   for (let i = 0; i < TAB_LABELS.length; i++) {
-    const trigger = buildTabTrigger(inputs, TAB_LABELS[i]!, i === active);
+    const trigger = await buildTabTrigger(inputs, TAB_LABELS[i]!, i === active);
     comp.appendChild(trigger);
   }
 
   return comp;
 }
 
-function buildTabTrigger(
+async function buildTabTrigger(
   inputs: ComponentsInputs,
   label: string,
   isActive: boolean,
-): FrameNode {
+): Promise<FrameNode> {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
@@ -112,6 +113,9 @@ function buildTabTrigger(
         showShadowBehindNode: true,
       },
     ];
+    // Reference the shared Shadow/xs effect style so the active tab tracks
+    // later edits to the shadow scale.
+    await applyEffectStyle(trigger, inputs.effectStyles?.idFor("Shadow/xs"));
   } else {
     trigger.fills = [];
   }

@@ -60,6 +60,7 @@ export type FakeNode = {
   resizeWithoutConstraints(w: number, h: number): void;
   setBoundVariable(field: string, variable: { id: string }): void;
   setFillStyleIdAsync(styleId: string): Promise<void>;
+  setEffectStyleIdAsync(styleId: string): Promise<void>;
   remove(): void;
   [key: string]: unknown;
 };
@@ -74,10 +75,19 @@ export type FakePaintStyle = {
   remove(): void;
 };
 
+export type FakeEffectStyle = {
+  id: string;
+  name: string;
+  type: "EFFECT";
+  effects: unknown[];
+  remove(): void;
+};
+
 export function createFigmaMock() {
   const collections = new Map<string, FakeCollection>();
   const variables = new Map<string, FakeVariable>();
   const paintStyles = new Map<string, FakePaintStyle>();
+  const effectStyles = new Map<string, FakeEffectStyle>();
 
   class FakeVariable {
     id = nextId("var");
@@ -197,6 +207,10 @@ export function createFigmaMock() {
       },
       setFillStyleIdAsync(styleId: string) {
         node.fillStyleId = styleId;
+        return Promise.resolve();
+      },
+      setEffectStyleIdAsync(styleId: string) {
+        node.effectStyleId = styleId;
         return Promise.resolve();
       },
       remove() {
@@ -320,6 +334,22 @@ export function createFigmaMock() {
       return style;
     },
     getLocalPaintStylesAsync: () => Promise.resolve([...paintStyles.values()]),
+
+    createEffectStyle: (): FakeEffectStyle => {
+      const style: FakeEffectStyle = {
+        id: nextId("style"),
+        name: "",
+        type: "EFFECT",
+        effects: [],
+        remove() {
+          effectStyles.delete(style.id);
+        },
+      };
+      effectStyles.set(style.id, style);
+      return style;
+    },
+    getLocalEffectStylesAsync: () =>
+      Promise.resolve([...effectStyles.values()]),
 
     combineAsVariants: (components: FakeNode[], parent: FakeNode) => {
       const set = makeNode("COMPONENT_SET");

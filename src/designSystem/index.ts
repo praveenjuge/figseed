@@ -25,6 +25,7 @@ import {
   type SectionBuilder,
 } from "./types";
 import { loadDesignSystemFonts } from "./utils";
+import { ensureEffectStyles } from "../effectStyles";
 import { applyTokenBindings } from "../tokenBindings";
 
 export type { DesignSystemInputs, DesignSystemResult } from "./types";
@@ -80,13 +81,20 @@ export async function buildDesignSystem(
   // gracefully on machines that don't have a given family.
   await loadDesignSystemFonts(inputs);
 
+  // Publish the shadow + blur effect styles (idempotent) so the shadow and
+  // blur sections can reference real styles instead of baking literal effects.
+  // Blur radii bind to the matching `blur/*` primitive variables.
+  const effectStyles =
+    inputs.effectStyles ?? (await ensureEffectStyles(inputs.primitives));
+  const inputsWithStyles: DesignSystemInputs = { ...inputs, effectStyles };
+
   const total = SECTIONS.length;
   let count = 0;
 
   for (let i = 0; i < SECTIONS.length; i++) {
     const section = SECTIONS[i]!;
     inputs.onProgress?.(i, total, section.label);
-    count += await section.build(page, inputs);
+    count += await section.build(page, inputsWithStyles);
     // Yield to the event loop so the UI can paint between sections.
     await Promise.resolve();
   }

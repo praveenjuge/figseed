@@ -1,6 +1,7 @@
 // Switch: toggle with thumb, two sizes × two states.
 
 import { bindCornerRadii, bindFill } from "../bindings";
+import { applyEffectStyle } from "../../effectStyles";
 import { styleComponentSet } from "../layout";
 import { SECTION_WIDTH, type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -29,7 +30,7 @@ export async function addSwitchSection(
   const components: ComponentNode[] = [];
   for (const size of SWITCH_SIZES) {
     for (const state of SWITCH_STATES) {
-      const comp = buildSwitchComponent(inputs, size, state);
+      const comp = await buildSwitchComponent(inputs, size, state);
       page.appendChild(comp);
       components.push(comp);
     }
@@ -52,7 +53,7 @@ function buildSwitchComponent(
   inputs: ComponentsInputs,
   size: SwitchSize,
   state: SwitchState,
-): ComponentNode {
+): Promise<ComponentNode> {
   const t = inputs.theme.light;
   const p = inputs.primitives;
   const dims = SWITCH_DIMS[size];
@@ -99,5 +100,7 @@ function buildSwitchComponent(
   ];
   comp.appendChild(thumb);
 
-  return comp;
+  return applyEffectStyle(thumb, inputs.effectStyles?.idFor("Shadow/xs")).then(
+    () => comp,
+  );
 }

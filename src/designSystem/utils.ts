@@ -88,3 +88,10 @@ export function countDescendants(node: SceneNode): number {
   }
   return count;
 }
+
+// Strip the group prefix from a slash-namespaced style/token name so tiles can
+// show a compact label (e.g. "Shadow/sm" → "sm", "Backdrop Blur/xl" → "xl").
+export function shortTokenName(name: string): string {
+  const slash = name.lastIndexOf("/");
+  return slash >= 0 ? name.slice(slash + 1) : name;
+}

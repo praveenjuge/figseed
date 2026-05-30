@@ -193,7 +193,12 @@ function axisIsFixed(node: SceneNode, axis: "width" | "height"): boolean {
 
 // Bind a node's drop-shadow / blur radii onto the `blur/*` scale. Effects are
 // immutable objects, so this rebuilds the array via setBoundVariableForEffect.
+// Nodes that reference an effect style are skipped — the style owns the
+// effects (and editing them directly would throw in Figma).
 function bindEffectRadii(node: SceneNode, primitives: VarMap): void {
+  const styleId = (node as unknown as { effectStyleId?: unknown })
+    .effectStyleId;
+  if (typeof styleId === "string" && styleId.length > 0) return;
   const effects = (node as unknown as { effects?: unknown }).effects;
   if (!Array.isArray(effects) || effects.length === 0) return;
   let changed = false;

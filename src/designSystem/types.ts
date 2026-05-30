@@ -6,6 +6,7 @@ import type {
   ThemeFontVars,
   ThemeVariableMaps,
 } from "../generator";
+import type { EffectStyleMap } from "../effectStyles";
 import type { ResolvedFonts } from "../primitives";
 
 export const PAGE_NAME = "Design System";
@@ -25,6 +26,9 @@ export type DesignSystemInputs = {
   // callers/tests keep working; the builder falls back to Inter when absent.
   fonts?: ResolvedFonts;
   fontVars?: ThemeFontVars;
+  // Shadow + blur effect styles. Populated by the builder when absent so the
+  // sections can reference published styles instead of literal effects.
+  effectStyles?: EffectStyleMap;
   // Called once per section so the UI can show a determinate progress bar.
   onProgress?: (current: number, total: number, label: string) => void;
 };
