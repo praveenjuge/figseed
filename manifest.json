@@ -4,6 +4,10 @@
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html",
+  "menu": [
+    { "name": "Generate from preset…", "command": "open" },
+    { "name": "Shuffle a random preset", "command": "shuffle" }
+  ],
   "editorType": ["figma"],
   "documentAccess": "dynamic-page",
   "networkAccess": {

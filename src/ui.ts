@@ -128,11 +128,15 @@ cancelButton.addEventListener("click", () => {
 });
 
 shuffleButton.addEventListener("click", () => {
+  runShuffle();
+});
+
+function runShuffle() {
   if (busy) return;
   const presetCode = generateRandomResolvablePreset();
   input.value = presetCode;
   runPreset(presetCode);
-});
+}
 
 window.addEventListener("message", (event: MessageEvent) => {
   const message = event.data?.pluginMessage as PluginToUi | undefined;
@@ -140,6 +144,11 @@ window.addEventListener("message", (event: MessageEvent) => {
 
   if (message.type === "ready") {
     syncGenerateButton();
+    // When launched from the "Shuffle a random preset" command in Figma's
+    // quick-actions palette, kick off a shuffle immediately.
+    if (message.command === "shuffle") {
+      runShuffle();
+    }
     return;
   }
 

@@ -10,7 +10,11 @@ import type { PluginToUi, UiToPlugin } from "./messages";
 
 figma.showUI(__html__, { width: 360, height: 360, themeColors: true });
 
-post({ type: "ready" });
+// `figma.command` is set when the plugin is launched from a manifest menu item
+// (the Figma quick-actions command palette / Plugins submenu). It's "" when the
+// plugin is run without a menu entry. Forward it so the UI can act on it (e.g.
+// auto-shuffle when launched from the "Shuffle a random preset" command).
+post({ type: "ready", command: figma.command || undefined });
 
 figma.ui.onmessage = async (message: UiToPlugin) => {
   if (!message || typeof message !== "object") return;

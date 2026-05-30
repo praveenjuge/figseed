@@ -5,7 +5,7 @@ export type UiToPlugin =
   | { type: "cancel" };
 
 export type PluginToUi =
-  | { type: "ready" }
+  | { type: "ready"; command?: string }
   | {
       type: "progress";
       message: string;
