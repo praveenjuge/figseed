@@ -12,12 +12,15 @@ import { addBadgeSection } from "./sections/badge";
 import { addBreadcrumbSection } from "./sections/breadcrumb";
 import { addButtonSection } from "./sections/button";
 import { addButtonGroupSection } from "./sections/buttonGroup";
+import { addCalendarSection } from "./sections/calendar";
 import { addCardSection } from "./sections/card";
 import { addCheckboxSection } from "./sections/checkbox";
+import { addCommandSection } from "./sections/command";
 import { addDialogSection } from "./sections/dialog";
 import { addDropdownMenuSection } from "./sections/dropdownMenu";
 import { addEmptySection } from "./sections/empty";
 import { addHeader } from "./sections/header";
+import { addHoverCardSection } from "./sections/hoverCard";
 import { addInputSection } from "./sections/input";
 import { addInputOtpSection } from "./sections/inputOtp";
 import { addKbdSection } from "./sections/kbd";
@@ -28,8 +31,10 @@ import { addProgressSection } from "./sections/progress";
 import { addRadioGroupSection } from "./sections/radioGroup";
 import { addSelectSection } from "./sections/select";
 import { addSeparatorSection } from "./sections/separator";
+import { addSheetSection } from "./sections/sheet";
 import { addSkeletonSection } from "./sections/skeleton";
 import { addSliderSection } from "./sections/slider";
+import { addSonnerSection } from "./sections/sonner";
 import { addSpinnerSection } from "./sections/spinner";
 import { addSwitchSection } from "./sections/switch";
 import { addTableSection } from "./sections/table";
@@ -67,11 +72,14 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Breadcrumb", build: addBreadcrumbSection },
   { label: "Button", build: addButtonSection },
   { label: "Button Group", build: addButtonGroupSection },
+  { label: "Calendar", build: addCalendarSection },
   { label: "Card", build: addCardSection },
   { label: "Checkbox", build: addCheckboxSection },
+  { label: "Command", build: addCommandSection },
   { label: "Dialog", build: addDialogSection },
   { label: "Dropdown Menu", build: addDropdownMenuSection },
   { label: "Empty", build: addEmptySection },
+  { label: "Hover Card", build: addHoverCardSection },
   { label: "Input", build: addInputSection },
   { label: "Input OTP", build: addInputOtpSection },
   { label: "Kbd", build: addKbdSection },
@@ -82,8 +90,10 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Radio Group", build: addRadioGroupSection },
   { label: "Select", build: addSelectSection },
   { label: "Separator", build: addSeparatorSection },
+  { label: "Sheet", build: addSheetSection },
   { label: "Skeleton", build: addSkeletonSection },
   { label: "Slider", build: addSliderSection },
+  { label: "Sonner", build: addSonnerSection },
   { label: "Spinner", build: addSpinnerSection },
   { label: "Switch", build: addSwitchSection },
   { label: "Table", build: addTableSection },
