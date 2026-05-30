@@ -47,6 +47,7 @@ async function handleGenerate(rawCode: string) {
           font: decoded.font,
           fontHeading: decoded.fontHeading,
           radius: decoded.radius,
+          iconLibrary: decoded.iconLibrary,
         }
       : undefined;
 

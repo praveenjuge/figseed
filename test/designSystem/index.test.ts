@@ -4,9 +4,7 @@ import type { DesignSystemInputs } from "../../src/designSystem";
 import { generateFromRegistry } from "../../src/generator";
 import { resolvePreset } from "../../src/registry";
 
-async function makeInputs(
-  code = "b2fA",
-): Promise<DesignSystemInputs> {
+async function makeInputs(code = "b2fA"): Promise<DesignSystemInputs> {
   const resolved = resolvePreset(code);
   if (!resolved.ok) throw new Error("fixture failed to resolve");
   const generated = await generateFromRegistry(resolved.data, {
@@ -26,26 +24,31 @@ describe("buildDesignSystem", () => {
     const result = await buildDesignSystem(inputs);
     expect(result.nodeCount).toBeGreaterThan(0);
 
-    const page = (globalThis as { figma: { root: { children: { name: string }[] } } })
-      .figma.root.children.find((c) => c.name === "Design System");
+    const page = (
+      globalThis as { figma: { root: { children: { name: string }[] } } }
+    ).figma.root.children.find((c) => c.name === "Design System");
     expect(page).toBeDefined();
-    expect((page as unknown as { children: unknown[] }).children.length).toBeGreaterThan(0);
+    expect(
+      (page as unknown as { children: unknown[] }).children.length,
+    ).toBeGreaterThan(0);
   });
 
   it("reports progress once per section plus a final Done", async () => {
     const inputs = await makeInputs();
     const onProgress = vi.fn();
     await buildDesignSystem({ ...inputs, onProgress });
-    // 11 sections + the final "Done" call.
-    expect(onProgress).toHaveBeenCalledTimes(12);
-    expect(onProgress).toHaveBeenLastCalledWith(11, 11, "Done");
+    // 12 sections + the final "Done" call.
+    expect(onProgress).toHaveBeenCalledTimes(13);
+    expect(onProgress).toHaveBeenLastCalledWith(12, 12, "Done");
   });
 
   it("rebuilds in place rather than duplicating the page", async () => {
     const inputs = await makeInputs();
     await buildDesignSystem(inputs);
     await buildDesignSystem(inputs);
-    const figma = (globalThis as { figma: { root: { children: { name: string }[] } } }).figma;
+    const figma = (
+      globalThis as { figma: { root: { children: { name: string }[] } } }
+    ).figma;
     const pages = figma.root.children.filter((c) => c.name === "Design System");
     expect(pages).toHaveLength(1);
   });

@@ -282,6 +282,30 @@ export function createFigmaMock() {
     createImage: (_bytes: Uint8Array) => ({ hash: nextId("img") }),
     base64Decode: (_value: string) => new Uint8Array(),
 
+    // createNodeFromSvg parses SVG markup into a FRAME containing vector
+    // children. The real API gives the wrapper frame its own (often white or
+    // transparent-but-present) background fill and resolves `currentColor` to a
+    // black paint on the shapes. We mirror both: a background fill on the
+    // wrapper (so consumers must clear it) plus a child vector carrying a fill
+    // and a stroke for the Design System icon section's recolor pass to rebind.
+    createNodeFromSvg: (_svg: string) => {
+      const frame = makeNode("FRAME");
+      frame.width = 24;
+      frame.height = 24;
+      frame.fills = [
+        { type: "SOLID", color: { r: 0, g: 0, b: 0 }, opacity: 1 },
+      ];
+      const vector = makeNode("VECTOR");
+      vector.fills = [
+        { type: "SOLID", color: { r: 0, g: 0, b: 0 }, opacity: 1 },
+      ];
+      vector.strokes = [
+        { type: "SOLID", color: { r: 0, g: 0, b: 0 }, opacity: 1 },
+      ];
+      frame.appendChild(vector);
+      return frame;
+    },
+
     createPaintStyle: (): FakePaintStyle => {
       const style: FakePaintStyle = {
         id: nextId("style"),

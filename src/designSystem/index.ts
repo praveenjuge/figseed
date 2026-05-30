@@ -9,6 +9,7 @@ import { addBlurAndBackdrop } from "./sections/blur";
 import { addBorderWidthScale } from "./sections/borderWidth";
 import { addBoxShadows } from "./sections/boxShadow";
 import { addHeader } from "./sections/header";
+import { addIconLibrary } from "./sections/icons";
 import { addOpacityScale } from "./sections/opacity";
 import { addRadiusScale } from "./sections/radius";
 import { addSpacingScale } from "./sections/spacing";
@@ -42,6 +43,7 @@ const SECTIONS: SectionBuilder[] = [
   },
   { label: "Tailwind palette", column: 0, build: addTailwindPalette },
   { label: "Spacing scale", column: 0, build: addSpacingScale },
+  { label: "Icons", column: 0, build: addIconLibrary },
   // Right column: the non-color scales and tokens.
   { label: "Border radius", column: 1, build: addRadiusScale },
   { label: "Border widths", column: 1, build: addBorderWidthScale },

@@ -15,6 +15,7 @@ npm test           # vitest run
 npm run test:coverage  # vitest run --coverage (enforces thresholds)
 node scripts/extract-themes.mjs  # regenerate src/data/themes.json from shadcn-ui/
 node scripts/gen-avatar-images.mjs  # regenerate src/data/avatars.ts (avatar photos)
+node scripts/gen-icons.mjs  # regenerate src/data/icons.ts (shadcn icon-library subsets)
 ```
 
 After changes, run `npm run typecheck`, `npm test`, and `npm run build`. Tests
@@ -55,10 +56,12 @@ src/
   componentsPage/    # rebuilds the "Components" page (shadcn primitives)
   data/themes.json   # snapshot of shadcn's apps/v4/registry/themes.ts
   data/avatars.ts    # base64 avatar photos (build-time fetch) for Avatar styles
+  data/icons.ts      # shadcn icon-library subsets (build-time) for the Icons section
 scripts/
   build.mjs          # esbuild runner
   extract-themes.mjs # regenerates src/data/themes.json from shadcn-ui/
   gen-avatar-images.mjs # regenerates src/data/avatars.ts from pravatar.cc
+  gen-icons.mjs      # regenerates src/data/icons.ts from the icon-library packages
 manifest.json        # Figma plugin manifest
 shadcn-ui/           # local clone, git-ignored, reference only
 ```
