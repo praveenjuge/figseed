@@ -3,7 +3,7 @@
 import { bindCornerRadii, bindFill } from "../bindings";
 import { applyEffectStyle } from "../../effectStyles";
 import { styleComponentSet } from "../layout";
-import { SECTION_WIDTH, type ComponentsInputs } from "../types";
+import { type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
 // Boolean variant: shadcn / Radix Switch exposes a `checked` prop, so we
@@ -39,12 +39,8 @@ export async function addSwitchSection(
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Switch";
   componentSet.layoutMode = "HORIZONTAL";
-  componentSet.layoutWrap = "WRAP";
   componentSet.itemSpacing = 16;
-  componentSet.counterAxisSpacing = 16;
   styleComponentSet(componentSet);
-  componentSet.primaryAxisSizingMode = "FIXED";
-  componentSet.resize(SECTION_WIDTH, componentSet.height);
 
   return countDescendants(componentSet);
 }

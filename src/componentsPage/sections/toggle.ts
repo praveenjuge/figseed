@@ -15,7 +15,7 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
-import { SECTION_WIDTH, type ComponentsInputs } from "../types";
+import { type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
 const TOGGLE_VARIANTS = ["default", "outline"] as const;
@@ -61,12 +61,8 @@ export async function addToggleSection(
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Toggle";
   componentSet.layoutMode = "HORIZONTAL";
-  componentSet.layoutWrap = "WRAP";
   componentSet.itemSpacing = 16;
-  componentSet.counterAxisSpacing = 16;
   styleComponentSet(componentSet);
-  componentSet.primaryAxisSizingMode = "FIXED";
-  componentSet.resize(SECTION_WIDTH, componentSet.height);
 
   return countDescendants(componentSet);
 }

@@ -9,7 +9,7 @@ import { ensureAvatarStyles, type AvatarStyleMap } from "../avatarStyles";
 import { applyFont } from "../../fonts";
 import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
 import { styleComponentSet } from "../layout";
-import { SECTION_WIDTH, type ComponentsInputs } from "../types";
+import { type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
 const AVATAR_SIZES = ["sm", "default", "lg"] as const;
@@ -51,12 +51,8 @@ export async function addAvatarSection(
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Avatar";
   componentSet.layoutMode = "HORIZONTAL";
-  componentSet.layoutWrap = "WRAP";
   componentSet.itemSpacing = 16;
-  componentSet.counterAxisSpacing = 16;
   styleComponentSet(componentSet);
-  componentSet.primaryAxisSizingMode = "FIXED";
-  componentSet.resize(SECTION_WIDTH, componentSet.height);
 
   return countDescendants(componentSet);
 }

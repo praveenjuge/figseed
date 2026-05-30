@@ -14,6 +14,7 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
+import { wrapInSectionCard } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -24,10 +25,11 @@ export async function addPopoverSection(
   inputs: ComponentsInputs,
 ): Promise<number> {
   const comp = buildPopoverComponent(inputs);
-  page.appendChild(comp);
   // radix-nova PopoverContent uses `shadow-md`; reference the published style.
   await applyEffectStyle(comp, inputs.effectStyles?.idFor("Shadow/md"));
-  return countDescendants(comp);
+  const card = wrapInSectionCard(comp);
+  page.appendChild(card);
+  return countDescendants(card);
 }
 
 function buildPopoverComponent(inputs: ComponentsInputs): ComponentNode {

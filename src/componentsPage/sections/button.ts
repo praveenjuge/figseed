@@ -9,7 +9,7 @@ import {
 import { applyFont } from "../../fonts";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
-import { SECTION_WIDTH, type ComponentsInputs } from "../types";
+import { type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
 const BUTTON_VARIANTS = [
@@ -59,18 +59,13 @@ export async function addButtonSection(
     }
   }
 
-  // Create the component set from all variants.
+  // Create the component set from all variants. styleComponentSet pins the
+  // set to the shared SECTION_WIDTH and wraps the variants onto new rows.
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Button";
   componentSet.layoutMode = "HORIZONTAL";
-  componentSet.layoutWrap = "WRAP";
   componentSet.itemSpacing = 16;
-  componentSet.counterAxisSpacing = 16;
   styleComponentSet(componentSet);
-  // Fixed primary-axis width forces the wrap to kick in instead of growing
-  // into a single very wide row.
-  componentSet.primaryAxisSizingMode = "FIXED";
-  componentSet.resize(SECTION_WIDTH, componentSet.height);
 
   return countDescendants(componentSet);
 }

@@ -7,6 +7,7 @@
 
 import { bindFill, bindFontSize, bindStrokeColor } from "../bindings";
 import { applyFont } from "../../fonts";
+import { wrapInSectionCard } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -29,8 +30,9 @@ export async function addAccordionSection(
   inputs: ComponentsInputs,
 ): Promise<number> {
   const comp = buildAccordionComponent(inputs);
-  page.appendChild(comp);
-  return countDescendants(comp);
+  const card = wrapInSectionCard(comp);
+  page.appendChild(card);
+  return countDescendants(card);
 }
 
 function buildAccordionComponent(inputs: ComponentsInputs): ComponentNode {

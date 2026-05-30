@@ -13,6 +13,7 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { createIcon, resolveIconLibrary } from "../../icons";
+import { wrapInSectionCard } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -23,8 +24,9 @@ export async function addEmptySection(
   inputs: ComponentsInputs,
 ): Promise<number> {
   const comp = buildEmptyComponent(inputs);
-  page.appendChild(comp);
-  return countDescendants(comp);
+  const card = wrapInSectionCard(comp);
+  page.appendChild(card);
+  return countDescendants(card);
 }
 
 function buildEmptyComponent(inputs: ComponentsInputs): ComponentNode {

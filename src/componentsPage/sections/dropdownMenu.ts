@@ -21,6 +21,7 @@ import {
   resolveIconLibrary,
   type SemanticIconName,
 } from "../../icons";
+import { wrapInSectionCard } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -44,10 +45,11 @@ export async function addDropdownMenuSection(
   inputs: ComponentsInputs,
 ): Promise<number> {
   const comp = buildDropdownMenuComponent(inputs);
-  page.appendChild(comp);
   // radix-nova DropdownMenuContent uses `shadow-md`.
   await applyEffectStyle(comp, inputs.effectStyles?.idFor("Shadow/md"));
-  return countDescendants(comp);
+  const card = wrapInSectionCard(comp);
+  page.appendChild(card);
+  return countDescendants(card);
 }
 
 function buildDropdownMenuComponent(inputs: ComponentsInputs): ComponentNode {
