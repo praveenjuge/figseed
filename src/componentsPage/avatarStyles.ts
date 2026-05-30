@@ -15,7 +15,7 @@ import { AVATAR_IMAGES } from "../data/avatars";
 const STYLE_PREFIX = "Avatar/";
 
 function styleName(index: number): string {
-  // 1-based, zero-padded to two digits: Avatar/01 … Avatar/10.
+  // 1-based, zero-padded to two digits: Avatar/01 … Avatar/20.
   const n = index + 1;
   return STYLE_PREFIX + (n < 10 ? "0" + n : String(n));
 }

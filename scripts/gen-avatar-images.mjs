@@ -11,8 +11,8 @@
 //   node scripts/gen-avatar-images.mjs
 //
 // Tunables (env):
-//   FIGSEED_AVATAR_COUNT  how many avatars to fetch (default 10)
-//   FIGSEED_AVATAR_SIZE   square pixel size to request (default 160)
+//   FIGSEED_AVATAR_COUNT  how many avatars to fetch (default 20)
+//   FIGSEED_AVATAR_SIZE   square pixel size to request (default 320)
 
 import { writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -22,12 +22,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 const outPath = resolve(root, "src/data/avatars.ts");
 
-const COUNT = Number(process.env.FIGSEED_AVATAR_COUNT || 10);
-const SIZE = Number(process.env.FIGSEED_AVATAR_SIZE || 160);
+const COUNT = Number(process.env.FIGSEED_AVATAR_COUNT || 20);
+const SIZE = Number(process.env.FIGSEED_AVATAR_SIZE || 320);
 
 // pravatar.cc serves royalty-free placeholder avatar photos meant exactly for
 // this kind of mock/design-system usage. `img=N` returns a distinct face.
-const urlFor = (n) => `https://i.pravatar.cc/${SIZE}?img=${n}`;
+const urlFor = (n) => `https://i.pravatar.cc/${SIZE}?img=${n + 10}`;
 
 // Figma's createImage accepts PNG, JPEG, or GIF. Reject anything else so the
 // runtime call doesn't throw inside the sandbox.
