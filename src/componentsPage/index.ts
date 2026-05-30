@@ -7,6 +7,8 @@
 
 import { addAccordionSection } from "./sections/accordion";
 import { addAlertSection } from "./sections/alert";
+import { addAlertDialogSection } from "./sections/alertDialog";
+import { addAspectRatioSection } from "./sections/aspectRatio";
 import { addAvatarSection } from "./sections/avatar";
 import { addBadgeSection } from "./sections/badge";
 import { addBreadcrumbSection } from "./sections/breadcrumb";
@@ -14,8 +16,13 @@ import { addButtonSection } from "./sections/button";
 import { addButtonGroupSection } from "./sections/buttonGroup";
 import { addCalendarSection } from "./sections/calendar";
 import { addCardSection } from "./sections/card";
+import { addCarouselSection } from "./sections/carousel";
+import { addChartSection } from "./sections/chart";
 import { addCheckboxSection } from "./sections/checkbox";
+import { addCollapsibleSection } from "./sections/collapsible";
 import { addCommandSection } from "./sections/command";
+import { addContextMenuSection } from "./sections/contextMenu";
+import { addDatePickerSection } from "./sections/datePicker";
 import { addDialogSection } from "./sections/dialog";
 import { addDropdownMenuSection } from "./sections/dropdownMenu";
 import { addEmptySection } from "./sections/empty";
@@ -25,13 +32,18 @@ import { addInputSection } from "./sections/input";
 import { addInputOtpSection } from "./sections/inputOtp";
 import { addKbdSection } from "./sections/kbd";
 import { addLabelSection } from "./sections/label";
+import { addMenubarSection } from "./sections/menubar";
+import { addNavigationMenuSection } from "./sections/navigationMenu";
 import { addPaginationSection } from "./sections/pagination";
 import { addPopoverSection } from "./sections/popover";
 import { addProgressSection } from "./sections/progress";
 import { addRadioGroupSection } from "./sections/radioGroup";
+import { addResizableSection } from "./sections/resizable";
+import { addScrollAreaSection } from "./sections/scrollArea";
 import { addSelectSection } from "./sections/select";
 import { addSeparatorSection } from "./sections/separator";
 import { addSheetSection } from "./sections/sheet";
+import { addSidebarSection } from "./sections/sidebar";
 import { addSkeletonSection } from "./sections/skeleton";
 import { addSliderSection } from "./sections/slider";
 import { addSonnerSection } from "./sections/sonner";
@@ -67,6 +79,8 @@ const HEADER_SECTION: SectionBuilder = { label: "Header", build: addHeader };
 const SECTIONS: SectionBuilder[] = [
   { label: "Accordion", build: addAccordionSection },
   { label: "Alert", build: addAlertSection },
+  { label: "Alert Dialog", build: addAlertDialogSection },
+  { label: "Aspect Ratio", build: addAspectRatioSection },
   { label: "Avatar", build: addAvatarSection },
   { label: "Badge", build: addBadgeSection },
   { label: "Breadcrumb", build: addBreadcrumbSection },
@@ -74,8 +88,13 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Button Group", build: addButtonGroupSection },
   { label: "Calendar", build: addCalendarSection },
   { label: "Card", build: addCardSection },
+  { label: "Carousel", build: addCarouselSection },
+  { label: "Chart", build: addChartSection },
   { label: "Checkbox", build: addCheckboxSection },
+  { label: "Collapsible", build: addCollapsibleSection },
   { label: "Command", build: addCommandSection },
+  { label: "Context Menu", build: addContextMenuSection },
+  { label: "Date Picker", build: addDatePickerSection },
   { label: "Dialog", build: addDialogSection },
   { label: "Dropdown Menu", build: addDropdownMenuSection },
   { label: "Empty", build: addEmptySection },
@@ -84,13 +103,18 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Input OTP", build: addInputOtpSection },
   { label: "Kbd", build: addKbdSection },
   { label: "Label", build: addLabelSection },
+  { label: "Menubar", build: addMenubarSection },
+  { label: "Navigation Menu", build: addNavigationMenuSection },
   { label: "Pagination", build: addPaginationSection },
   { label: "Popover", build: addPopoverSection },
   { label: "Progress", build: addProgressSection },
   { label: "Radio Group", build: addRadioGroupSection },
+  { label: "Resizable", build: addResizableSection },
+  { label: "Scroll Area", build: addScrollAreaSection },
   { label: "Select", build: addSelectSection },
   { label: "Separator", build: addSeparatorSection },
   { label: "Sheet", build: addSheetSection },
+  { label: "Sidebar", build: addSidebarSection },
   { label: "Skeleton", build: addSkeletonSection },
   { label: "Slider", build: addSliderSection },
   { label: "Sonner", build: addSonnerSection },
