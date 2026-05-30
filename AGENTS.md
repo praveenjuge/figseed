@@ -16,6 +16,7 @@ npm run test:coverage  # vitest run --coverage (enforces thresholds)
 node scripts/extract-themes.mjs  # regenerate src/data/themes.json from shadcn-ui/
 node scripts/gen-avatar-images.mjs  # regenerate src/data/avatars.ts (avatar photos)
 node scripts/gen-icons.mjs  # regenerate src/data/icons.ts (shadcn icon-library subsets)
+node scripts/gen-plugin-icon.mjs  # regenerate assets/icon.png + @512/@1024 from assets/icon.svg
 ```
 
 After changes, run `npm run typecheck`, `npm test`, and `npm run build`. Tests

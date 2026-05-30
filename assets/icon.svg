@@ -1,0 +1,24 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1024 1024"
+  width="1024"
+  height="1024"
+  role="img"
+  aria-label="Figseed"
+>
+  <!-- shadcn-flavored squircle background -->
+  <rect width="1024" height="1024" rx="232" ry="232" fill="#0a0a0a" />
+
+  <!-- "F" mark, drawn as three rounded bars -->
+  <g fill="#ffffff">
+    <!-- vertical stem -->
+    <rect x="256" y="216" width="144" height="624" rx="16" ry="16" />
+    <!-- top arm -->
+    <rect x="256" y="216" width="528" height="144" rx="16" ry="16" />
+    <!-- middle arm -->
+    <rect x="256" y="448" width="392" height="144" rx="16" ry="16" />
+  </g>
+
+  <!-- seed accent: a small dot just past the middle arm, hinting at "Figseed" -->
+  <circle cx="744" cy="520" r="56" fill="#ffffff" />
+</svg>

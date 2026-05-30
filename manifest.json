@@ -1,5 +1,5 @@
 {
-  "name": "Figseed — shadcn preset to Figma",
+  "name": "Figseed",
   "id": "figseed-shadcn-preset",
   "api": "1.0.0",
   "main": "dist/code.js",
