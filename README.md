@@ -31,3 +31,13 @@ npm run typecheck
 ```
 
 See [AGENTS.md](./AGENTS.md) for project layout and conventions.
+
+## Roadmap
+
+- [x] Variables
+- [x] Components
+- [x] Design System
+- [x] Icons
+- [x] Fonts
+- [] Blocks
+- [] Charts
