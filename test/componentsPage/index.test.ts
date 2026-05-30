@@ -28,11 +28,11 @@ describe("buildComponentsPage", () => {
     expect(page).toBeDefined();
   });
 
-  it("reports progress for all 28 sections plus Done", async () => {
+  it("reports progress for all 33 sections plus Done", async () => {
     const onProgress = vi.fn();
     await buildComponentsPage({ ...(await makeInputs()), onProgress });
-    expect(onProgress).toHaveBeenCalledTimes(29);
-    expect(onProgress).toHaveBeenLastCalledWith(28, 28, "Done");
+    expect(onProgress).toHaveBeenCalledTimes(34);
+    expect(onProgress).toHaveBeenLastCalledWith(33, 33, "Done");
   });
 
   it("reuses and clears an existing Components page on rebuild", async () => {

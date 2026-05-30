@@ -59,6 +59,7 @@ const SEMANTIC_ICONS = {
     "arrow-down-01",
   ],
   plus: ["plus", "plus-sign", "add-line", "add-circle-line"],
+  folder: ["folder", "folder-line", "folder-01"],
   star: ["star", "star-line"],
   bell: ["bell", "bell-line", "notification-02"],
   close: ["x", "close-line", "cancel-01", "multiplication-sign"],
