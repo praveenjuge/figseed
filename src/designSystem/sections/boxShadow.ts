@@ -2,6 +2,7 @@
 // them as literal effects on each tile. Values mirror Tailwind v4's preset.
 
 import { bindFill } from "../bindings";
+import { applyFont } from "../../fonts";
 import {
   createSectionFrame,
   createVertical,
@@ -83,7 +84,7 @@ export async function addBoxShadows(
     const label = figma.createText();
     label.characters = shadow.name;
     label.fontSize = 11;
-    label.fontName = { family: "Inter", style: "Medium" };
+    applyFont(label, "body", "Medium");
     bindFill(label, inputs.theme.light.get("foreground"));
 
     cell.appendChild(tile);

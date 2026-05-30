@@ -2,6 +2,7 @@
 // spacing/<name> primitive variable.
 
 import { SPACING_TOKENS } from "../../primitives";
+import { applyFont } from "../../fonts";
 import { bindFill, bindWidth } from "../bindings";
 import { createSectionFrame, createVertical } from "../layout";
 import type { DesignSystemInputs } from "../types";
@@ -26,14 +27,14 @@ export async function addSpacingScale(
     const label = figma.createText();
     label.characters = `spacing/${token.name}`;
     label.fontSize = 10;
-    label.fontName = { family: "Inter", style: "Regular" };
+    applyFont(label, "body", "Regular");
     bindFill(label, inputs.theme.light.get("muted-foreground"));
     label.resize(96, 16);
 
     const value = figma.createText();
     value.characters = `${token.value}px`;
     value.fontSize = 10;
-    value.fontName = { family: "Inter", style: "Regular" };
+    applyFont(value, "body", "Regular");
     bindFill(value, inputs.theme.light.get("foreground"));
     value.resize(40, 16);
 

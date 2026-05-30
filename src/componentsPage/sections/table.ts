@@ -6,6 +6,7 @@
 // footer uses `bg-muted/50 font-medium border-t`.
 
 import { bindFill, bindFontSize, bindStrokeColor } from "../bindings";
+import { applyFont } from "../../fonts";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -176,10 +177,7 @@ function buildCell(
   cell.strokes = [];
 
   const text = figma.createText();
-  text.fontName = {
-    family: "Inter",
-    style: opts.bold ? "Medium" : "Regular",
-  };
+  applyFont(text, "body", opts.bold ? "Medium" : "Regular");
   text.characters = value;
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));

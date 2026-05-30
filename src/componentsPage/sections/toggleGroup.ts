@@ -12,6 +12,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -110,14 +111,13 @@ function buildToggleGroupItem(
   }
 
   const glyph = figma.createText();
-  glyph.fontName = { family: "Inter", style: "Bold" };
+  applyFont(glyph, "body", data.glyph === "I" ? "Medium" : "Bold");
   glyph.characters = data.glyph;
   glyph.fontSize = 14;
   bindFontSize(glyph, p.get("font/size/sm"));
   // radix-nova items inherit `text-foreground` (no colour swap on press).
   bindFill(glyph, t.get("foreground"));
   if (data.glyph === "U") glyph.textDecoration = "UNDERLINE";
-  if (data.glyph === "I") glyph.fontName = { family: "Inter", style: "Medium" };
   item.appendChild(glyph);
 
   return item;

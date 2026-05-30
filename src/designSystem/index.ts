@@ -23,7 +23,7 @@ import {
   type DesignSystemResult,
   type SectionBuilder,
 } from "./types";
-import { loadCommonFonts } from "./utils";
+import { loadDesignSystemFonts } from "./utils";
 
 export type { DesignSystemInputs, DesignSystemResult } from "./types";
 
@@ -72,9 +72,10 @@ export async function buildDesignSystem(
     page.name = PAGE_NAME;
   }
 
-  // Loading the regular sans family is enough for every text node we create.
-  // Figma will fall back gracefully on machines that don't have Inter.
-  await loadCommonFonts();
+  // Load the preset's body + heading fonts (plus the Inter fallback) and make
+  // them the active context so every section can apply them. Figma falls back
+  // gracefully on machines that don't have a given family.
+  await loadDesignSystemFonts(inputs);
 
   const total = SECTIONS.length;
   let count = 0;

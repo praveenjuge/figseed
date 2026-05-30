@@ -40,7 +40,7 @@ import {
   type ComponentsResult,
   type SectionBuilder,
 } from "./types";
-import { loadCommonFonts } from "./utils";
+import { loadComponentsFonts } from "./utils";
 
 export type { ComponentsInputs, ComponentsResult } from "./types";
 
@@ -91,7 +91,7 @@ export async function buildComponentsPage(
     page.name = PAGE_NAME;
   }
 
-  await loadCommonFonts();
+  await loadComponentsFonts(inputs);
 
   const total = SECTIONS.length;
   let count = 0;

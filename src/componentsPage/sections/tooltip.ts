@@ -5,6 +5,7 @@
 // pointing down toward the trigger.
 
 import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
+import { applyFont } from "../../fonts";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -50,7 +51,7 @@ function buildTooltipComponent(inputs: ComponentsInputs): ComponentNode {
 
   const text = figma.createText();
   // shadcn TooltipContent uses `text-xs` with no explicit weight (Regular).
-  text.fontName = { family: "Inter", style: "Regular" };
+  applyFont(text, "body", "Regular");
   text.characters = "Add to library";
   text.fontSize = 12;
   bindFontSize(text, p.get("font/size/xs"));

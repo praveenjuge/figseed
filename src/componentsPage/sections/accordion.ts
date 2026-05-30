@@ -6,6 +6,7 @@
 // chevron 180°.
 
 import { bindFill, bindFontSize, bindStrokeColor } from "../bindings";
+import { applyFont } from "../../fonts";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -100,7 +101,7 @@ function buildAccordionItem(
   trigger.layoutSizingHorizontal = "FILL";
 
   const title = figma.createText();
-  title.fontName = { family: "Inter", style: "Medium" };
+  applyFont(title, "body", "Medium");
   title.characters = data.title;
   title.fontSize = 14;
   bindFontSize(title, p.get("font/size/sm"));
@@ -113,7 +114,7 @@ function buildAccordionItem(
   if (data.open && data.body) {
     const content = figma.createText();
     content.name = "Content";
-    content.fontName = { family: "Inter", style: "Regular" };
+    applyFont(content, "body", "Regular");
     content.characters = data.body;
     content.fontSize = 14;
     bindFontSize(content, p.get("font/size/sm"));

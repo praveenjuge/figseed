@@ -4,7 +4,9 @@ import {
   FONT_SIZE_TOKENS,
   fontSlugBucket,
   PRESET_FONT_FAMILY_MAP,
+  presetFontFamily,
   RADIUS_TOKENS,
+  resolveFonts,
   SPACING_TOKENS,
 } from "../src/primitives";
 
@@ -47,5 +49,47 @@ describe("PRESET_FONT_FAMILY_MAP", () => {
     expect(PRESET_FONT_FAMILY_MAP["dm-sans"]).toBe("DM Sans");
     expect(PRESET_FONT_FAMILY_MAP["jetbrains-mono"]).toBe("JetBrains Mono");
     expect(PRESET_FONT_FAMILY_MAP["unknown"]).toBeUndefined();
+  });
+});
+
+describe("presetFontFamily", () => {
+  it("resolves a known slug", () => {
+    expect(presetFontFamily("geist")).toBe("Geist");
+    expect(presetFontFamily("lora")).toBe("Lora");
+  });
+
+  it("falls back to Inter for unknown or missing slugs", () => {
+    expect(presetFontFamily(undefined)).toBe("Inter");
+    expect(presetFontFamily("not-a-font")).toBe("Inter");
+  });
+});
+
+describe("resolveFonts", () => {
+  it("uses distinct body and heading families", () => {
+    expect(resolveFonts("geist", "lora")).toEqual({
+      body: "Geist",
+      heading: "Lora",
+    });
+  });
+
+  it("reuses the body font when heading is inherit", () => {
+    expect(resolveFonts("geist", "inherit")).toEqual({
+      body: "Geist",
+      heading: "Geist",
+    });
+  });
+
+  it("reuses the body font when heading is missing", () => {
+    expect(resolveFonts("dm-sans", undefined)).toEqual({
+      body: "DM Sans",
+      heading: "DM Sans",
+    });
+  });
+
+  it("defaults both to Inter when nothing is provided", () => {
+    expect(resolveFonts(undefined, undefined)).toEqual({
+      body: "Inter",
+      heading: "Inter",
+    });
   });
 });

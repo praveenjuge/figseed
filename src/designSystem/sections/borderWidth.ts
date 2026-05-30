@@ -2,6 +2,7 @@
 // primitive variables.
 
 import { BORDER_WIDTH_TOKENS } from "../../primitives";
+import { applyFont } from "../../fonts";
 import { bindFill, bindStrokeColor, bindStrokeWeight } from "../bindings";
 import {
   createSectionFrame,
@@ -35,7 +36,7 @@ export async function addBorderWidthScale(
     const label = figma.createText();
     label.characters = `${token.name} · ${token.value}px`;
     label.fontSize = 11;
-    label.fontName = { family: "Inter", style: "Regular" };
+    applyFont(label, "body", "Regular");
     bindFill(label, inputs.theme.light.get("foreground"));
 
     cell.appendChild(tile);

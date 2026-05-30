@@ -1,5 +1,8 @@
 // Misc helpers shared by the Design System page.
 
+import { loadPresetFonts } from "../fonts";
+import type { DesignSystemInputs } from "./types";
+
 export function summarizePreset(
   summary: Record<string, string | undefined> | undefined,
 ): string {
@@ -10,6 +13,7 @@ export function summarizePreset(
     "baseColor",
     "theme",
     "font",
+    "fontHeading",
     "radius",
   ] as const) {
     const value = summary[key];
@@ -44,6 +48,19 @@ export function weightStyleName(weight: number): string {
   }
 }
 
+// Load the preset fonts for the Design System page and activate them. Falls
+// back to Inter when the inputs don't carry preset fonts (older callers/tests).
+export async function loadDesignSystemFonts(
+  inputs: DesignSystemInputs,
+): Promise<void> {
+  const body = inputs.fonts ? inputs.fonts.body : "Inter";
+  const heading = inputs.fonts ? inputs.fonts.heading : "Inter";
+  await loadPresetFonts({ body, heading, fontVars: inputs.fontVars });
+}
+
+// Loads the Inter weights the typography showcase relies on. Kept for hosts
+// that want the fallback family available even when the preset uses another
+// font; loadDesignSystemFonts already loads Inter as a fallback.
 export async function loadCommonFonts(): Promise<void> {
   const fonts: FontName[] = [
     { family: "Inter", style: "Regular" },

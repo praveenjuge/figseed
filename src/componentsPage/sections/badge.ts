@@ -6,6 +6,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -92,7 +93,7 @@ function buildBadgeComponent(
   }
 
   const label = figma.createText();
-  label.fontName = { family: "Inter", style: "Medium" };
+  applyFont(label, "body", "Medium");
   label.characters = "Badge";
   label.fontSize = 12;
   bindFontSize(label, p.get("font/size/xs"));

@@ -2,6 +2,7 @@
 // neutrals (white, black, transparent).
 
 import { TAILWIND_COLOR_FAMILIES, TAILWIND_COLOR_SCALES } from "../../colors";
+import { applyFont } from "../../fonts";
 import { bindFill } from "../bindings";
 import {
   createSectionFrame,
@@ -38,7 +39,7 @@ export async function addTailwindPalette(
     const label = figma.createText();
     label.characters = family;
     label.fontSize = 10;
-    label.fontName = { family: "Inter", style: "Medium" };
+    applyFont(label, "body", "Medium");
     label.fills = [solidPaint(0.4)];
     label.resize(labelWidth, 16);
     row.appendChild(label);
@@ -62,7 +63,7 @@ export async function addTailwindPalette(
       const tag = figma.createText();
       tag.characters = scale;
       tag.fontSize = 9;
-      tag.fontName = { family: "Inter", style: "Medium" };
+      applyFont(tag, "body", "Medium");
       const isDark = parseInt(scale, 10) >= 500;
       tag.fills = [solidPaint(isDark ? 0.95 : 0.1)];
       swatch.appendChild(tag);
@@ -92,7 +93,7 @@ export async function addTailwindPalette(
     const cap = figma.createText();
     cap.characters = name;
     cap.fontSize = 9;
-    cap.fontName = { family: "Inter", style: "Medium" };
+    applyFont(cap, "body", "Medium");
     cap.fills = [solidPaint(0.4)];
 
     cell.appendChild(swatch);

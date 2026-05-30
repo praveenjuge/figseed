@@ -10,6 +10,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -77,7 +78,7 @@ function buildSelectComponent(
   comp.strokeWeight = 1;
 
   const value = figma.createText();
-  value.fontName = { family: "Inter", style: "Regular" };
+  applyFont(value, "body", "Regular");
   value.characters = "Select a fruit";
   value.fontSize = 14;
   bindFontSize(value, p.get("font/size/sm"));

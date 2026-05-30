@@ -78,7 +78,63 @@ describe("ensureThemeCollection", () => {
   it("accounts for every variable processed", async () => {
     const tw = await ensureTailwindColorCollection();
     const result = await ensureThemeCollection(makeRegistry(), tw);
-    // 4 light keys + 1 dark key.
-    expect(result.variableCount).toBe(5);
+    // 4 light keys + 1 dark key + 2 font variables (font-sans, font-heading).
+    expect(result.variableCount).toBe(7);
+  });
+
+  it("emits body + heading font variables, defaulting to Inter", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const result = await ensureThemeCollection(makeRegistry(), tw);
+    // config has no font/fontHeading, so both resolve to the Inter fallback.
+    expect(result.fonts).toEqual({ body: "Inter", heading: "Inter" });
+    expect(result.fontVars.body).toBeDefined();
+    expect(result.fontVars.heading).toBeDefined();
+    expect(soleValue(result.fontVars.body)).toBe("Inter");
+    expect(soleValue(result.fontVars.heading)).toBe("Inter");
+    expect(
+      (result.fontVars.body as unknown as { resolvedType: string })
+        .resolvedType,
+    ).toBe("STRING");
+  });
+
+  it("uses the preset body + heading fonts, with heading inherit falling back", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const registry = makeRegistry();
+    registry.config = {
+      font: "geist",
+      fontHeading: "inherit",
+    } as ResolvedRegistry["config"];
+    const result = await ensureThemeCollection(registry, tw);
+    // Geist body; heading "inherit" reuses the body family.
+    expect(result.fonts).toEqual({ body: "Geist", heading: "Geist" });
+
+    const registry2 = makeRegistry();
+    registry2.config = {
+      font: "geist",
+      fontHeading: "lora",
+    } as ResolvedRegistry["config"];
+    const result2 = await ensureThemeCollection(registry2, tw);
+    expect(result2.fonts).toEqual({ body: "Geist", heading: "Lora" });
+  });
+
+  it("loads the resolved font families before writing the font variables", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const registry = makeRegistry();
+    registry.config = {
+      font: "figtree",
+      fontHeading: "lora",
+    } as ResolvedRegistry["config"];
+
+    await ensureThemeCollection(registry, tw);
+
+    // Figma rejects setValueForMode on a bound font variable unless the font
+    // is loaded first; ensure the generator loaded both families.
+    const loaded = (
+      figma.loadFontAsync as unknown as {
+        mock: { calls: Array<[{ family: string; style: string }]> };
+      }
+    ).mock.calls.map((c) => c[0].family);
+    expect(loaded).toContain("Figtree");
+    expect(loaded).toContain("Lora");
   });
 });

@@ -47,6 +47,7 @@ src/
   messages.ts        # sandbox ↔ UI message contract
   preset.ts          # shadcn preset codec mirror (validate + decode)
   registry.ts        # local resolver, mirrors shadcn buildRegistryTheme
+  fonts.ts           # loads preset body/heading fonts, applies + binds them
   colors/            # Tailwind table, OKLCH→sRGB, alias matcher
   primitives.ts      # radius/spacing/typography token tables
   generator/         # builds Figma collections, modes, variables

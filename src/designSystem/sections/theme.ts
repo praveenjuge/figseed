@@ -3,6 +3,7 @@
 // variable so the whole grid updates with the preset.
 
 import { bindFill } from "../bindings";
+import { applyFont } from "../../fonts";
 import { createSectionFrame, sectionContentWidth } from "../layout";
 import { solidPaint } from "../paints";
 import type { DesignSystemInputs } from "../types";
@@ -87,7 +88,7 @@ export async function addThemeSection(
     groupBlock.counterAxisSizingMode = "FIXED";
 
     const heading = figma.createText();
-    heading.fontName = { family: "Inter", style: "Medium" };
+    applyFont(heading, "heading", "Medium");
     heading.characters = group.title.toUpperCase();
     heading.fontSize = 10;
     heading.lineHeight = { unit: "PIXELS", value: 14 };
@@ -131,7 +132,7 @@ export async function addThemeSection(
       cell.appendChild(chip);
 
       const caption = figma.createText();
-      caption.fontName = { family: "Inter", style: "Regular" };
+      applyFont(caption, "body", "Regular");
       caption.characters = key;
       caption.fontSize = 9;
       caption.fills = [solidPaint(0.35)];

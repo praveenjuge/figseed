@@ -6,6 +6,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
 import { SECTION_WIDTH, type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -121,7 +122,7 @@ function buildButtonComponent(
 
   // Label text.
   const label = figma.createText();
-  label.fontName = { family: "Inter", style: "Medium" };
+  applyFont(label, "body", "Medium");
   label.characters = isIconSize(size) ? "★" : "Button";
   label.fontSize = size === "xs" || size === "icon-xs" ? 12 : 14;
   bindFontSize(

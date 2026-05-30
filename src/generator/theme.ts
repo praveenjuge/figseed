@@ -3,6 +3,8 @@
 // only supports a single mode per collection.
 
 import { findTailwindAlias, parseColor, type Rgba } from "../colors";
+import { loadFontFamilies } from "../fonts";
+import { resolveFonts, type ResolvedFonts } from "../primitives";
 import {
   ensureSingleMode,
   getOrCreateCollection,
@@ -12,6 +14,7 @@ import { COLLECTION_THEME, THEME_NUMBER_KEYS } from "./constants";
 import type {
   ResolvedRegistry,
   TailwindColorVarMap,
+  ThemeFontVars,
   ThemeVariableMaps,
 } from "./types";
 
@@ -19,6 +22,10 @@ export type ThemeResult = {
   variableCount: number;
   unaliasedCount: number;
   maps: ThemeVariableMaps;
+  // The resolved family names + the variables backing them, so page builders
+  // can load the fonts and bind text nodes to them.
+  fonts: ResolvedFonts;
+  fontVars: ThemeFontVars;
 };
 
 // Maps a shadcn theme key to a friendly Figma variable name.
@@ -105,7 +112,35 @@ export async function ensureThemeCollection(
     }
   }
 
-  return { variableCount, unaliasedCount, maps };
+  // Font families come from the preset (body + heading), not from cssVars.
+  // They live alongside the colors in `shadcn / Theme` so a designer sees the
+  // whole preset in one collection. Heading "inherit" reuses the body font.
+  const fonts = resolveFonts(data.config.font, data.config.fontHeading);
+
+  // On a re-run these STRING variables may already be bound to text nodes from
+  // a previous build. Figma rejects setValueForMode on a bound font variable
+  // unless the font is loaded, so load the families before writing the values.
+  await loadFontFamilies([fonts.body, fonts.heading]);
+
+  const bodyVar = await getOrCreateVariable(collection, "font-sans", "STRING");
+  bodyVar.setValueForMode(modeId, fonts.body);
+  variableCount += 1;
+
+  const headingVar = await getOrCreateVariable(
+    collection,
+    "font-heading",
+    "STRING",
+  );
+  headingVar.setValueForMode(modeId, fonts.heading);
+  variableCount += 1;
+
+  return {
+    variableCount,
+    unaliasedCount,
+    maps,
+    fonts,
+    fontVars: { body: bodyVar, heading: headingVar },
+  };
 }
 
 function applyThemeColor(

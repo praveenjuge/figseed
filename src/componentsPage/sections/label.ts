@@ -4,6 +4,7 @@
 // font-medium` text used to caption inputs and other controls.
 
 import { bindFill, bindFontSize } from "../bindings";
+import { applyFont } from "../../fonts";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -31,7 +32,7 @@ function buildLabelComponent(inputs: ComponentsInputs): ComponentNode {
   comp.strokes = [];
 
   const text = figma.createText();
-  text.fontName = { family: "Inter", style: "Medium" };
+  applyFont(text, "body", "Medium");
   text.characters = "Email address";
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));

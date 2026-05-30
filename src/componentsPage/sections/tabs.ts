@@ -5,6 +5,7 @@
 // `bg-background` surface plus a subtle drop shadow.
 
 import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
+import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -116,7 +117,7 @@ function buildTabTrigger(
   }
 
   const text = figma.createText();
-  text.fontName = { family: "Inter", style: "Medium" };
+  applyFont(text, "body", "Medium");
   text.characters = label;
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));

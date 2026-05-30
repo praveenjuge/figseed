@@ -6,6 +6,7 @@
 // keep the initials-on-muted treatment from shadcn's AvatarFallback.
 
 import { ensureAvatarStyles, type AvatarStyleMap } from "../avatarStyles";
+import { applyFont } from "../../fonts";
 import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
 import { styleComponentSet } from "../layout";
 import { SECTION_WIDTH, type ComponentsInputs } from "../types";
@@ -122,7 +123,7 @@ function appendInitials(
 ) {
   const p = inputs.primitives;
   const initials = figma.createText();
-  initials.fontName = { family: "Inter", style: "Regular" };
+  applyFont(initials, "body", "Regular");
   initials.characters = characters;
   initials.fontSize = dims.fontSize;
   bindFontSize(initials, p.get(dims.fontToken));

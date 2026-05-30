@@ -2,6 +2,7 @@
 // opacity/<name> primitive variable.
 
 import { OPACITY_TOKENS } from "../../primitives";
+import { applyFont } from "../../fonts";
 import { bindFill, bindOpacity } from "../bindings";
 import { createSectionFrame, createWrappingRow } from "../layout";
 import type { DesignSystemInputs } from "../types";
@@ -35,13 +36,13 @@ export async function addOpacityScale(
     const label = figma.createText();
     label.characters = token.name;
     label.fontSize = 10;
-    label.fontName = { family: "Inter", style: "Medium" };
+    applyFont(label, "body", "Medium");
     bindFill(label, inputs.theme.light.get("foreground"));
 
     const sub = figma.createText();
     sub.characters = `${token.value}%`;
     sub.fontSize = 9;
-    sub.fontName = { family: "Inter", style: "Regular" };
+    applyFont(sub, "body", "Regular");
     bindFill(sub, inputs.theme.light.get("muted-foreground"));
 
     cell.appendChild(tile);

@@ -6,6 +6,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -111,7 +112,7 @@ function buildAlertComponent(
   textCol.layoutSizingHorizontal = "FILL";
 
   const title = figma.createText();
-  title.fontName = { family: "Inter", style: "Medium" };
+  applyFont(title, "heading", "Medium");
   title.fontSize = 14;
   bindFontSize(title, p.get("font/size/sm"));
   if (variant === "destructive") {
@@ -125,7 +126,7 @@ function buildAlertComponent(
   title.layoutSizingHorizontal = "FILL";
 
   const desc = figma.createText();
-  desc.fontName = { family: "Inter", style: "Regular" };
+  applyFont(desc, "body", "Regular");
   desc.fontSize = 14;
   bindFontSize(desc, p.get("font/size/sm"));
   desc.characters =

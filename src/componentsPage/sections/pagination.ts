@@ -13,6 +13,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -104,7 +105,7 @@ function buildPageLink(
   }
 
   const text = figma.createText();
-  text.fontName = { family: "Inter", style: "Medium" };
+  applyFont(text, "body", "Medium");
   text.characters = label;
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));
@@ -145,7 +146,7 @@ function buildNavButton(
   const chevron = buildChevron(t, direction);
 
   const text = figma.createText();
-  text.fontName = { family: "Inter", style: "Medium" };
+  applyFont(text, "body", "Medium");
   text.characters = label;
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));
@@ -178,7 +179,7 @@ function buildEllipsis(inputs: ComponentsInputs): FrameNode {
   wrapper.strokes = [];
 
   const text = figma.createText();
-  text.fontName = { family: "Inter", style: "Medium" };
+  applyFont(text, "body", "Medium");
   text.characters = "…";
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));

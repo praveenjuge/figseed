@@ -12,6 +12,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -83,7 +84,7 @@ function buildToggleComponent(
   }
 
   const glyph = figma.createText();
-  glyph.fontName = { family: "Inter", style: "Bold" };
+  applyFont(glyph, "body", "Bold");
   // A bold "B" is a good stand-in for the typical toggle use case (text
   // formatting). Designers can swap to any icon they prefer.
   glyph.characters = "B";

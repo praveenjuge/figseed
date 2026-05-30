@@ -21,6 +21,7 @@ export type {
   GenerateResult,
   PrimitiveVariableMap,
   TailwindColorVarMap,
+  ThemeFontVars,
   ThemeVariableMaps,
 } from "./types";
 
@@ -45,10 +46,12 @@ export async function generateFromRegistry(
       },
     ],
     fallbackThemeColors: themeResult.unaliasedCount,
+    fonts: themeResult.fonts,
     variables: {
       tailwindColors: colorVars,
       primitives,
       theme: themeResult.maps,
+      fonts: themeResult.fontVars,
     },
   };
 }

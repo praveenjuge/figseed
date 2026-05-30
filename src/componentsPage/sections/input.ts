@@ -6,6 +6,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -87,7 +88,7 @@ function buildInputComponent(
   }
 
   const text = figma.createText();
-  text.fontName = { family: "Inter", style: "Regular" };
+  applyFont(text, "body", "Regular");
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));
 

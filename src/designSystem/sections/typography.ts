@@ -7,6 +7,7 @@ import {
   FONT_TRACKING_TOKENS,
   FONT_WEIGHT_TOKENS,
 } from "../../primitives";
+import { applyFont } from "../../fonts";
 import { bindFill, bindFontSize } from "../bindings";
 import {
   addLabel,
@@ -38,7 +39,7 @@ export async function addTypography(
     addLabel(row, `font/size/${token.name}`, mutedVar, labelColumnWidth);
 
     const sample = figma.createText();
-    sample.fontName = { family: "Inter", style: "Regular" };
+    applyFont(sample, "body", "Regular");
     sample.characters = `The quick brown fox · ${token.value}px`;
     sample.fontSize = token.value;
     bindFontSize(sample, inputs.primitives.get(`font/size/${token.name}`));
@@ -58,14 +59,9 @@ export async function addTypography(
     const row = createTableRow(weightStack, labelColumnWidth);
 
     const styleName = weightStyleName(token.value);
-    const fontName: FontName = { family: "Inter", style: styleName };
 
     const nameLabel = figma.createText();
-    try {
-      nameLabel.fontName = fontName;
-    } catch {
-      nameLabel.fontName = { family: "Inter", style: "Regular" };
-    }
+    applyFont(nameLabel, "body", styleName);
     nameLabel.characters = token.name;
     nameLabel.fontSize = 14;
     bindFill(nameLabel, fgVar);
@@ -73,7 +69,7 @@ export async function addTypography(
     row.appendChild(nameLabel);
 
     const valueLabel = figma.createText();
-    valueLabel.fontName = { family: "Inter", style: "Regular" };
+    applyFont(valueLabel, "body", "Regular");
     valueLabel.characters = `${token.value}`;
     valueLabel.fontSize = 12;
     bindFill(valueLabel, mutedVar);
@@ -81,11 +77,7 @@ export async function addTypography(
     row.appendChild(valueLabel);
 
     const sample = figma.createText();
-    try {
-      sample.fontName = fontName;
-    } catch {
-      sample.fontName = { family: "Inter", style: "Regular" };
-    }
+    applyFont(sample, "body", styleName);
     sample.characters = "The quick brown fox jumps over the lazy dog";
     sample.fontSize = 14;
     bindFill(sample, fgVar);
@@ -101,7 +93,7 @@ export async function addTypography(
     const sample = figma.createText();
     sample.characters = `Letter spacing ${token.value}px`;
     sample.fontSize = 14;
-    sample.fontName = { family: "Inter", style: "Regular" };
+    applyFont(sample, "body", "Regular");
     sample.letterSpacing = { value: token.value, unit: "PIXELS" };
     bindFill(sample, fgVar);
     row.appendChild(sample);
@@ -120,7 +112,7 @@ export async function addTypography(
     const sample = figma.createText();
     sample.characters = `Two lines of body copy\nshare leading ${token.value}px`;
     sample.fontSize = 13;
-    sample.fontName = { family: "Inter", style: "Regular" };
+    applyFont(sample, "body", "Regular");
     sample.lineHeight = { value: token.value, unit: "PIXELS" };
     sample.resize(sampleColumnWidth, sample.height);
     bindFill(sample, fgVar);

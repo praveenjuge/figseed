@@ -6,6 +6,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -62,7 +63,7 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   header.fills = [];
 
   const title = figma.createText();
-  title.fontName = { family: "Inter", style: "Medium" };
+  applyFont(title, "heading", "Medium");
   title.characters = "Card Title";
   title.fontSize = 16;
   bindFontSize(title, p.get("font/size/base"));
@@ -70,7 +71,7 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   header.appendChild(title);
 
   const desc = figma.createText();
-  desc.fontName = { family: "Inter", style: "Regular" };
+  applyFont(desc, "body", "Regular");
   desc.characters = "Card description goes here with supporting text.";
   desc.fontSize = 14;
   bindFontSize(desc, p.get("font/size/sm"));
@@ -92,7 +93,7 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   content.fills = [];
 
   const body = figma.createText();
-  body.fontName = { family: "Inter", style: "Regular" };
+  applyFont(body, "body", "Regular");
   body.characters =
     "This is the card body content area. It can contain any layout.";
   body.fontSize = 14;
@@ -118,7 +119,7 @@ function buildCardComponent(inputs: ComponentsInputs): ComponentNode {
   footer.fills = [];
 
   const footerText = figma.createText();
-  footerText.fontName = { family: "Inter", style: "Regular" };
+  applyFont(footerText, "body", "Regular");
   footerText.characters = "Card footer";
   footerText.fontSize = 12;
   bindFontSize(footerText, p.get("font/size/xs"));

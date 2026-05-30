@@ -6,6 +6,7 @@
 // few caps in a row with a small "+" style joiner.
 
 import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
+import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -88,7 +89,7 @@ function buildCap(inputs: ComponentsInputs, glyph: string): FrameNode {
   cap.strokes = [];
 
   const text = figma.createText();
-  text.fontName = { family: "Inter", style: "Medium" };
+  applyFont(text, "body", "Medium");
   text.characters = glyph;
   text.fontSize = 12;
   bindFontSize(text, p.get("font/size/xs"));

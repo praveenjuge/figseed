@@ -5,6 +5,7 @@
 // page, chevron separator (drawn here as a small vector glyph).
 
 import { bindFill, bindFontSize, bindStrokeColor } from "../bindings";
+import { applyFont } from "../../fonts";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -47,7 +48,7 @@ function buildBreadcrumbComponent(inputs: ComponentsInputs): ComponentNode {
     const label = figma.createText();
     // Both links and the current page render as regular weight; only the
     // colour distinguishes them (BreadcrumbPage is `font-normal text-foreground`).
-    label.fontName = { family: "Inter", style: "Regular" };
+    applyFont(label, "body", "Regular");
     label.characters = crumb.label;
     label.fontSize = 14;
     bindFontSize(label, p.get("font/size/sm"));

@@ -13,6 +13,7 @@ import {
   bindFontSize,
   bindStrokeColor,
 } from "../bindings";
+import { applyFont } from "../../fonts";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -84,7 +85,7 @@ function buildDialogComponent(inputs: ComponentsInputs): ComponentNode {
   header.layoutSizingHorizontal = "FILL";
 
   const title = figma.createText();
-  title.fontName = { family: "Inter", style: "Medium" };
+  applyFont(title, "heading", "Medium");
   title.characters = "Are you absolutely sure?";
   title.fontSize = 16;
   bindFontSize(title, p.get("font/size/base"));
@@ -93,7 +94,7 @@ function buildDialogComponent(inputs: ComponentsInputs): ComponentNode {
   title.layoutSizingHorizontal = "FILL";
 
   const desc = figma.createText();
-  desc.fontName = { family: "Inter", style: "Regular" };
+  applyFont(desc, "body", "Regular");
   desc.characters =
     "This action cannot be undone. This will permanently delete your account.";
   desc.fontSize = 14;
@@ -154,7 +155,7 @@ function buildCloseButton(inputs: ComponentsInputs): FrameNode {
   btn.strokes = [];
 
   const glyph = figma.createText();
-  glyph.fontName = { family: "Inter", style: "Regular" };
+  applyFont(glyph, "body", "Regular");
   glyph.characters = "✕";
   glyph.fontSize = 14;
   bindFontSize(glyph, p.get("font/size/sm"));
@@ -197,7 +198,7 @@ function buildButton(
   }
 
   const text = figma.createText();
-  text.fontName = { family: "Inter", style: "Medium" };
+  applyFont(text, "body", "Medium");
   text.characters = label;
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));

@@ -1,6 +1,7 @@
 // Layout helpers shared by the Design System page sections.
 
 import { bindFill } from "./bindings";
+import { applyFont } from "../fonts";
 import { solidPaint } from "./paints";
 import { SECTION_WIDTH } from "./types";
 
@@ -31,7 +32,7 @@ export function createSectionFrame(
   frame.clipsContent = true;
 
   const heading = figma.createText();
-  heading.fontName = { family: "Inter", style: "Semi Bold" };
+  applyFont(heading, "heading", "Semi Bold");
   heading.characters = meta?.title ?? name;
   heading.fontSize = meta?.titleSize ?? 16;
   heading.fills = [solidPaint(0.1)];
@@ -39,7 +40,7 @@ export function createSectionFrame(
 
   if (meta?.subtitle) {
     const sub = figma.createText();
-    sub.fontName = { family: "Inter", style: "Regular" };
+    applyFont(sub, "body", "Regular");
     sub.characters = meta.subtitle;
     sub.fontSize = 12;
     sub.fills = [solidPaint(0.4)];
@@ -58,7 +59,7 @@ export function createSubSection(parent: FrameNode, title: string): FrameNode {
   frame.fills = [];
 
   const heading = figma.createText();
-  heading.fontName = { family: "Inter", style: "Medium" };
+  applyFont(heading, "heading", "Medium");
   heading.characters = title;
   heading.fontSize = 12;
   heading.fills = [solidPaint(0.3)];
@@ -127,7 +128,7 @@ export function addLabel(
   const label = figma.createText();
   label.characters = text;
   label.fontSize = 10;
-  label.fontName = { family: "Inter", style: "Regular" };
+  applyFont(label, "body", "Regular");
   bindFill(label, variable);
   label.resize(width, 16);
   parent.appendChild(label);

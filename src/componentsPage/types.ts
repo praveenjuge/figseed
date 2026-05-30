@@ -3,8 +3,10 @@
 import type {
   PrimitiveVariableMap,
   TailwindColorVarMap,
+  ThemeFontVars,
   ThemeVariableMaps,
 } from "../generator";
+import type { ResolvedFonts } from "../primitives";
 
 export const PAGE_NAME = "Components";
 export const SECTION_GAP = 32;
@@ -18,6 +20,10 @@ export type ComponentsInputs = {
   primitives: PrimitiveVariableMap;
   tailwindColors: TailwindColorVarMap;
   theme: ThemeVariableMaps;
+  // Preset font families + the variables backing them. Optional so existing
+  // callers/tests keep working; the builder falls back to Inter when absent.
+  fonts?: ResolvedFonts;
+  fontVars?: ThemeFontVars;
   onProgress?: (current: number, total: number, label: string) => void;
 };
 

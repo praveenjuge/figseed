@@ -23,6 +23,15 @@ describe("summarizePreset", () => {
     ).toBe("style: new-york · baseColor: zinc · font: Inter · radius: 0.5rem");
   });
 
+  it("includes the heading font when present, after the body font", () => {
+    expect(
+      summarizePreset({
+        font: "geist",
+        fontHeading: "lora",
+      }),
+    ).toBe("font: geist · fontHeading: lora");
+  });
+
   it("ignores unknown keys", () => {
     expect(summarizePreset({ unknown: "x", style: "default" })).toBe(
       "style: default",

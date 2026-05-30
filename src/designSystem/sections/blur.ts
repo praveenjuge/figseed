@@ -3,6 +3,7 @@
 
 import { BLUR_BG_BASE64 } from "../../data/blurBackground";
 import { BLUR_TOKENS } from "../../primitives";
+import { applyFont } from "../../fonts";
 import { bindEffectRadius, bindFill } from "../bindings";
 import {
   createSectionFrame,
@@ -67,13 +68,13 @@ export async function addBlurAndBackdrop(
     const label = figma.createText();
     label.characters = `blur/${token.name}`;
     label.fontSize = 11;
-    label.fontName = { family: "Inter", style: "Medium" };
+    applyFont(label, "body", "Medium");
     bindFill(label, inputs.theme.light.get("foreground"));
 
     const sub = figma.createText();
     sub.characters = `${token.value}px`;
     sub.fontSize = 10;
-    sub.fontName = { family: "Inter", style: "Regular" };
+    applyFont(sub, "body", "Regular");
     bindFill(sub, inputs.theme.light.get("muted-foreground"));
 
     cell.appendChild(stage);

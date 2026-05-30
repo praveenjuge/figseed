@@ -45,6 +45,7 @@ async function handleGenerate(rawCode: string) {
           baseColor: decoded.baseColor,
           theme: decoded.theme,
           font: decoded.font,
+          fontHeading: decoded.fontHeading,
           radius: decoded.radius,
         }
       : undefined;
@@ -62,6 +63,8 @@ async function handleGenerate(rawCode: string) {
       tailwindColors: result.variables.tailwindColors,
       primitives: result.variables.primitives,
       theme: result.variables.theme,
+      fonts: result.fonts,
+      fontVars: result.variables.fonts,
       onProgress: (current, total, label) => {
         post({
           type: "progress",
@@ -80,6 +83,8 @@ async function handleGenerate(rawCode: string) {
       tailwindColors: result.variables.tailwindColors,
       primitives: result.variables.primitives,
       theme: result.variables.theme,
+      fonts: result.fonts,
+      fontVars: result.variables.fonts,
       onProgress: (current, total, label) => {
         post({
           type: "progress",

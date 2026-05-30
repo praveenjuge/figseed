@@ -241,3 +241,30 @@ export function fontSlugBucket(slug: string): "sans" | "serif" | "mono" {
   if (SERIF_FONT_SLUGS.has(slug)) return "serif";
   return "sans";
 }
+
+// Resolve a shadcn preset font slug to a Figma-friendly family name. Unknown
+// slugs (and an empty slug) fall back to Inter, which Figma always ships.
+export function presetFontFamily(slug: string | undefined): string {
+  if (!slug) return "Inter";
+  return PRESET_FONT_FAMILY_MAP[slug] ?? "Inter";
+}
+
+// The two fonts a shadcn "create preset" run can pick: a body font and a
+// heading font. Heading "inherit" (the default) reuses the body font, matching
+// shadcn's own resolution.
+export type ResolvedFonts = {
+  body: string;
+  heading: string;
+};
+
+export function resolveFonts(
+  bodySlug: string | undefined,
+  headingSlug: string | undefined,
+): ResolvedFonts {
+  const body = presetFontFamily(bodySlug);
+  const heading =
+    !headingSlug || headingSlug === "inherit"
+      ? body
+      : presetFontFamily(headingSlug);
+  return { body, heading };
+}
