@@ -26,6 +26,7 @@ import {
 } from "./types";
 import { loadDesignSystemFonts } from "./utils";
 import { ensureEffectStyles } from "../effectStyles";
+import { ensureTextStyles, applyTextStyles } from "../textStyles";
 import { applyTokenBindings } from "../tokenBindings";
 
 export type { DesignSystemInputs, DesignSystemResult } from "./types";
@@ -88,6 +89,12 @@ export async function buildDesignSystem(
     inputs.effectStyles ?? (await ensureEffectStyles(inputs.primitives));
   const inputsWithStyles: DesignSystemInputs = { ...inputs, effectStyles };
 
+  // Publish/refresh the Tailwind typography text styles so matching text nodes
+  // can be mapped onto a published style after the sections are built.
+  const textStyles =
+    inputs.textStyles ??
+    (await ensureTextStyles(inputs.primitives, inputs.fontVars));
+
   const total = SECTIONS.length;
   let count = 0;
 
@@ -99,6 +106,13 @@ export async function buildDesignSystem(
     await Promise.resolve();
   }
   inputs.onProgress?.(total, total, "Done");
+
+  // Map every eligible text node onto its Tailwind text style first, so the
+  // style owns the node's font size + line height. The token sweep below then
+  // skips those fields (a node with a text style needs no literal bindings).
+  for (const child of page.children) {
+    await applyTextStyles(child as SceneNode, textStyles);
+  }
 
   // Bind the remaining non-color primitives (spacing, padding, gaps, border
   // widths, radii, font sizes) wherever a literal matches a token, so later

@@ -1,6 +1,7 @@
 // Public types for the generator module.
 
 import type { EffectStyleMap } from "../effectStyles";
+import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
 import type { ResolvedRegistry } from "../registry";
 
@@ -38,6 +39,9 @@ export type GenerateResult = {
   // Published shadow + blur effect styles, so page builders reference the same
   // styles the generator created instead of re-deriving them.
   effectStyles: EffectStyleMap;
+  // Published Tailwind typography text styles (one per size × weight), so page
+  // builders can map matching text nodes onto them.
+  textStyles: TextStyleMap;
   variables: {
     tailwindColors: TailwindColorVarMap;
     primitives: PrimitiveVariableMap;

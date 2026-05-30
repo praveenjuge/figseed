@@ -1,7 +1,11 @@
 // Misc helpers shared by the Design System page.
 
-import { loadPresetFonts } from "../fonts";
+import { loadPresetFonts, weightStyleName } from "../fonts";
 import type { DesignSystemInputs } from "./types";
+
+// Re-exported from fonts.ts (the shared source of truth) so existing imports
+// from this module keep working.
+export { weightStyleName };
 
 export function summarizePreset(
   summary: Record<string, string | undefined> | undefined,
@@ -20,32 +24,6 @@ export function summarizePreset(
     if (value) parts.push(`${key}: ${value}`);
   }
   return parts.join(" · ");
-}
-
-export function weightStyleName(weight: number): string {
-  // Inter ships these named styles; mirror them where possible.
-  switch (weight) {
-    case 100:
-      return "Thin";
-    case 200:
-      return "Extra Light";
-    case 300:
-      return "Light";
-    case 400:
-      return "Regular";
-    case 500:
-      return "Medium";
-    case 600:
-      return "Semi Bold";
-    case 700:
-      return "Bold";
-    case 800:
-      return "Extra Bold";
-    case 900:
-      return "Black";
-    default:
-      return "Regular";
-  }
 }
 
 // Load the preset fonts for the Design System page and activate them. Falls

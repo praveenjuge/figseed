@@ -306,23 +306,33 @@ function bindNode(node: SceneNode, primitives: VarMap): void {
   bindEffectRadii(node, primitives);
 
   // Text metrics: font size, line height (leading), letter spacing (tracking).
+  // A node that references a published text style delegates its font size +
+  // line height to that style, so binding literals here would conflict (and
+  // Figma rejects editing a styled node's metrics). Letter spacing has no
+  // text-style coverage in our scale, so it is still bound either way.
   if (node.type === "TEXT") {
-    bindField(
-      node,
-      "fontSize",
-      numberField(node, "fontSize"),
-      FONT_SIZE_BY_VALUE,
-      "font/size",
-      primitives,
-    );
-    bindField(
-      node,
-      "lineHeight",
-      pixelField(node, "lineHeight"),
-      LEADING_BY_VALUE,
-      "font/leading",
-      primitives,
-    );
+    const textStyleId = (node as unknown as { textStyleId?: unknown })
+      .textStyleId;
+    const hasTextStyle =
+      typeof textStyleId === "string" && textStyleId.length > 0;
+    if (!hasTextStyle) {
+      bindField(
+        node,
+        "fontSize",
+        numberField(node, "fontSize"),
+        FONT_SIZE_BY_VALUE,
+        "font/size",
+        primitives,
+      );
+      bindField(
+        node,
+        "lineHeight",
+        pixelField(node, "lineHeight"),
+        LEADING_BY_VALUE,
+        "font/leading",
+        primitives,
+      );
+    }
     bindField(
       node,
       "letterSpacing",

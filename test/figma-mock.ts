@@ -61,6 +61,7 @@ export type FakeNode = {
   setBoundVariable(field: string, variable: { id: string }): void;
   setFillStyleIdAsync(styleId: string): Promise<void>;
   setEffectStyleIdAsync(styleId: string): Promise<void>;
+  setTextStyleIdAsync(styleId: string): Promise<void>;
   remove(): void;
   [key: string]: unknown;
 };
@@ -83,11 +84,25 @@ export type FakeEffectStyle = {
   remove(): void;
 };
 
+export type FakeTextStyle = {
+  id: string;
+  name: string;
+  type: "TEXT";
+  fontName: { family: string; style: string };
+  fontSize: number;
+  lineHeight: unknown;
+  letterSpacing: unknown;
+  boundVariables: Record<string, AliasValue>;
+  setBoundVariable(field: string, variable: { id: string } | null): void;
+  remove(): void;
+};
+
 export function createFigmaMock() {
   const collections = new Map<string, FakeCollection>();
   const variables = new Map<string, FakeVariable>();
   const paintStyles = new Map<string, FakePaintStyle>();
   const effectStyles = new Map<string, FakeEffectStyle>();
+  const textStyles = new Map<string, FakeTextStyle>();
 
   class FakeVariable {
     id = nextId("var");
@@ -211,6 +226,10 @@ export function createFigmaMock() {
       },
       setEffectStyleIdAsync(styleId: string) {
         node.effectStyleId = styleId;
+        return Promise.resolve();
+      },
+      setTextStyleIdAsync(styleId: string) {
+        node.textStyleId = styleId;
         return Promise.resolve();
       },
       remove() {
@@ -350,6 +369,35 @@ export function createFigmaMock() {
     },
     getLocalEffectStylesAsync: () =>
       Promise.resolve([...effectStyles.values()]),
+
+    createTextStyle: (): FakeTextStyle => {
+      const style: FakeTextStyle = {
+        id: nextId("style"),
+        name: "",
+        type: "TEXT",
+        fontName: { family: "Inter", style: "Regular" },
+        fontSize: 16,
+        lineHeight: { unit: "AUTO" },
+        letterSpacing: { unit: "PERCENT", value: 0 },
+        boundVariables: {},
+        setBoundVariable(field: string, variable: { id: string } | null) {
+          if (variable === null) {
+            delete style.boundVariables[field];
+            return;
+          }
+          style.boundVariables[field] = {
+            type: "VARIABLE_ALIAS",
+            id: variable.id,
+          };
+        },
+        remove() {
+          textStyles.delete(style.id);
+        },
+      };
+      textStyles.set(style.id, style);
+      return style;
+    },
+    getLocalTextStylesAsync: () => Promise.resolve([...textStyles.values()]),
 
     combineAsVariants: (components: FakeNode[], parent: FakeNode) => {
       const set = makeNode("COMPONENT_SET");

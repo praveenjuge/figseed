@@ -7,6 +7,7 @@ import type {
   ThemeVariableMaps,
 } from "../generator";
 import type { EffectStyleMap } from "../effectStyles";
+import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
 
 export const PAGE_NAME = "Components";
@@ -28,6 +29,9 @@ export type ComponentsInputs = {
   // Shadow + blur effect styles. Populated by the builder when absent so
   // sections can reference published styles instead of literal effects.
   effectStyles?: EffectStyleMap;
+  // Tailwind typography text styles. Populated by the builder when absent so
+  // matching text nodes get mapped onto a published style.
+  textStyles?: TextStyleMap;
   onProgress?: (current: number, total: number, label: string) => void;
 };
 

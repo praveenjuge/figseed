@@ -32,10 +32,40 @@ const FONT_STYLES = [
 ] as const;
 
 // Inter ships with Figma, so it is always a safe fallback.
-const FALLBACK_FAMILY = "Inter";
+export const FALLBACK_FAMILY = "Inter";
 
 function styleKey(family: string, style: string): string {
   return family + "\u0000" + style;
+}
+
+// Maps a numeric font weight (100–900) to the Figma/Inter named style. Lives
+// here (alongside the rest of the font handling) so both the page builders and
+// the text-style generator can share one source of truth. `designSystem/utils`
+// re-exports it for the existing call sites.
+export function weightStyleName(weight: number): string {
+  // Inter ships these named styles; mirror them where possible.
+  switch (weight) {
+    case 100:
+      return "Thin";
+    case 200:
+      return "Extra Light";
+    case 300:
+      return "Light";
+    case 400:
+      return "Regular";
+    case 500:
+      return "Medium";
+    case 600:
+      return "Semi Bold";
+    case 700:
+      return "Bold";
+    case 800:
+      return "Extra Bold";
+    case 900:
+      return "Black";
+    default:
+      return "Regular";
+  }
 }
 
 export type FontContext = {
@@ -120,13 +150,13 @@ export async function loadPresetFonts(
   return context;
 }
 
-type PickedFont = { fontName: FontName; bindable: boolean };
+export type PickedFont = { fontName: FontName; bindable: boolean };
 
 // Choose the closest loaded font for a requested family/style. `bindable` is
 // true only when the chosen family is the requested preset family, so callers
 // know it is safe to bind the node's fontFamily to the preset variable (binding
 // to an unloaded family would break setting characters).
-function pickFont(
+export function pickFont(
   context: FontContext,
   family: string,
   style: string,
@@ -176,4 +206,32 @@ export function applyFont(
       // Some hosts/types reject the binding — leave the literal font in place.
     }
   }
+}
+
+// Return the currently active font context (set by loadPresetFonts). The
+// text-style generator reads it so its styles use the preset's body font and
+// bind to the matching theme variable, exactly like applyFont does for nodes.
+export function getActiveFonts(): FontContext | null {
+  return active;
+}
+
+// Resolve the body font for a requested weight against the active (or given)
+// context, returning the chosen FontName plus the theme variable it is safe to
+// bind. Mirrors applyFont's resolution so text styles and text nodes stay in
+// sync. Falls back to Inter when no context is active.
+export function resolveBodyFont(
+  style: string,
+  context: FontContext | null = active,
+): { fontName: FontName; familyVar: Variable | undefined } {
+  if (!context) {
+    return {
+      fontName: { family: FALLBACK_FAMILY, style },
+      familyVar: undefined,
+    };
+  }
+  const picked = pickFont(context, context.body, style);
+  return {
+    fontName: picked.fontName,
+    familyVar: picked.bindable ? context.bodyVar : undefined,
+  };
 }

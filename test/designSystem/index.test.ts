@@ -3,6 +3,7 @@ import { buildDesignSystem } from "../../src/designSystem";
 import type { DesignSystemInputs } from "../../src/designSystem";
 import { generateFromRegistry } from "../../src/generator";
 import { resolvePreset } from "../../src/registry";
+import type { FigmaMock } from "../figma-mock";
 
 async function makeInputs(code = "b2fA"): Promise<DesignSystemInputs> {
   const resolved = resolvePreset(code);
@@ -52,4 +53,34 @@ describe("buildDesignSystem", () => {
     const pages = figma.root.children.filter((c) => c.name === "Design System");
     expect(pages).toHaveLength(1);
   });
+
+  it("publishes the Tailwind text styles and maps matching text nodes onto them", async () => {
+    const inputs = await makeInputs();
+    await buildDesignSystem(inputs);
+
+    const figma = (globalThis as unknown as { figma: FigmaMock }).figma;
+    const styles = await figma.getLocalTextStylesAsync();
+    // 13 sizes × 9 weights.
+    expect(styles).toHaveLength(117);
+
+    const page = figma.root.children.find(
+      (c) => (c as unknown as { name: string }).name === "Design System",
+    );
+    const styled = countStyledText(page as unknown as TreeNode);
+    expect(styled).toBeGreaterThan(0);
+  });
 });
+
+type TreeNode = {
+  type: string;
+  textStyleId?: string;
+  children?: TreeNode[];
+};
+
+function countStyledText(node: TreeNode | undefined): number {
+  if (!node) return 0;
+  let count =
+    node.type === "TEXT" && typeof node.textStyleId === "string" ? 1 : 0;
+  for (const child of node.children ?? []) count += countStyledText(child);
+  return count;
+}

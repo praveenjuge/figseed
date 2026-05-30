@@ -11,6 +11,8 @@ import { ensurePrimitivesCollection, resolveFontFamily } from "./primitives";
 import { ensureTailwindColorCollection } from "./tailwindColors";
 import { ensureThemeCollection } from "./theme";
 import { ensureEffectStyles } from "../effectStyles";
+import { loadPresetFonts } from "../fonts";
+import { ensureTextStyles } from "../textStyles";
 import type {
   GenerateOptions,
   GenerateResult,
@@ -26,6 +28,7 @@ export type {
   ThemeVariableMaps,
 } from "./types";
 export type { EffectStyleMap } from "../effectStyles";
+export type { TextStyleMap } from "../textStyles";
 
 export async function generateFromRegistry(
   data: ResolvedRegistry,
@@ -41,6 +44,18 @@ export async function generateFromRegistry(
   // `blur/*` primitives created just above, so the styles stay in sync.
   const effectStyles = await ensureEffectStyles(primitives);
 
+  // Publish the Tailwind typography text styles (one per size × weight). They
+  // bind their font size, line height, family, and weight to the matching
+  // variables. Load the preset fonts first so each style's fontName resolves to
+  // a really-loaded face (and activate the context so the binding mirrors what
+  // the page builders apply to text nodes).
+  await loadPresetFonts({
+    body: themeResult.fonts.body,
+    heading: themeResult.fonts.heading,
+    fontVars: themeResult.fontVars,
+  });
+  const textStyles = await ensureTextStyles(primitives, themeResult.fontVars);
+
   return {
     presetCode: options.presetCode,
     collections: [
@@ -54,6 +69,7 @@ export async function generateFromRegistry(
     fallbackThemeColors: themeResult.unaliasedCount,
     fonts: themeResult.fonts,
     effectStyles,
+    textStyles,
     variables: {
       tailwindColors: colorVars,
       primitives,
