@@ -29,6 +29,10 @@ export async function addBoxShadows(
   inputs: DesignSystemInputs,
 ): Promise<number> {
   const section = createSectionFrame("Shadows");
+  // Shadows bleed past their tile, so the section must NOT clip its content —
+  // otherwise the spread/blur gets cut off at the card edge. (Regression
+  // guard: see test/designSystem/boxShadow.test.ts.)
+  section.clipsContent = false;
 
   await addShadowGroup(section, inputs, "Drop shadow", SHADOW_STYLES);
   await addShadowGroup(section, inputs, "Inner shadow", INNER_SHADOW_STYLES);
@@ -44,17 +48,25 @@ async function addShadowGroup(
   specs: EffectStyleSpec[],
 ): Promise<void> {
   const group = createSubSection(section, title);
+  // The subsection frame sits between the (non-clipping) section and the row;
+  // it must not clip either, or it cuts off the shadow bleed.
+  group.clipsContent = false;
 
   // Parent the row to the section's content width so tiles flow left-to-right
   // and wrap, instead of collapsing into a vertical stack inside the hugging
-  // subsection frame. A little vertical padding gives the larger shadows room
-  // to bleed without being clipped by the section's rounded card.
-  const row = createWrappingRow(group, 16);
+  // subsection frame.
+  const row = createWrappingRow(group, 24);
+  // The subsection hugs its content (≈0 width), so size the row to the
+  // section's content width — otherwise tiles collapse into a vertical stack.
   row.resize(sectionContentWidth(), 1);
-  row.paddingTop = 12;
-  row.paddingBottom = 16;
-  row.paddingLeft = 4;
-  row.paddingRight = 4;
+  // Let shadows spread freely — none of the wrappers around a shadow tile may
+  // clip, or the bleed gets cut off. Vertical padding keeps neighbouring rows
+  // from visually overlapping once the shadows extend past the tiles.
+  row.clipsContent = false;
+  row.paddingTop = 16;
+  row.paddingBottom = 24;
+  row.paddingLeft = 8;
+  row.paddingRight = 8;
 
   for (const spec of specs) {
     const cell = figma.createFrame();
@@ -62,6 +74,7 @@ async function addShadowGroup(
     cell.itemSpacing = 6;
     cell.counterAxisAlignItems = "CENTER";
     cell.fills = [];
+    cell.clipsContent = false;
     cell.primaryAxisSizingMode = "AUTO";
     cell.counterAxisSizingMode = "AUTO";
 
