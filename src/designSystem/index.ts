@@ -25,6 +25,7 @@ import {
   type SectionBuilder,
 } from "./types";
 import { loadDesignSystemFonts } from "./utils";
+import { applyTokenBindings } from "../tokenBindings";
 
 export type { DesignSystemInputs, DesignSystemResult } from "./types";
 
@@ -90,6 +91,13 @@ export async function buildDesignSystem(
     await Promise.resolve();
   }
   inputs.onProgress?.(total, total, "Done");
+
+  // Bind the remaining non-color primitives (spacing, padding, gaps, border
+  // widths, radii, font sizes) wherever a literal matches a token, so later
+  // variable edits reflow the page instead of leaving frozen literals.
+  for (const child of page.children) {
+    applyTokenBindings(child as SceneNode, inputs.primitives);
+  }
 
   // Lay out the section frames across two columns, keeping each section in
   // its assigned column (all color sections stay together).

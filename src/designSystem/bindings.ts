@@ -87,6 +87,27 @@ export function bindFontSize(node: TextNode, variable: Variable | undefined) {
   }
 }
 
+export function bindLineHeight(node: TextNode, variable: Variable | undefined) {
+  if (!variable) return;
+  try {
+    node.setBoundVariable("lineHeight", variable);
+  } catch {
+    // ignore
+  }
+}
+
+export function bindLetterSpacing(
+  node: TextNode,
+  variable: Variable | undefined,
+) {
+  if (!variable) return;
+  try {
+    node.setBoundVariable("letterSpacing", variable);
+  } catch {
+    // ignore
+  }
+}
+
 export function bindCornerRadii(
   node: FrameNode,
   variable: Variable | undefined,

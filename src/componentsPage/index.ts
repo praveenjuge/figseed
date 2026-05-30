@@ -41,6 +41,7 @@ import {
   type SectionBuilder,
 } from "./types";
 import { loadComponentsFonts } from "./utils";
+import { applyTokenBindings } from "../tokenBindings";
 
 export type { ComponentsInputs, ComponentsResult } from "./types";
 
@@ -103,6 +104,13 @@ export async function buildComponentsPage(
     await Promise.resolve();
   }
   inputs.onProgress?.(total, total, "Done");
+
+  // Bind the remaining non-color primitives (spacing, padding, gaps, border
+  // widths, radii, font sizes) wherever a literal matches a token, so later
+  // variable edits reflow the components instead of leaving frozen literals.
+  for (const child of page.children) {
+    applyTokenBindings(child as SceneNode, inputs.primitives);
+  }
 
   layoutSectionsVertically(page);
   return { nodeCount: count };

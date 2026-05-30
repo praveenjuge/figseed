@@ -8,7 +8,12 @@ import {
   FONT_WEIGHT_TOKENS,
 } from "../../primitives";
 import { applyFont } from "../../fonts";
-import { bindFill, bindFontSize } from "../bindings";
+import {
+  bindFill,
+  bindFontSize,
+  bindLetterSpacing,
+  bindLineHeight,
+} from "../bindings";
 import {
   addLabel,
   createSectionFrame,
@@ -95,6 +100,10 @@ export async function addTypography(
     sample.fontSize = 14;
     applyFont(sample, "body", "Regular");
     sample.letterSpacing = { value: token.value, unit: "PIXELS" };
+    bindLetterSpacing(
+      sample,
+      inputs.primitives.get(`font/tracking/${token.name}`),
+    );
     bindFill(sample, fgVar);
     row.appendChild(sample);
   }
@@ -115,6 +124,7 @@ export async function addTypography(
     applyFont(sample, "body", "Regular");
     sample.lineHeight = { value: token.value, unit: "PIXELS" };
     sample.resize(sampleColumnWidth, sample.height);
+    bindLineHeight(sample, inputs.primitives.get(`font/leading/${token.name}`));
     bindFill(sample, fgVar);
     row.appendChild(sample);
   }
