@@ -26,10 +26,16 @@ function makePrimitives(): Map<string, Variable> {
   };
   add("spacing/4"); // 16
   add("spacing/2"); // 8
+  add("spacing/8"); // 32
   add("spacing/0"); // 0
   add("border-width/1"); // 1
   add("radius/lg"); // 8
   add("font/size/sm"); // 14
+  add("container/lg"); // 512
+  add("font/leading/5"); // 20
+  add("font/tracking/wide"); // 0.4
+  add("opacity/50"); // 50
+  add("blur/md"); // 12
   return map;
 }
 
@@ -158,5 +164,136 @@ describe("applyTokenBindings", () => {
     applyTokenBindings(frame as never, primitives);
 
     expect(boundId(frame, "itemSpacing")).toBeUndefined();
+  });
+
+  it("binds fixed width/height onto the spacing scale", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const frame = figma.createFrame();
+    frame.resize(32, 32);
+
+    applyTokenBindings(frame as never, primitives);
+
+    const spacing8 = primitives.get("spacing/8")!.id;
+    expect(boundId(frame, "width")).toBe(spacing8);
+    expect(boundId(frame, "height")).toBe(spacing8);
+  });
+
+  it("falls back to the container scale for large widths", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const frame = figma.createFrame();
+    frame.resize(512, 32);
+
+    applyTokenBindings(frame as never, primitives);
+
+    expect(boundId(frame, "width")).toBe(primitives.get("container/lg")!.id);
+    expect(boundId(frame, "height")).toBe(primitives.get("spacing/8")!.id);
+  });
+
+  it("does not bind size on the hug axis of an auto-layout frame", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const frame = figma.createFrame();
+    (frame as unknown as Record<string, unknown>).layoutMode = "HORIZONTAL";
+    // Primary axis (width) hugs, counter axis (height) is fixed.
+    (frame as unknown as Record<string, unknown>).primaryAxisSizingMode =
+      "AUTO";
+    (frame as unknown as Record<string, unknown>).counterAxisSizingMode =
+      "FIXED";
+    frame.resize(32, 32);
+
+    applyTokenBindings(frame as never, primitives);
+
+    expect(boundId(frame, "width")).toBeUndefined();
+    expect(boundId(frame, "height")).toBe(primitives.get("spacing/8")!.id);
+  });
+
+  it("does not bind width/height on text nodes", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const text = figma.createText();
+    text.resize(32, 32);
+
+    applyTokenBindings(text as never, primitives);
+
+    expect(boundId(text, "width")).toBeUndefined();
+    expect(boundId(text, "height")).toBeUndefined();
+  });
+
+  it("binds a faded opacity onto the opacity scale but skips fully opaque", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const faded = figma.createFrame();
+    (faded as unknown as Record<string, unknown>).opacity = 0.5;
+    const opaque = figma.createFrame();
+    (opaque as unknown as Record<string, unknown>).opacity = 1;
+
+    applyTokenBindings(faded as never, primitives);
+    applyTokenBindings(opaque as never, primitives);
+
+    expect(boundId(faded, "opacity")).toBe(primitives.get("opacity/50")!.id);
+    expect(boundId(opaque, "opacity")).toBeUndefined();
+  });
+
+  it("binds pixel line height + letter spacing on text, ignoring percent units", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const text = figma.createText();
+    (text as unknown as Record<string, unknown>).lineHeight = {
+      unit: "PIXELS",
+      value: 20,
+    };
+    (text as unknown as Record<string, unknown>).letterSpacing = {
+      unit: "PIXELS",
+      value: 0.4,
+    };
+
+    const percentText = figma.createText();
+    (percentText as unknown as Record<string, unknown>).letterSpacing = {
+      unit: "PERCENT",
+      value: 4,
+    };
+
+    applyTokenBindings(text as never, primitives);
+    applyTokenBindings(percentText as never, primitives);
+
+    expect(boundId(text, "lineHeight")).toBe(
+      primitives.get("font/leading/5")!.id,
+    );
+    expect(boundId(text, "letterSpacing")).toBe(
+      primitives.get("font/tracking/wide")!.id,
+    );
+    expect(boundId(percentText, "letterSpacing")).toBeUndefined();
+  });
+
+  it("binds drop-shadow radius onto the blur scale", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const frame = figma.createFrame();
+    frame.effects = [
+      {
+        type: "DROP_SHADOW",
+        radius: 12,
+        color: { r: 0, g: 0, b: 0, a: 0.1 },
+        offset: { x: 0, y: 2 },
+        spread: 0,
+        visible: true,
+        blendMode: "NORMAL",
+      },
+    ];
+
+    applyTokenBindings(frame as never, primitives);
+
+    const effect = (frame.effects as Array<Record<string, unknown>>)[0]!;
+    const bound = effect.boundVariables as Record<string, { id: string }>;
+    expect(bound.radius!.id).toBe(primitives.get("blur/md")!.id);
   });
 });
