@@ -47,7 +47,6 @@
       h1 {
         margin: 0;
         font-size: 12px;
-        margin-bottom: 2px;
         font-weight: 600;
       }
       p.subtitle {
@@ -142,20 +141,12 @@
           transform: translateX(300%);
         }
       }
-      .help {
-        color: var(--muted);
-        line-height: 1.4;
-      }
       a {
         color: var(--accent);
         text-decoration: none;
       }
       a:hover {
         text-decoration: underline;
-      }
-      ul {
-        margin: 4px 0 0;
-        padding-left: 16px;
       }
       .presets {
         display: flex;
@@ -223,18 +214,13 @@
       <header>
         <h1>Figseed</h1>
         <p class="subtitle">
-          Paste a shadcn preset code to generate Tailwind colors, primitives,
-          and theme variables in this Figma file.
+          Paste a
+          <a href="https://ui.shadcn.com/create" target="_blank" rel="noopener"
+            >shadcn preset</a
+          >
+          code to generate Tailwind colors, primitives, and theme variables.
         </p>
       </header>
-
-      <p class="help">
-        Build a preset at
-        <a href="https://ui.shadcn.com/create" target="_blank" rel="noopener"
-          >ui.shadcn.com/create</a
-        >
-        and paste the code here.
-      </p>
 
       <label for="preset">
         Preset code
