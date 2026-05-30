@@ -70,9 +70,11 @@ function buildButtonGroupComponent(
     const item = buildSegment(inputs, LABELS[i]!, orientation, isFirst, isLast);
     comp.appendChild(item);
     // Stretch each segment across the counter axis so heights/widths match.
-    if (horizontal) {
-      item.layoutSizingVertical = "FILL";
-    } else {
+    // Horizontal segments already share a fixed BUTTON_HEIGHT, so they match
+    // without FILL — and FILL would discard that fixed height, collapsing the
+    // hugging parent to the text's intrinsic height (a squished group). Only
+    // the vertical orientation needs FILL, to equalize the differing widths.
+    if (!horizontal) {
       item.layoutSizingHorizontal = "FILL";
     }
   }
