@@ -20,6 +20,7 @@ export type PluginToUi =
         fallbackThemeColors: number;
         designSystemNodes: number;
         componentsNodes: number;
+        blocksNodes: number;
       };
     }
   | { type: "error"; message: string };

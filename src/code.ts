@@ -2,6 +2,7 @@
 // figma.* APIs.
 
 import { buildComponentsPage } from "./componentsPage";
+import { buildBlocksRegion } from "./blocksPage";
 import { buildDesignSystem } from "./designSystem";
 import { generateFromRegistry } from "./generator";
 import { decodePreset } from "./preset";
@@ -100,6 +101,40 @@ async function handleGenerate(rawCode: string) {
       },
     });
 
+    post({ type: "progress", message: "Building Blocks…" });
+
+    // Render the blocks region onto the Components page itself — Figma's
+    // Starter tier caps a file at 3 pages, so blocks live alongside the
+    // component grid rather than on a 4th page. The page is resolvable by name
+    // here (loadAllPagesAsync ran inside buildComponentsPage) and already holds
+    // every component the blocks reuse as live instances.
+    const componentsPage = figma.root.children.find(
+      (child) => child.type === "PAGE" && child.name === "Components",
+    ) as PageNode | undefined;
+
+    const blocks = componentsPage
+      ? await buildBlocksRegion({
+          presetCode: result.presetCode,
+          presetSummary,
+          tailwindColors: result.variables.tailwindColors,
+          primitives: result.variables.primitives,
+          theme: result.variables.theme,
+          fonts: result.fonts,
+          fontVars: result.variables.fonts,
+          effectStyles: result.effectStyles,
+          textStyles: result.textStyles,
+          targetPage: componentsPage,
+          onProgress: (current, total, label) => {
+            post({
+              type: "progress",
+              message: `Building ${label}…`,
+              step: current,
+              total,
+            });
+          },
+        })
+      : { nodeCount: 0 };
+
     post({
       type: "done",
       presetCode: result.presetCode,
@@ -108,6 +143,7 @@ async function handleGenerate(rawCode: string) {
         fallbackThemeColors: result.fallbackThemeColors,
         designSystemNodes: ds.nodeCount,
         componentsNodes: components.nodeCount,
+        blocksNodes: blocks.nodeCount,
       },
     });
 
@@ -116,7 +152,7 @@ async function handleGenerate(rawCode: string) {
       0,
     );
     figma.notify(
-      `Figseed: ${variableTotal} variables · Design System (${ds.nodeCount} nodes) · Components (${components.nodeCount} nodes).`,
+      `Figseed: ${variableTotal} variables · Design System (${ds.nodeCount} nodes) · Components (${components.nodeCount} nodes) · Blocks (${blocks.nodeCount} nodes).`,
     );
   } catch (error) {
     const messageText =

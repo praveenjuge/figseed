@@ -168,7 +168,7 @@ window.addEventListener("message", (event: MessageEvent) => {
       0,
     );
     setStatus(
-      `Created ${total} variables · Design System (${message.summary.designSystemNodes} nodes) · Components (${message.summary.componentsNodes} nodes).`,
+      `Created ${total} variables · Design System (${message.summary.designSystemNodes} nodes) · Components (${message.summary.componentsNodes} nodes) · Blocks (${message.summary.blocksNodes} nodes).`,
       "done",
     );
     finishProgress();

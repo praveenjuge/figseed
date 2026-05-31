@@ -57,6 +57,7 @@ src/
   generator/         # builds Figma collections, modes, variables
   designSystem/      # rebuilds the "Design System" page
   componentsPage/    # rebuilds the "Components" page (shadcn primitives)
+  blocksPage/        # blocks region appended to the Components page (shadcn screens, reuses components)
   data/themes.json   # snapshot of shadcn's apps/v4/registry/themes.ts
   data/avatars.ts    # base64 avatar photos (build-time fetch) for Avatar styles
   data/icons.ts      # shadcn icon-library subsets (build-time) for the Icons section

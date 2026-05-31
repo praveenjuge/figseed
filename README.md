@@ -20,9 +20,10 @@ Figseed creates three variable collections — `Tailwind / Colors`,
 `Tailwind / Primitives`, and `shadcn / Theme` (light values plus `dark-*`
 twins) — plus a set of Figma effect styles for the Tailwind shadow and blur
 scales (`Shadow/*`, `Inner Shadow/*`, `Blur/*`, `Backdrop Blur/*`). It then
-rebuilds a `Design System` page and a `Components` page wired to those
-variables and styles. Re-running with a different preset updates everything in
-place.
+rebuilds a `Design System` page and a `Components` page wired to those variables
+and styles — the latter also carries a **Blocks** region (login, signup, and
+dashboard screens assembled from the component instances). Re-running with a
+different preset updates everything in place.
 
 ## Privacy
 
@@ -35,7 +36,7 @@ services.
 The plugin only writes to the file you run it in: variables in the
 `Tailwind / Colors`, `Tailwind / Primitives`, and `shadcn / Theme`
 collections, shadow/blur effect styles, and nodes on the `Design System` and
-`Components` pages.
+`Components` pages (the Components page includes the Blocks region).
 
 ## Support
 
@@ -60,16 +61,6 @@ To load the plugin locally in Figma desktop:
 
 See [AGENTS.md](./AGENTS.md) for project layout and conventions, and
 [PUBLISHING.md](./PUBLISHING.md) for the Community submission flow.
-
-## Roadmap
-
-- [x] Variables
-- [x] Components
-- [x] Design System
-- [x] Icons
-- [x] Fonts
-- [ ] Blocks
-- [x] Charts
 
 ## License
 
