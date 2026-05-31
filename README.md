@@ -1,66 +1,74 @@
 # Figseed
 
-Generate a [shadcn/ui](https://ui.shadcn.com) design system inside Figma from a
-preset code. Paste a code, hit Generate, and Figseed materializes Tailwind v4
-colors, primitive tokens, and a light/dark theme as native Figma variables —
-with theme colors aliased back to the Tailwind palette where possible.
+Figseed is a Figma plugin that turns a [shadcn/ui](https://ui.shadcn.com)
+preset code into native Figma variables, styles, components, and app blocks.
 
-> Status: 1.0 release candidate. See [PUBLISHING.md](./PUBLISHING.md) for the
-> Figma Community submission checklist.
+Paste a preset code, generate once, and Figseed builds the design-system
+surface around it:
+
+- `Tailwind / Colors` with the Tailwind v4 OKLCH palette.
+- `Tailwind / Primitives` with radius, spacing, typography, opacity, border,
+  shadow, and blur tokens.
+- `shadcn / Theme` with light values plus `dark-*` twin variables for Figma
+  free-tier compatibility.
+- Tailwind typography text styles and shadow, inner shadow, blur, and backdrop
+  blur effect styles.
+- A `Design System` page for colors, type, spacing, radii, effects, opacity,
+  border widths, and icons.
+- A `Components` page with 58 shadcn-style sections, including charts, forms,
+  typography, data tables, sidebars, icon-backed controls, and common overlays.
+- A Blocks region on the `Components` page with login, signup, and a
+  shadcn-structured dashboard assembled from generated component instances.
+
+Re-running with a different preset updates the same variables, styles, and
+pages in place.
 
 ## Usage
 
-1. Build a preset at <https://ui.shadcn.com/create> and copy its short code
-   (e.g. `b0`, `bAhk2P`).
-2. Open the plugin in Figma and run **Generate from preset…**, or pick one of
-   the curated presets, or hit **Shuffle a random preset**.
-3. Paste the code and hit **Generate**.
-
-Figseed creates three variable collections — `Tailwind / Colors`,
-`Tailwind / Primitives`, and `shadcn / Theme` (light values plus `dark-*`
-twins) — plus a set of Figma effect styles for the Tailwind shadow and blur
-scales (`Shadow/*`, `Inner Shadow/*`, `Blur/*`, `Backdrop Blur/*`). It then
-rebuilds a `Design System` page and a `Components` page wired to those variables
-and styles — the latter also carries a **Blocks** region (login, signup, and
-dashboard screens assembled from the component instances). Re-running with a
-different preset updates everything in place.
+1. Build a preset at <https://ui.shadcn.com/create> and copy its code, such as
+   `b0` or `bAhk2P`.
+2. Run **Generate from preset...** in Figma, or use **Shuffle a random preset**.
+3. Paste the code and generate.
 
 ## Privacy
 
-Figseed runs fully offline. The manifest declares
-`networkAccess.allowedDomains: ["none"]`, so the plugin cannot make network
-requests. Nothing about your file, your selection, or the preset code you
-paste leaves your machine. No analytics, no telemetry, no third-party
+Figseed runs offline. `manifest.json` declares
+`networkAccess.allowedDomains: ["none"]`, so the plugin cannot make external
+network requests. It does not use analytics, telemetry, CDNs, or third-party
 services.
 
-The plugin only writes to the file you run it in: variables in the
-`Tailwind / Colors`, `Tailwind / Primitives`, and `shadcn / Theme`
-collections, shadow/blur effect styles, and nodes on the `Design System` and
-`Components` pages (the Components page includes the Blocks region).
+The plugin only writes to the file where you run it: the three variable
+collections, generated text/effect styles, and the `Design System` and
+`Components` pages.
 
-## Support
-
-- Found a bug or have a feature request? Open an issue at
-  <https://github.com/praveenjuge/figseed/issues>.
-- For everything else, ping the maintainer on the
-  [GitHub repo](https://github.com/praveenjuge/figseed).
-
-## Develop
+## Development
 
 ```bash
 npm install
-npm run build       # → dist/code.js + dist/ui.html
-npm run watch       # rebuild on changes
 npm run typecheck
 npm test
+npm run build
 ```
 
-To load the plugin locally in Figma desktop:
-**Plugins → Development → Import plugin from manifest…**, then pick
-`manifest.json`.
+Useful scripts:
 
-See [AGENTS.md](./AGENTS.md) for project layout and conventions, and
-[PUBLISHING.md](./PUBLISHING.md) for the Community submission flow.
+```bash
+npm run watch
+npm run test:coverage
+node scripts/extract-themes.mjs
+node scripts/gen-avatar-images.mjs
+node scripts/gen-icons.mjs
+node scripts/gen-plugin-icon.mjs
+```
+
+Load locally with **Plugins -> Development -> Import plugin from manifest...**
+and select `manifest.json`.
+
+See [AGENTS.md](./AGENTS.md) for architecture, commands, and constraints.
+
+## Support
+
+Open issues at <https://github.com/praveenjuge/figseed/issues>.
 
 ## License
 
