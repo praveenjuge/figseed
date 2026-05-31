@@ -20,19 +20,26 @@ import { addCarouselSection } from "./sections/carousel";
 import { addChartSection } from "./sections/chart";
 import { addCheckboxSection } from "./sections/checkbox";
 import { addCollapsibleSection } from "./sections/collapsible";
+import { addComboboxSection } from "./sections/combobox";
 import { addCommandSection } from "./sections/command";
 import { addContextMenuSection } from "./sections/contextMenu";
+import { addDataTableSection } from "./sections/dataTable";
 import { addDatePickerSection } from "./sections/datePicker";
 import { addDialogSection } from "./sections/dialog";
+import { addDrawerSection } from "./sections/drawer";
 import { addDropdownMenuSection } from "./sections/dropdownMenu";
 import { addEmptySection } from "./sections/empty";
+import { addFieldSection } from "./sections/field";
 import { addHeader } from "./sections/header";
 import { addHoverCardSection } from "./sections/hoverCard";
 import { addInputSection } from "./sections/input";
+import { addInputGroupSection } from "./sections/inputGroup";
 import { addInputOtpSection } from "./sections/inputOtp";
+import { addItemSection } from "./sections/item";
 import { addKbdSection } from "./sections/kbd";
 import { addLabelSection } from "./sections/label";
 import { addMenubarSection } from "./sections/menubar";
+import { addNativeSelectSection } from "./sections/nativeSelect";
 import { addNavigationMenuSection } from "./sections/navigationMenu";
 import { addPaginationSection } from "./sections/pagination";
 import { addPopoverSection } from "./sections/popover";
@@ -92,18 +99,25 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Chart", build: addChartSection },
   { label: "Checkbox", build: addCheckboxSection },
   { label: "Collapsible", build: addCollapsibleSection },
+  { label: "Combobox", build: addComboboxSection },
   { label: "Command", build: addCommandSection },
   { label: "Context Menu", build: addContextMenuSection },
+  { label: "Data Table", build: addDataTableSection },
   { label: "Date Picker", build: addDatePickerSection },
   { label: "Dialog", build: addDialogSection },
+  { label: "Drawer", build: addDrawerSection },
   { label: "Dropdown Menu", build: addDropdownMenuSection },
   { label: "Empty", build: addEmptySection },
+  { label: "Field", build: addFieldSection },
   { label: "Hover Card", build: addHoverCardSection },
   { label: "Input", build: addInputSection },
+  { label: "Input Group", build: addInputGroupSection },
   { label: "Input OTP", build: addInputOtpSection },
+  { label: "Item", build: addItemSection },
   { label: "Kbd", build: addKbdSection },
   { label: "Label", build: addLabelSection },
   { label: "Menubar", build: addMenubarSection },
+  { label: "Native Select", build: addNativeSelectSection },
   { label: "Navigation Menu", build: addNavigationMenuSection },
   { label: "Pagination", build: addPaginationSection },
   { label: "Popover", build: addPopoverSection },
