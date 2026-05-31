@@ -69,7 +69,7 @@ See [AGENTS.md](./AGENTS.md) for project layout and conventions, and
 - [x] Icons
 - [x] Fonts
 - [ ] Blocks
-- [ ] Charts
+- [x] Charts
 
 ## License
 
