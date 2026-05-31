@@ -192,13 +192,13 @@ export async function buildComponentsPage(
   return { nodeCount: count };
 }
 
-// Lay the section frames out across two equal-width columns (mirroring the
+// Lay the section frames out across three equal-width columns (mirroring the
 // Design System page) so the page stays compact instead of running down a
 // single tall column. The header pins to the top-left; every other section is
-// placed into whichever column is currently shorter, preserving the
-// alphabetical build order while keeping the two columns balanced in height.
+// placed into whichever column is currently shortest, preserving the
+// alphabetical build order while keeping the columns balanced in height.
 function layoutSectionsInColumns(page: PageNode) {
-  const COLUMN_COUNT = 2;
+  const COLUMN_COUNT = 3;
   const columnHeights = new Array<number>(COLUMN_COUNT).fill(0);
 
   page.children.forEach((child, index) => {
@@ -212,8 +212,10 @@ function layoutSectionsInColumns(page: PageNode) {
     // The header (first child) always anchors the top of the left column.
     let target = 0;
     if (index > 0) {
-      // Pick the shorter column so the two stacks stay balanced.
-      target = columnHeights[1]! < columnHeights[0]! ? 1 : 0;
+      // Pick the shortest column so the stacks stay balanced.
+      for (let col = 1; col < COLUMN_COUNT; col++) {
+        if (columnHeights[col]! < columnHeights[target]!) target = col;
+      }
     }
 
     node.x = target * (SECTION_WIDTH + SECTION_GAP);
