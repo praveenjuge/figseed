@@ -30,6 +30,7 @@ import { addDrawerSection } from "./sections/drawer";
 import { addDropdownMenuSection } from "./sections/dropdownMenu";
 import { addEmptySection } from "./sections/empty";
 import { addFieldSection } from "./sections/field";
+import { addFormSection } from "./sections/form";
 import { addHeader } from "./sections/header";
 import { addHoverCardSection } from "./sections/hoverCard";
 import { addInputSection } from "./sections/input";
@@ -62,6 +63,7 @@ import { addTextareaSection } from "./sections/textarea";
 import { addToggleSection } from "./sections/toggle";
 import { addToggleGroupSection } from "./sections/toggleGroup";
 import { addTooltipSection } from "./sections/tooltip";
+import { addTypographySection } from "./sections/typography";
 import {
   PAGE_NAME,
   SECTION_GAP,
@@ -140,12 +142,24 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Toggle", build: addToggleSection },
   { label: "Toggle Group", build: addToggleGroupSection },
   { label: "Tooltip", build: addTooltipSection },
+  { label: "Typography", build: addTypographySection },
 ];
 
-// Header first, then every other section alphabetically by label.
+// Sections that embed live instances of other page-built components (the same
+// reuse model the Toggle uses for the published icon set). They must run after
+// every component set above exists on the page, so they're appended after the
+// alphabetical pass rather than sorted into it. Form reuses Button, Input, and
+// Label.
+const DEFERRED_SECTIONS: SectionBuilder[] = [
+  { label: "Form", build: addFormSection },
+];
+
+// Header first, then every other section alphabetically by label, then the
+// deferred sections that depend on the others already being built.
 const ORDERED_SECTIONS: SectionBuilder[] = [
   HEADER_SECTION,
   ...[...SECTIONS].sort((a, b) => a.label.localeCompare(b.label)),
+  ...DEFERRED_SECTIONS,
 ];
 
 export async function buildComponentsPage(
@@ -212,7 +226,7 @@ export async function buildComponentsPage(
 // placed into whichever column is currently shortest, preserving the
 // alphabetical build order while keeping the columns balanced in height.
 function layoutSectionsInColumns(page: PageNode) {
-  const COLUMN_COUNT = 3;
+  const COLUMN_COUNT = 4;
   const columnHeights = new Array<number>(COLUMN_COUNT).fill(0);
 
   page.children.forEach((child, index) => {
