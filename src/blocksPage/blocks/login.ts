@@ -34,7 +34,10 @@ export async function addLoginBlock(
   canvas.primaryAxisAlignItems = "CENTER";
   canvas.counterAxisAlignItems = "CENTER";
 
-  const card = createSurface(inputs, CARD_WIDTH, { gap: 24 });
+  const card = await createSurface(inputs, CARD_WIDTH, {
+    gap: 24,
+    name: "Card",
+  });
 
   // Header: title + supporting copy.
   const header = createColumn("Header", 6);

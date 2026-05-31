@@ -10,6 +10,7 @@ import {
   bindStrokeColor,
 } from "../componentsPage/bindings";
 import { applyFont } from "../fonts";
+import { applyEffectStyle } from "../effectStyles";
 import { solidPaint } from "../componentsPage/paints";
 import type { BlocksInputs } from "./types";
 
@@ -36,19 +37,21 @@ export function createBlockCanvas(
   return frame;
 }
 
-// A card surface (`bg-card text-card-foreground rounded-xl border`) used as the
-// container for auth forms and dashboard panels. Vertical auto-layout, hugging
-// its content height.
-export function createSurface(
+// A card surface (`bg-card text-card-foreground rounded-xl ring-1
+// ring-foreground/10`) used as the container for auth forms and dashboard
+// panels. Vertical auto-layout, hugging its content height. Pass `name` to
+// label the layer and `shadow` (a Shadow/* style key) to lift it like
+// radix-nova's `shadow-xs` cards.
+export async function createSurface(
   inputs: BlocksInputs,
   width: number,
-  opts: { padding?: number; gap?: number } = {},
-): FrameNode {
+  opts: { padding?: number; gap?: number; name?: string; shadow?: string } = {},
+): Promise<FrameNode> {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
   const surface = figma.createFrame();
-  surface.name = "Surface";
+  surface.name = opts.name ?? "Surface";
   surface.layoutMode = "VERTICAL";
   surface.resize(width, 10);
   surface.primaryAxisSizingMode = "AUTO";
@@ -65,6 +68,9 @@ export function createSurface(
   bindStrokeColor(surface, t.get("border"));
   surface.strokeWeight = 1;
   surface.strokeAlign = "INSIDE";
+  if (opts.shadow) {
+    await applyEffectStyle(surface, inputs.effectStyles?.idFor(opts.shadow));
+  }
   return surface;
 }
 

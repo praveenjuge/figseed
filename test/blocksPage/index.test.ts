@@ -88,7 +88,7 @@ describe("buildBlocksRegion", () => {
     ).toBeUndefined();
   });
 
-  it("reports progress for the header plus three blocks and Done", async () => {
+  it("reports progress for the header plus all blocks and Done", async () => {
     const onProgress = vi.fn();
     await buildBlocksRegion({
       ...(await makeInputsOnComponentsPage()),

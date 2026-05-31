@@ -31,7 +31,10 @@ export async function addSignupBlock(
   canvas.primaryAxisAlignItems = "CENTER";
   canvas.counterAxisAlignItems = "CENTER";
 
-  const card = createSurface(inputs, CARD_WIDTH, { gap: 24 });
+  const card = await createSurface(inputs, CARD_WIDTH, {
+    gap: 24,
+    name: "Card",
+  });
 
   // Header.
   const header = createColumn("Header", 6);

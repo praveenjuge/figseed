@@ -111,13 +111,15 @@ function buildFallbackInput(
   return input;
 }
 
-// Build a primary, full-width action button for an auth form. Reuses the
-// published Button (default variant) and relabels it; falls back to a drawn
-// button when the Components page isn't available.
+// Build a primary action button. Reuses the published Button (default variant)
+// and relabels it; falls back to a drawn button when the Components page isn't
+// available. `fill` (default true) makes it stretch to its parent's width — set
+// false for inline buttons sized to `width`.
 export function buildPrimaryButton(
   inputs: BlocksInputs,
   width: number,
   label: string,
+  fill = true,
 ): SceneNode {
   const instance = instanceFromComponents(
     inputs,
@@ -127,18 +129,21 @@ export function buildPrimaryButton(
   );
   if (instance) {
     instance.resize(width, instance.height || 32);
-    fillWidth(instance);
+    if (fill) fillWidth(instance);
     return instance;
   }
   return buildFallbackButton(inputs, width, label, "primary");
 }
 
-// Build a full-width outline button (e.g. "Continue with Google"). Reuses the
-// published outline Button variant; falls back to a drawn outline button.
+// Build an outline button (e.g. "Continue with Google"). Reuses the published
+// outline Button variant; falls back to a drawn outline button. `fill`
+// (default true) makes it stretch to its parent's width — set false for inline
+// buttons sized to `width`.
 export function buildOutlineButton(
   inputs: BlocksInputs,
   width: number,
   label: string,
+  fill = true,
 ): SceneNode {
   const instance = instanceFromComponents(
     inputs,
@@ -148,7 +153,7 @@ export function buildOutlineButton(
   );
   if (instance) {
     instance.resize(width, instance.height || 32);
-    fillWidth(instance);
+    if (fill) fillWidth(instance);
     return instance;
   }
   return buildFallbackButton(inputs, width, label, "outline");
