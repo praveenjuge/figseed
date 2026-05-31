@@ -242,6 +242,12 @@ export function createFigmaMock() {
           id: variable.id,
         };
       },
+      // Shared factory (see makeInstance below) rather than a fresh per-node
+      // closure: a closure capturing `node` would add a node↔closure reference
+      // cycle on *every* node, and the extra object pressure trips the
+      // strict-assertion QuickJS build's teardown GC. Using a single function
+      // that reads via `this` keeps the VM object graph flat.
+      createInstance: makeInstance,
       setFillStyleIdAsync(styleId: string) {
         node.fillStyleId = styleId;
         return Promise.resolve();
@@ -270,6 +276,20 @@ export function createFigmaMock() {
     node.fontName = { family: "Inter", style: "Regular" };
     node.textDecoration = "NONE";
     return node;
+  }
+
+  // Shared `createInstance` implementation assigned to every node (see
+  // makeNode). Called as `component.createInstance()`, so `this` is the source
+  // component. Returns a fresh, detached INSTANCE that copies the component's
+  // size/name. It deliberately does NOT back-reference the main component (a
+  // cross-tree pointer would bloat the VM object graph the strict-assertion
+  // QuickJS build inspects on teardown), and nothing under test reads it.
+  function makeInstance(this: FakeNode): FakeNode {
+    const instance = makeNode("INSTANCE");
+    instance.width = this.width;
+    instance.height = this.height;
+    instance.name = this.name;
+    return instance;
   }
 
   const figma = {

@@ -16,6 +16,7 @@ import {
 import { applyFont } from "../../fonts";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { wrapInSectionCard } from "../layout";
+import { createCloseGlyph } from "../glyphs";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -158,28 +159,17 @@ function buildCloseButton(inputs: ComponentsInputs): FrameNode {
   btn.strokes = [];
 
   // Close button glyph: a real `close` icon from the preset's icon library,
-  // tinted muted-foreground. Falls back to a "✕" text glyph when the active
-  // library has no candidate (the glyph forces a symbol-font substitution, so
-  // prefer the icon).
+  // tinted muted-foreground. Falls back to a vector "✕" when the active library
+  // has no candidate — never a text glyph, since "✕" (U+2715) forces an
+  // unloaded symbol-font substitution that breaks setValueForMode on re-run.
   const icon = createIcon({
     library: resolveIconLibrary(inputs.presetSummary),
     name: "close",
     size: 16,
     color: t.get("muted-foreground"),
   });
-  if (icon) {
-    icon.name = "Icon";
-    btn.appendChild(icon);
-    return btn;
-  }
-
-  const glyph = figma.createText();
-  applyFont(glyph, "body", "Regular");
-  glyph.characters = "✕";
-  glyph.fontSize = 14;
-  bindFontSize(glyph, p.get("font/size/sm"));
-  bindFill(glyph, t.get("muted-foreground"));
-  btn.appendChild(glyph);
+  if (icon) icon.name = "Icon";
+  btn.appendChild(icon ?? createCloseGlyph(t.get("muted-foreground")));
 
   return btn;
 }

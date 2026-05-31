@@ -100,6 +100,7 @@ function buildCardComponent(
   bindFontSize(title, p.get("font/size/base"));
   bindFill(title, t.get("card-foreground"));
   header.appendChild(title);
+  title.layoutSizingHorizontal = "FILL";
 
   const desc = figma.createText();
   applyFont(desc, "body", "Regular");
@@ -108,8 +109,10 @@ function buildCardComponent(
   bindFontSize(desc, p.get("font/size/sm"));
   bindFill(desc, t.get("muted-foreground"));
   header.appendChild(desc);
+  desc.layoutSizingHorizontal = "FILL";
 
   comp.appendChild(header);
+  header.layoutSizingHorizontal = "FILL";
 
   // Card Content.
   const content = figma.createFrame();
@@ -133,6 +136,8 @@ function buildCardComponent(
   content.appendChild(body);
 
   comp.appendChild(content);
+  content.layoutSizingHorizontal = "FILL";
+  body.layoutSizingHorizontal = "FILL";
 
   // Card Footer — omitted for the body-only `simple` variant.
   if (variant !== "simple") {
@@ -159,6 +164,7 @@ function buildCardComponent(
     footer.appendChild(footerText);
 
     comp.appendChild(footer);
+    footer.layoutSizingHorizontal = "FILL";
   }
 
   return comp;

@@ -28,6 +28,7 @@ import { loadDesignSystemFonts } from "./utils";
 import { ensureEffectStyles } from "../effectStyles";
 import { ensureTextStyles, applyTextStyles } from "../textStyles";
 import { applyTokenBindings } from "../tokenBindings";
+import { collectIconComponents } from "../icons";
 
 export type { DesignSystemInputs, DesignSystemResult } from "./types";
 
@@ -132,7 +133,11 @@ export async function buildDesignSystem(
     figma.viewport.scrollAndZoomIntoView(page.children as SceneNode[]);
   }
 
-  return { nodeCount: count };
+  // Collect the icon showcase's components so the Components page can embed
+  // instances of them (swappable icons that stay in sync with the set).
+  const iconComponents = collectIconComponents(page as unknown as SceneNode);
+
+  return { nodeCount: count, iconComponents };
 }
 
 function layoutSectionsInColumns(page: PageNode) {

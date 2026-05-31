@@ -13,11 +13,44 @@
 import { build } from "esbuild";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { getQuickJS } from "quickjs-emscripten";
+import {
+  newQuickJSWASMModuleFromVariant,
+  newVariant,
+  RELEASE_SYNC,
+} from "quickjs-emscripten";
 import { makeCodeOptions } from "../../scripts/esbuild-config.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "../..");
+
+// The prebuilt QuickJS WASM variant ships with a fixed 16 MiB linear memory and
+// no growth support (Emscripten was built without ALLOW_MEMORY_GROWTH, so it
+// never calls memory.grow). A full 50-section generate retains the entire
+// Figma-mock node tree (tens of thousands of JSObjects), which sits right at
+// that 16 MiB ceiling — adding sections/variants tips it over and QuickJS OOMs,
+// surfacing only as a `list_empty(&rt->gc_obj_list)` abort during
+// JS_FreeRuntime teardown. Since the module can't grow, hand it a larger
+// *initial* Memory up front so the harness scales with the component library
+// instead of crashing on the next section. This is a test-only knob; the
+// shipped sandbox runs under Figma's own engine.
+const WASM_PAGE = 64 * 1024; // 64 KiB
+const HIGH_MEMORY_VARIANT = newVariant(RELEASE_SYNC, {
+  wasmMemory: new WebAssembly.Memory({
+    initial: (256 * 1024 * 1024) / WASM_PAGE, // 256 MiB up front
+    maximum: (2 * 1024 * 1024 * 1024) / WASM_PAGE, // 2 GiB WASM ceiling
+  }),
+});
+
+let modulePromise: ReturnType<typeof newQuickJSWASMModuleFromVariant> | null =
+  null;
+
+// Memoize the module so we only compile the WASM once per process.
+function getHighMemoryQuickJS() {
+  if (!modulePromise) {
+    modulePromise = newQuickJSWASMModuleFromVariant(HIGH_MEMORY_VARIANT);
+  }
+  return modulePromise;
+}
 
 export type PostedMessage = { type: string; [key: string]: unknown };
 export type DriveResult = {
@@ -60,7 +93,9 @@ async function buildBundles() {
 // resolve synchronously (Promise.resolve), so a bounded loop fully settles the
 // generate() chain without real async I/O.
 function drainJobs(
-  runtime: ReturnType<Awaited<ReturnType<typeof getQuickJS>>["newRuntime"]>,
+  runtime: ReturnType<
+    Awaited<ReturnType<typeof getHighMemoryQuickJS>>["newRuntime"]
+  >,
 ) {
   for (let i = 0; i < 10_000; i++) {
     const pending = runtime.executePendingJobs();
@@ -79,7 +114,7 @@ export async function runSandboxInQuickJS(
   presetCode: string,
 ): Promise<DriveResult> {
   const { sandbox, bootstrap } = await buildBundles();
-  const QuickJS = await getQuickJS();
+  const QuickJS = await getHighMemoryQuickJS();
   const runtime = QuickJS.newRuntime();
   const context = runtime.newContext();
 

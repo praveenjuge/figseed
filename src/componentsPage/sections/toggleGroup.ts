@@ -7,6 +7,12 @@
 // `h-7 min-w-7`, lg is `h-9 min-w-9`; pressed items get `bg-muted`, and the
 // outline variant adds an `input` border. The default `spacing` is 2 → an 8px
 // gap between items.
+//
+// Each item embeds an instance of the Design System icon set (bold / italic /
+// underline — the classic text-formatting group) so the glyphs are swappable
+// from Figma's instance menu and stay in sync with the published icon set.
+// Falls back to bold "B" / italic "I" / underlined "U" text when the icon set
+// isn't available (older callers/tests).
 
 import {
   bindCornerRadii,
@@ -15,6 +21,11 @@ import {
   bindStrokeColor,
 } from "../bindings";
 import { applyFont } from "../../fonts";
+import {
+  instantiateIcon,
+  resolveIconLibrary,
+  type SemanticIconName,
+} from "../../icons";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -38,12 +49,17 @@ const TOGGLE_GROUP_DIMS: Record<
 };
 
 // A classic text-formatting group. The first item starts pressed so the
-// "on" surface is visible at a glance.
-type ItemData = { glyph: string; pressed: boolean };
+// "on" surface is visible at a glance. `icon` selects the Design System icon
+// instance; `glyph` is the text fallback when the icon set isn't available.
+type ItemData = {
+  icon: SemanticIconName;
+  glyph: string;
+  pressed: boolean;
+};
 const ITEMS: ItemData[] = [
-  { glyph: "B", pressed: true },
-  { glyph: "I", pressed: false },
-  { glyph: "U", pressed: false },
+  { icon: "bold", glyph: "B", pressed: true },
+  { icon: "italic", glyph: "I", pressed: false },
+  { icon: "underline", glyph: "U", pressed: false },
 ];
 
 export async function addToggleGroupSection(
@@ -130,6 +146,25 @@ function buildToggleGroupItem(
     item.fills = [];
   }
 
+  // Prefer an instance of the Design System icon set (bold / italic /
+  // underline) so the glyphs are swappable and track the published set. The
+  // instance inherits the set's theme-bound `foreground` paint. radix sizes
+  // toggle-group icons at `size-4` (16).
+  const icon = inputs.iconComponents
+    ? instantiateIcon({
+        icons: inputs.iconComponents,
+        library: resolveIconLibrary(inputs.presetSummary),
+        name: data.icon,
+        size: 16,
+      })
+    : undefined;
+  if (icon) {
+    item.appendChild(icon);
+    return item;
+  }
+
+  // Fallback: a text glyph (bold "B" / medium italic "I" / underlined "U")
+  // when the icon set isn't available.
   const glyph = figma.createText();
   applyFont(glyph, "body", data.glyph === "I" ? "Medium" : "Bold");
   glyph.characters = data.glyph;

@@ -89,6 +89,7 @@ async function handleGenerate(rawCode: string) {
       fontVars: result.variables.fonts,
       effectStyles: result.effectStyles,
       textStyles: result.textStyles,
+      iconComponents: ds.iconComponents,
       onProgress: (current, total, label) => {
         post({
           type: "progress",

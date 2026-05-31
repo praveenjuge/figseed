@@ -47,10 +47,15 @@ export async function addSliderSection(
     }
   }
 
+  // Horizontal auto layout so styleComponentSet wraps the variants onto new
+  // rows within SECTION_WIDTH. A VERTICAL set stacked all 12 variants in one
+  // column, and the 160px-tall vertical sliders made the section enormously
+  // tall; wrapping lets the slim vertical variants sit side by side on a row.
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Slider";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 24;
+  componentSet.counterAxisAlignItems = "CENTER";
   styleComponentSet(componentSet);
 
   return countDescendants(componentSet);

@@ -9,6 +9,7 @@ import type {
 import type { EffectStyleMap } from "../effectStyles";
 import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
+import type { IconComponentMap } from "../icons";
 
 export const PAGE_NAME = "Components";
 export const SECTION_GAP = 32;
@@ -32,6 +33,11 @@ export type ComponentsInputs = {
   // Tailwind typography text styles. Populated by the builder when absent so
   // matching text nodes get mapped onto a published style.
   textStyles?: TextStyleMap;
+  // The Design System icon showcase's published components, keyed by
+  // library-specific icon name. When present, components embed instances of
+  // these (swappable icons that stay in sync with the set) instead of baking a
+  // one-off vector. Optional so existing callers/tests keep working.
+  iconComponents?: IconComponentMap;
   onProgress?: (current: number, total: number, label: string) => void;
 };
 

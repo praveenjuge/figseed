@@ -71,9 +71,22 @@ const SEMANTIC_ICONS = {
   bell: ["bell", "bell-line", "notification-02"],
   close: ["x", "close-line", "cancel-01", "multiplication-sign"],
   command: ["command", "command-line"],
+  // Text-formatting glyphs used by the Toggle / Toggle Group components.
+  // Verified to resolve across all five libraries (lucide/tabler/remixicon
+  // expose them bare; hugeicons/phosphor prefix them with `text-`).
+  bold: ["bold", "text-bold", "text-b"],
+  italic: ["italic", "text-italic"],
+  underline: ["underline", "text-underline"],
 } as const;
 
 export type SemanticIconName = keyof typeof SEMANTIC_ICONS;
+
+// A lookup of the Design System icon component set's variants, keyed by the
+// library-specific icon name (the part after the `Icon=` variant property).
+// Components reuse this so a toggle/alert/button icon is a real instance of the
+// published icon component — swappable from Figma's instance menu and kept in
+// sync with the icon set — instead of a one-off baked vector.
+export type IconComponentMap = Map<string, ComponentNode>;
 
 // The native size of the bundled markup; createNodeFromSvg yields a 24×24 frame.
 const NATIVE_ICON_SIZE = 24;
@@ -140,6 +153,31 @@ export function resolveIconLibrary(
   return "lucide";
 }
 
+// Walk a built page (or any node tree) and collect every icon component the
+// Design System icon showcase published, keyed by its library-specific name
+// (the `Icon=<name>` variant property). The Components page reuses this map so
+// component icons are instances of the published set. Decoupled from the
+// builder so it stays robust to layout changes — it just looks for the
+// `Icon=`-named components wherever they live.
+export function collectIconComponents(root: SceneNode): IconComponentMap {
+  const ICON_PREFIX = "Icon=";
+  const map: IconComponentMap = new Map();
+
+  function visit(node: SceneNode): void {
+    if (node.type === "COMPONENT" && node.name.indexOf(ICON_PREFIX) === 0) {
+      map.set(node.name.slice(ICON_PREFIX.length), node as ComponentNode);
+    }
+    if ("children" in node) {
+      for (const child of (node as ChildrenMixin).children as SceneNode[]) {
+        visit(child);
+      }
+    }
+  }
+
+  visit(root);
+  return map;
+}
+
 function findIconInner(
   library: IconLibraryName,
   name: SemanticIconName,
@@ -148,6 +186,21 @@ function findIconInner(
   for (const candidate of SEMANTIC_ICONS[name]) {
     const inner = icons[candidate];
     if (inner !== undefined) return inner;
+  }
+  return undefined;
+}
+
+// Resolve the library-specific icon name (the value used as the `Icon=` variant
+// property in the Design System icon set) for a semantic icon. Mirrors
+// findIconInner's candidate order so the chosen name and markup always agree.
+// Returns undefined when no candidate exists in the active library.
+export function resolveIconName(
+  library: IconLibraryName,
+  name: SemanticIconName,
+): string | undefined {
+  const icons = ICON_LIBRARIES[library].icons;
+  for (const candidate of SEMANTIC_ICONS[name]) {
+    if (icons[candidate] !== undefined) return candidate;
   }
   return undefined;
 }
@@ -183,4 +236,48 @@ export function createIcon(options: CreateIconOptions): SceneNode | undefined {
   }
 
   return node;
+}
+
+export type InstantiateIconOptions = {
+  // The Design System icon component set's variants, keyed by library-specific
+  // icon name (see buildDesignSystem's result).
+  icons: IconComponentMap;
+  // Which icon library the preset selected (use resolveIconLibrary).
+  library: IconLibraryName;
+  // Semantic icon to render.
+  name: SemanticIconName;
+  // Target square size in px (the 24px instance is rescaled to match).
+  size: number;
+};
+
+// Create an *instance* of the published Design System icon component for a
+// semantic icon, so the embedding component (e.g. Toggle) shares the same
+// swappable icon as the icon showcase. The instance inherits the variant's
+// theme-bound paint (foreground), so no recolor is needed. Returns undefined
+// when the active library has no candidate or the icon set wasn't published
+// (callers fall back to their previous placeholder).
+export function instantiateIcon(
+  options: InstantiateIconOptions,
+): InstanceNode | undefined {
+  const iconName = resolveIconName(options.library, options.name);
+  if (iconName === undefined) return undefined;
+
+  const component = options.icons.get(iconName);
+  if (component === undefined) return undefined;
+  if (typeof component.createInstance !== "function") return undefined;
+
+  const instance = component.createInstance();
+  instance.name = "Icon";
+
+  // The icon set's components are the native 24px; rescale scales the cloned
+  // geometry too (plain resize would not). Guard the call so the Node-side
+  // test mock, which doesn't implement rescale, keeps the 24px instance.
+  if (
+    options.size !== NATIVE_ICON_SIZE &&
+    typeof instance.rescale === "function"
+  ) {
+    instance.rescale(options.size / NATIVE_ICON_SIZE);
+  }
+
+  return instance;
 }

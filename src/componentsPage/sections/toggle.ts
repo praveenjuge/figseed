@@ -6,6 +6,11 @@
 // outline variant adds an `input` border. The `size` axis mirrors the source
 // CVA: default `h-8 min-w-8 rounded-lg`, sm `h-7 min-w-7 rounded-[min(
 // --radius-md,12px)]`, lg `h-9 min-w-9 rounded-lg`.
+//
+// The glyph is an instance of the Design System icon set's `bold` icon (radix
+// renders an svg inside the toggle), so designers can swap it from Figma's
+// instance menu and it stays in sync with the published icon set. When the icon
+// set isn't available (older callers/tests) it falls back to a bold "B" glyph.
 
 import {
   bindCornerRadii,
@@ -14,6 +19,7 @@ import {
   bindStrokeColor,
 } from "../bindings";
 import { applyFont } from "../../fonts";
+import { instantiateIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import { type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -101,10 +107,27 @@ function buildToggleComponent(
     comp.fills = [];
   }
 
+  // radix renders an svg inside the toggle. Prefer an instance of the Design
+  // System icon set's `bold` icon so designers can swap it from the instance
+  // menu and it tracks the published set; the instance inherits the set's
+  // theme-bound `foreground` paint. radix-nova sizes the icon at `size-4` (16).
+  const icon = inputs.iconComponents
+    ? instantiateIcon({
+        icons: inputs.iconComponents,
+        library: resolveIconLibrary(inputs.presetSummary),
+        name: "bold",
+        size: 16,
+      })
+    : undefined;
+  if (icon) {
+    comp.appendChild(icon);
+    return comp;
+  }
+
+  // Fallback: a bold "B" glyph (text-formatting is the canonical toggle use
+  // case) when the icon set isn't available.
   const glyph = figma.createText();
   applyFont(glyph, "body", "Bold");
-  // A bold "B" is a good stand-in for the typical toggle use case (text
-  // formatting). Designers can swap to any icon they prefer.
   glyph.characters = "B";
   // radix-nova: sm uses `text-[0.8rem]` (~13), default/lg use `text-sm` (14).
   glyph.fontSize = size === "sm" ? 13 : 14;

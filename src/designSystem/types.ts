@@ -9,6 +9,7 @@ import type {
 import type { EffectStyleMap } from "../effectStyles";
 import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
+import type { IconComponentMap } from "../icons";
 
 export const PAGE_NAME = "Design System";
 
@@ -37,7 +38,13 @@ export type DesignSystemInputs = {
   onProgress?: (current: number, total: number, label: string) => void;
 };
 
-export type DesignSystemResult = { nodeCount: number };
+export type DesignSystemResult = {
+  nodeCount: number;
+  // The icon showcase's published components, keyed by library-specific icon
+  // name. Forwarded to the Components page so component icons can be instances
+  // of the same swappable set.
+  iconComponents: IconComponentMap;
+};
 
 // Each entry corresponds to one top-level section frame on the page. Adding
 // a section here also extends the progress total reported to the UI.

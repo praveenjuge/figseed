@@ -18,6 +18,7 @@ import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
+import { createCloseGlyph } from "../glyphs";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -219,19 +220,8 @@ function buildCloseButton(inputs: ComponentsInputs): FrameNode {
     size: 16,
     color: t.get("muted-foreground"),
   });
-  if (icon) {
-    icon.name = "Icon";
-    btn.appendChild(icon);
-    return btn;
-  }
-
-  const glyph = figma.createText();
-  applyFont(glyph, "body", "Regular");
-  glyph.characters = "✕";
-  glyph.fontSize = 14;
-  bindFontSize(glyph, p.get("font/size/sm"));
-  bindFill(glyph, t.get("muted-foreground"));
-  btn.appendChild(glyph);
+  if (icon) icon.name = "Icon";
+  btn.appendChild(icon ?? createCloseGlyph(t.get("muted-foreground")));
   return btn;
 }
 
