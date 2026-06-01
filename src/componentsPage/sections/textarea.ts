@@ -122,9 +122,7 @@ function buildTextareaComponent(
 
   comp.appendChild(text);
   // After appending, let auto-layout manage the text width (FILL).
-  if ("layoutSizingHorizontal" in text) {
-    (text as TextNode).layoutSizingHorizontal = "FILL";
-  }
+  (text as TextNode).layoutSizingHorizontal = "FILL";
 
   // shadcn: `disabled:opacity-50 disabled:cursor-not-allowed`.
   if (state === "disabled") {

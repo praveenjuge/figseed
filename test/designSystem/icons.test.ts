@@ -65,6 +65,21 @@ describe("addIconLibrary", () => {
     expect(set!.children.every((c) => c.name.startsWith("Icon="))).toBe(true);
   });
 
+  it("emits just the section header when the library has no icons", async () => {
+    const saved = ICON_LIBRARIES.lucide.icons;
+    ICON_LIBRARIES.lucide.icons = {};
+    try {
+      const inputs = await makeInputs();
+      const p = page();
+      const count = await addIconLibrary(p as unknown as PageNode, inputs);
+      // Header only, no component set.
+      expect(count).toBeGreaterThan(0);
+      expect(findComponentSet(p)).toBeUndefined();
+    } finally {
+      ICON_LIBRARIES.lucide.icons = saved;
+    }
+  });
+
   it("falls back to lucide when the preset summary has no icon library", async () => {
     const inputs = await makeInputs();
     const p = page();

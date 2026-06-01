@@ -297,6 +297,104 @@ describe("applyTokenBindings", () => {
     expect(bound.radius!.id).toBe(primitives.get("blur/md")!.id);
   });
 
+  it("swallows a setBoundVariable rejection from the host and keeps the literal", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const frame = figma.createFrame();
+    (frame as unknown as Record<string, unknown>).layoutMode = "VERTICAL";
+    (frame as unknown as Record<string, unknown>).itemSpacing = 16; // spacing/4
+    // Some node types reject a binding (e.g. padding on a non-auto-layout
+    // frame). Simulate the host throwing; setBound must swallow it.
+    (frame as unknown as { setBoundVariable: () => void }).setBoundVariable =
+      () => {
+        throw new Error("binding rejected");
+      };
+
+    expect(() => applyTokenBindings(frame as never, primitives)).not.toThrow();
+    expect(boundId(frame, "itemSpacing")).toBeUndefined();
+  });
+
+  it("leaves effects that aren't bindable shadows untouched", () => {
+    const figma = liveFigma();
+    const primitives = makePrimitives();
+
+    const frame = figma.createFrame();
+    // A grab-bag of effects that each trip a different early-return guard in
+    // the effect radius mapper, so none gets a bound variable.
+    frame.effects = [
+      // not an object → skipped
+      null as unknown as Effect,
+      // radius <= 0 → skipped
+      {
+        type: "DROP_SHADOW",
+        radius: 0,
+        color: { r: 0, g: 0, b: 0, a: 0.1 },
+        offset: { x: 0, y: 1 },
+        spread: 0,
+        visible: true,
+        blendMode: "NORMAL",
+      } as unknown as Effect,
+      // radius not on the blur scale → skipped
+      {
+        type: "DROP_SHADOW",
+        radius: 7,
+        color: { r: 0, g: 0, b: 0, a: 0.1 },
+        offset: { x: 0, y: 1 },
+        spread: 0,
+        visible: true,
+        blendMode: "NORMAL",
+      } as unknown as Effect,
+      // radius already bound to a variable → skipped
+      {
+        type: "DROP_SHADOW",
+        radius: 12,
+        color: { r: 0, g: 0, b: 0, a: 0.1 },
+        offset: { x: 0, y: 1 },
+        spread: 0,
+        visible: true,
+        blendMode: "NORMAL",
+        boundVariables: { radius: { type: "VARIABLE_ALIAS", id: "preset" } },
+      } as unknown as Effect,
+    ];
+
+    applyTokenBindings(frame as never, primitives);
+
+    const effects = frame.effects as Array<Record<string, unknown> | null>;
+    // The null effect is preserved as-is; the rest carry no fresh binding.
+    expect(effects[0]).toBeNull();
+    expect(effects[2]!.boundVariables).toBeUndefined();
+    // The pre-bound effect keeps its original (untouched) binding object.
+    expect(
+      (effects[3]!.boundVariables as Record<string, { id: string }>).radius!.id,
+    ).toBe("preset");
+  });
+
+  it("leaves a shadow radius unbound when its blur token variable is absent", () => {
+    const figma = liveFigma();
+    // A primitives map that resolves the blur name but is missing the variable.
+    const primitives = makePrimitives();
+    primitives.delete("blur/md");
+
+    const frame = figma.createFrame();
+    frame.effects = [
+      {
+        type: "DROP_SHADOW",
+        radius: 12,
+        color: { r: 0, g: 0, b: 0, a: 0.1 },
+        offset: { x: 0, y: 2 },
+        spread: 0,
+        visible: true,
+        blendMode: "NORMAL",
+      },
+    ];
+
+    applyTokenBindings(frame as never, primitives);
+
+    const effect = (frame.effects as Array<Record<string, unknown>>)[0]!;
+    expect(effect.boundVariables).toBeUndefined();
+  });
+
   it("skips effect-radius binding on nodes that reference an effect style", () => {
     const figma = liveFigma();
     const primitives = makePrimitives();

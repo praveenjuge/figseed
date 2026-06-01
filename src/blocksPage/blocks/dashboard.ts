@@ -37,7 +37,13 @@ import {
 } from "../layout";
 import type { BlocksInputs } from "../types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../types";
-import { countDescendants, fillWidth, instanceFromComponents } from "../utils";
+import {
+  countDescendants,
+  fillHeight,
+  fillWidth,
+  growWidth,
+  instanceFromComponents,
+} from "../utils";
 
 // radix-nova: `--sidebar-width: 16rem`. The inset variant floats the content
 // area with a small gutter.
@@ -279,11 +285,7 @@ async function buildSectionCards(inputs: BlocksInputs): Promise<FrameNode> {
   for (const stat of STATS) {
     const card = await buildStatCard(inputs, stat);
     row.appendChild(card);
-    try {
-      (card as unknown as { layoutGrow: number }).layoutGrow = 1;
-    } catch {
-      // Keep intrinsic width.
-    }
+    growWidth(card);
   }
   return row;
 }
@@ -469,17 +471,6 @@ function buildTab(
   );
   tab.appendChild(text);
   return tab;
-}
-
-// --- Sizing helpers --------------------------------------------------------
-
-function fillHeight(node: SceneNode): void {
-  try {
-    (node as unknown as { layoutSizingVertical: string }).layoutSizingVertical =
-      "FILL";
-  } catch {
-    // Keep the node's intrinsic height.
-  }
 }
 
 // ----- Fallbacks (used only when the page has no matching components) -------

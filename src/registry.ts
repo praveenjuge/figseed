@@ -111,6 +111,7 @@ function buildRegistry(config: PresetConfig): ResolvedRegistry {
   const baseColor = getTheme(config.baseColor);
   const theme = getTheme(config.theme);
 
+  /* v8 ignore next 6 -- defensive: resolvePreset filters missing baseColor/theme via missingThemeName before ever calling buildRegistry, so both are always resolvable here */
   if (!baseColor || !theme) {
     throw new Error(
       `Missing theme entry for baseColor="${config.baseColor}" or theme="${config.theme}". ` +
@@ -195,10 +196,9 @@ function firstResolvable<T extends string>(
   values: readonly T[],
   fallback: T,
 ): T {
-  for (const value of values) {
-    if (getTheme(value)) return value;
-  }
-  return fallback;
+  const found = values.find((value) => getTheme(value) !== undefined);
+  /* v8 ignore next -- defensive: callers pass PRESET_BASE_COLORS / PRESET_THEMES, both of which always contain a bundled theme (e.g. "neutral"), so `found` is always set and the fallback is unreachable */
+  return found ?? fallback;
 }
 
 export function isBaseColor(name: string): boolean {

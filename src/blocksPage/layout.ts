@@ -13,6 +13,7 @@ import { applyFont } from "../fonts";
 import { applyEffectStyle } from "../effectStyles";
 import { solidPaint } from "../componentsPage/paints";
 import { createIcon, resolveIconLibrary } from "../icons";
+import { growWidth } from "./utils";
 import type { BlocksInputs } from "./types";
 
 // The outer frame for a single block: a named, fixed-width canvas painted with
@@ -214,11 +215,7 @@ export function createSeparatorLabel(
   left.resize(10, 1);
   bindFill(left, t.get("border"));
   row.appendChild(left);
-  try {
-    (left as unknown as { layoutGrow: number }).layoutGrow = 1;
-  } catch {
-    // Keep intrinsic width.
-  }
+  growWidth(left);
 
   const label = createBody(inputs, text, 14, "muted-foreground");
   row.appendChild(label);
@@ -228,11 +225,7 @@ export function createSeparatorLabel(
   right.resize(10, 1);
   bindFill(right, t.get("border"));
   row.appendChild(right);
-  try {
-    (right as unknown as { layoutGrow: number }).layoutGrow = 1;
-  } catch {
-    // Keep intrinsic width.
-  }
+  growWidth(right);
 
   return row;
 }

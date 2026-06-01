@@ -81,6 +81,52 @@ describe("ensureThemeCollection", () => {
     expect(soleValue(result.maps.light.get("radius"))).toBe(8);
   });
 
+  it("leaves an empty radius value unset (parseLengthRem !value guard)", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const registry = makeRegistry();
+    registry.cssVars.light.radius = "";
+    const result = await ensureThemeCollection(registry, tw);
+    const radius = result.maps.light.get("radius") as unknown as {
+      valuesByMode: Record<string, unknown>;
+    };
+    expect(radius).toBeDefined();
+    expect(Object.keys(radius.valuesByMode)).toHaveLength(0);
+  });
+
+  it("leaves a NaN rem radius unset (parseFloat fails the rem branch)", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const registry = makeRegistry();
+    registry.cssVars.light.radius = "abcrem";
+    const result = await ensureThemeCollection(registry, tw);
+    const radius = result.maps.light.get("radius") as unknown as {
+      valuesByMode: Record<string, unknown>;
+    };
+    expect(Object.keys(radius.valuesByMode)).toHaveLength(0);
+  });
+
+  it("leaves a NaN px radius unset (parseFloat fails the px branch)", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const registry = makeRegistry();
+    registry.cssVars.light.radius = "abcpx";
+    const result = await ensureThemeCollection(registry, tw);
+    const radius = result.maps.light.get("radius") as unknown as {
+      valuesByMode: Record<string, unknown>;
+    };
+    expect(Object.keys(radius.valuesByMode)).toHaveLength(0);
+  });
+
+  it("leaves an empty color value unset (applyThemeColor !rawValue guard)", async () => {
+    const tw = await ensureTailwindColorCollection();
+    const registry = makeRegistry();
+    registry.cssVars.light.custom = "";
+    const result = await ensureThemeCollection(registry, tw);
+    const custom = result.maps.light.get("custom") as unknown as {
+      valuesByMode: Record<string, unknown>;
+    };
+    expect(custom).toBeDefined();
+    expect(Object.keys(custom.valuesByMode)).toHaveLength(0);
+  });
+
   it("leaves a non-numeric radius unset (parseLengthRem returns null)", async () => {
     const tw = await ensureTailwindColorCollection();
     const registry = makeRegistry();

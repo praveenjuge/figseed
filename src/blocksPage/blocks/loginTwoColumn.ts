@@ -20,7 +20,7 @@ import {
 } from "../layout";
 import type { BlocksInputs } from "../types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../types";
-import { countDescendants, fillWidth } from "../utils";
+import { countDescendants, fillHeight, fillWidth } from "../utils";
 import { buildField, buildOutlineButton, buildPrimaryButton } from "../field";
 
 // The left pane is half the canvas; the form hugs `max-w-xs` (320px) centered
@@ -161,13 +161,4 @@ function buildPasswordField(inputs: BlocksInputs, width: number): FrameNode {
   fillWidth(row);
 
   return field;
-}
-
-function fillHeight(node: SceneNode): void {
-  try {
-    (node as unknown as { layoutSizingVertical: string }).layoutSizingVertical =
-      "FILL";
-  } catch {
-    // Keep intrinsic height.
-  }
 }

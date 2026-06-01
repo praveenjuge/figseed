@@ -202,9 +202,7 @@ async function buildTabTrigger(
       underline.visible = false;
     }
     trigger.appendChild(underline);
-    if ("layoutSizingHorizontal" in underline) {
-      (underline as RectangleNode).layoutSizingHorizontal = "FILL";
-    }
+    (underline as RectangleNode).layoutSizingHorizontal = "FILL";
   }
 
   return trigger;

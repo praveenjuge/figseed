@@ -151,6 +151,7 @@ function fromBase62(str: string): number {
   let result = 0;
   for (const ch of str) {
     const idx = BASE62.indexOf(ch);
+    /* v8 ignore next -- defensive: the sole caller (decodePreset) runs isPresetCode first, which already rejects any non-base62 char */
     if (idx === -1) return -1;
     result = result * 62 + idx;
   }
@@ -230,6 +231,7 @@ export function decodePreset(code: string): PresetConfig | null {
   const version = code[0]!;
   const fields = version === "a" ? PRESET_FIELDS_V1 : PRESET_FIELDS_V2;
   const bits = fromBase62(code.slice(1));
+  /* v8 ignore next -- defensive: isPresetCode above guarantees every char is base62, so fromBase62 never returns -1 here */
   if (bits < 0) return null;
 
   // Strict: real shadcn codes only set bits within the encoded field range.

@@ -150,19 +150,17 @@ function layoutSectionsInColumns(page: PageNode) {
   // exactly one top-level frame in sequence. Use that to read each section's
   // pinned column.
   page.children.forEach((child, index) => {
-    if (!("x" in child)) return;
     const node = child as SceneNode & {
       x: number;
       y: number;
       height: number;
     };
 
-    const target = SECTIONS[index]?.column ?? 0;
+    const target = SECTIONS[index]!.column;
 
     node.x = target * (SECTION_WIDTH + SECTION_GAP);
     node.y = columnHeights[target]!;
 
-    const height = node.height ?? 0;
-    columnHeights[target] = columnHeights[target]! + height + SECTION_GAP;
+    columnHeights[target] = columnHeights[target]! + node.height + SECTION_GAP;
   });
 }

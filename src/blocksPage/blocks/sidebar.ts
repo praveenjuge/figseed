@@ -24,7 +24,13 @@ import {
 } from "../layout";
 import type { BlocksInputs } from "../types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../types";
-import { countDescendants, fillWidth, instanceFromComponents } from "../utils";
+import {
+  countDescendants,
+  fillHeight,
+  fillWidth,
+  growWidth,
+  instanceFromComponents,
+} from "../utils";
 
 const SIDEBAR_WIDTH = 256; // shadcn `--sidebar-width: 16rem`
 const HEADER_HEIGHT = 64; // `h-16`
@@ -182,25 +188,6 @@ function buildMutedPanel(inputs: BlocksInputs, height: number): FrameNode {
   bindFill(panel, t.get("muted"));
   panel.strokes = [];
   return panel;
-}
-
-// --- Sizing helpers --------------------------------------------------------
-
-function fillHeight(node: SceneNode): void {
-  try {
-    (node as unknown as { layoutSizingVertical: string }).layoutSizingVertical =
-      "FILL";
-  } catch {
-    // Keep intrinsic height.
-  }
-}
-
-function growWidth(node: SceneNode): void {
-  try {
-    (node as unknown as { layoutGrow: number }).layoutGrow = 1;
-  } catch {
-    // Keep intrinsic width.
-  }
 }
 
 // ----- Fallback (used only when the page has no matching components) --------

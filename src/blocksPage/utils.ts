@@ -79,3 +79,26 @@ export function fillWidth(node: SceneNode): void {
     // Leave the node at its built width.
   }
 }
+
+// Best-effort `layoutGrow = 1` for a node freshly appended to a horizontal
+// auto-layout row, so it shares the remaining space. Some hosts/instances
+// reject the grow; the node then keeps its intrinsic width.
+export function growWidth(node: SceneNode): void {
+  try {
+    (node as unknown as { layoutGrow: number }).layoutGrow = 1;
+  } catch {
+    // Leave the node at its intrinsic width.
+  }
+}
+
+// Best-effort `layoutSizingVertical = "FILL"` for a node freshly appended to a
+// vertical auto-layout frame. Some hosts/instances reject FILL; the node then
+// keeps its intrinsic height.
+export function fillHeight(node: SceneNode): void {
+  try {
+    (node as unknown as { layoutSizingVertical: string }).layoutSizingVertical =
+      "FILL";
+  } catch {
+    // Leave the node at its built height.
+  }
+}

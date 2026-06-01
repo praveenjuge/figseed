@@ -58,12 +58,12 @@ export function findTailwindAlias(value: string | undefined): string | null {
 
   const family = OKLCH_TO_FAMILY.get(noAlpha);
   if (!family) return null;
-  for (const scale of TAILWIND_COLOR_SCALES) {
-    if (normalizeColorValue(TAILWIND_COLORS[family][scale]) === noAlpha) {
-      return `${family}/${scale}`;
-    }
-  }
-  return null;
+  const scale = TAILWIND_COLOR_SCALES.find(
+    (candidate) =>
+      normalizeColorValue(TAILWIND_COLORS[family][candidate]) === noAlpha,
+  );
+  /* v8 ignore next -- defensive: OKLCH_TO_FAMILY is built from the same TAILWIND_COLORS via the same normalizeColorValue, so the matched family always contains noAlpha at some scale; the `: null` fallback is unreachable */
+  return scale ? `${family}/${scale}` : null;
 }
 
 // Legacy name kept so the generator's call site stays small.

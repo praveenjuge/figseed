@@ -85,6 +85,47 @@ describe("addAvatarSection", () => {
     expect(avatarStyles).toHaveLength(AVATAR_IMAGES.length);
   });
 
+  it("skips a blank avatar image entry without minting a style", async () => {
+    const figma = getFigma();
+    // A falsy entry exercises the `if (!base64) continue` guard in
+    // ensureAvatarStyles without producing a paint style for it.
+    (AVATAR_IMAGES as string[]).push("");
+    try {
+      const page = figma.createPage();
+      await addAvatarSection(page as unknown as PageNode, await makeInputs());
+      const styles = await figma.getLocalPaintStylesAsync();
+      const avatarStyles = styles.filter(
+        (s) => s.name.indexOf("Avatar/") === 0,
+      );
+      // The blank entry is skipped, so the style count matches the real images.
+      expect(avatarStyles).toHaveLength(AVATAR_IMAGES.length - 1);
+    } finally {
+      (AVATAR_IMAGES as string[]).pop();
+    }
+  });
+
+  it("swallows a setFillStyleIdAsync rejection from the host", async () => {
+    const figma = getFigma() as unknown as {
+      createComponent: () => { setFillStyleIdAsync: (id: string) => Promise<void> };
+      createPage(): NodeLike;
+    };
+    const origCreate = figma.createComponent.bind(figma);
+    figma.createComponent = () => {
+      const comp = origCreate();
+      comp.setFillStyleIdAsync = () =>
+        Promise.reject(new Error("host rejected fill style"));
+      return comp;
+    };
+    try {
+      const page = figma.createPage();
+      await expect(
+        addAvatarSection(page as unknown as PageNode, await makeInputs()),
+      ).resolves.toBeGreaterThan(0);
+    } finally {
+      figma.createComponent = origCreate;
+    }
+  });
+
   it("falls back to a tinted fill + initials when no image style is available", async () => {
     // Simulate the data module being absent: ensureAvatarStyles yields a map
     // whose idAt always returns undefined, so the image variants take the

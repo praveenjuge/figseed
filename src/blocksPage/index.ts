@@ -139,14 +139,12 @@ function layoutBlocksRegion(
   // newNodes mirrors ORDERED_BLOCKS order, since each builder appends exactly
   // one top-level frame in sequence. Use that to read each block's column.
   newNodes.forEach((child, index) => {
-    if (!("x" in child)) return;
     const node = child as SceneNode & { x: number; y: number; height: number };
-    const target = ORDERED_BLOCKS[index]?.column ?? 0;
+    const target = ORDERED_BLOCKS[index]!.column;
 
     node.x = originX + target * columnStride;
     node.y = columnHeights[target]!;
-    columnHeights[target] =
-      columnHeights[target]! + (node.height ?? 0) + BLOCK_GAP;
+    columnHeights[target] = columnHeights[target]! + node.height + BLOCK_GAP;
   });
 }
 
@@ -158,9 +156,8 @@ function regionOriginX(page: PageNode, preexisting: Set<SceneNode>): number {
   let seen = false;
   for (const child of page.children as SceneNode[]) {
     if (!preexisting.has(child)) continue;
-    if (!("x" in child)) continue;
     const node = child as SceneNode & { x: number; width: number };
-    const right = (node.x ?? 0) + (node.width ?? 0);
+    const right = node.x + node.width;
     if (right > maxRight) maxRight = right;
     seen = true;
   }

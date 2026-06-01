@@ -53,9 +53,7 @@ export async function addSonnerSection(
 
   // Let each toast fill the section width.
   for (const child of componentSet.children) {
-    if ("layoutSizingHorizontal" in child) {
-      (child as FrameNode).layoutSizingHorizontal = "FILL";
-    }
+    (child as FrameNode).layoutSizingHorizontal = "FILL";
   }
 
   return countDescendants(componentSet);

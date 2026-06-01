@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   countDescendants,
   loadCommonFonts,
+  loadDesignSystemFonts,
   shortTokenName,
   summarizePreset,
   weightStyleName,
 } from "../../src/designSystem/utils";
+import type { DesignSystemInputs } from "../../src/designSystem";
 
 describe("summarizePreset", () => {
   it("returns an empty string for undefined", () => {
@@ -76,6 +78,33 @@ describe("loadCommonFonts", () => {
     expect(families).toContain("Thin");
     expect(families).toContain("Black");
     expect(families.length).toBeGreaterThanOrEqual(9);
+  });
+});
+
+describe("loadDesignSystemFonts", () => {
+  function loaded(): string[] {
+    return (
+      figma.loadFontAsync as unknown as {
+        mock: { calls: Array<[{ family: string }]> };
+      }
+    ).mock.calls.map((c) => c[0].family);
+  }
+
+  it("loads the preset's body + heading families when supplied", async () => {
+    await loadDesignSystemFonts({
+      presetCode: "x",
+      fonts: { body: "Roboto", heading: "Lora" },
+    } as unknown as DesignSystemInputs);
+    const families = loaded();
+    expect(families).toContain("Roboto");
+    expect(families).toContain("Lora");
+  });
+
+  it("falls back to Inter when the inputs carry no preset fonts", async () => {
+    await loadDesignSystemFonts({
+      presetCode: "x",
+    } as unknown as DesignSystemInputs);
+    expect(loaded()).toContain("Inter");
   });
 });
 

@@ -46,6 +46,12 @@ describe("normalizeColorValue", () => {
     expect(normalizeColorValue("oklch(1 0)")).toBe("oklch(1 0)");
   });
 
+  it("returns the lowered original when the color part before the alpha is empty", () => {
+    // `oklch( / 1)` has an empty color component before the `/`; the
+    // `if (!color)` guard returns the lowercased original untouched.
+    expect(normalizeColorValue("oklch( / 1)")).toBe("oklch( / 1)");
+  });
+
   it("emits empty channels for non-numeric values", () => {
     // Each channel runs through normalizeNumber; a non-numeric one yields "".
     expect(normalizeColorValue("oklch(abc def ghi)")).toBe("oklch(  )");

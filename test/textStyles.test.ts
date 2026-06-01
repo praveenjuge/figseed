@@ -133,6 +133,47 @@ describe("ensureTextStyles", () => {
       (theme.fontVars.body as unknown as { id: string }).id,
     );
   });
+
+  it("creates the styles without bindings when no primitives are supplied", async () => {
+    // The `primitives ? ... : undefined` guards short-circuit to undefined, so
+    // every bind is skipped but the styles are still created.
+    const map = await ensureTextStyles();
+    expect(map.count).toBe(TOTAL_STYLES);
+    const styles =
+      (await liveFigma().getLocalTextStylesAsync()) as unknown as StyleLike[];
+    expect(styles).toHaveLength(TOTAL_STYLES);
+    const sm = styles.find((s) => s.name === "text-sm/semibold");
+    expect(sm!.boundVariables?.fontSize).toBeUndefined();
+  });
+
+  it("swallows a setBoundVariable rejection while binding a style", async () => {
+    const figma = liveFigma();
+    // Pre-create the style ensureTextStyles will reuse by name, and make its
+    // binding throw so the bind closure's catch swallows it.
+    const hostile = figma.createTextStyle();
+    hostile.name = "text-xs/thin";
+    hostile.setBoundVariable = () => {
+      throw new Error("binding rejected");
+    };
+
+    await expect(ensureTextStyles(await primitives())).resolves.toBeDefined();
+  });
+
+  it("treats a fontVars object with no body as having no body variable", async () => {
+    // The `fontVars && fontVars.body ? ... : undefined` ternary: a fontVars
+    // object that omits `body` resolves bodyVar to undefined. With no active
+    // font context the resolved familyVar is also undefined, so no fontFamily
+    // binding is written.
+    resetActiveFonts();
+    const map = await ensureTextStyles(await primitives(), {
+      body: undefined,
+    } as never);
+    expect(map.count).toBe(TOTAL_STYLES);
+    const styles =
+      (await liveFigma().getLocalTextStylesAsync()) as unknown as StyleLike[];
+    const base = styles.find((s) => s.name === "text-base/normal");
+    expect(base!.boundVariables?.fontFamily).toBeUndefined();
+  });
 });
 
 describe("textStyleName", () => {
@@ -200,6 +241,90 @@ describe("applyTextStyles", () => {
     ).toBeUndefined();
   });
 
+  it("leaves a node alone when its font weight isn't on the scale", async () => {
+    const figma = liveFigma();
+    resetActiveFonts();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    // A concrete family (so the family gate passes) but no style string, so
+    // textNodeWeight's guard fails and it returns undefined.
+    (text as unknown as { fontName: unknown }).fontName = {
+      family: "Inter",
+    };
+
+    await applyTextStyles(text as never, map);
+    expect(
+      (text as unknown as { textStyleId?: string }).textStyleId,
+    ).toBeUndefined();
+  });
+
+  it("skips nodes that carry an explicit pixel letter-spacing override", async () => {
+    const figma = liveFigma();
+    resetActiveFonts();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    (text as unknown as { fontName: unknown }).fontName = {
+      family: "Inter",
+      style: "Regular",
+    };
+    // Pixel letter-spacing (a deliberate tracking demo) with an auto line
+    // height: the lineHeight guard passes, the letterSpacing guard catches it.
+    (text as unknown as { lineHeight: unknown }).lineHeight = { unit: "AUTO" };
+    (text as unknown as { letterSpacing: unknown }).letterSpacing = {
+      unit: "PIXELS",
+      value: 0.5,
+    };
+
+    await applyTextStyles(text as never, map);
+    expect(
+      (text as unknown as { textStyleId?: string }).textStyleId,
+    ).toBeUndefined();
+  });
+
+  it("leaves a node alone when its fontSize isn't a concrete number", async () => {
+    const figma = liveFigma();
+    resetActiveFonts();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontName: unknown }).fontName = {
+      family: "Inter",
+      style: "Medium",
+    };
+    // figma.mixed fontSize (mixed sizing across runs) isn't a number.
+    (text as unknown as { fontSize: unknown }).fontSize = figma.mixed;
+
+    await applyTextStyles(text as never, map);
+    expect(
+      (text as unknown as { textStyleId?: string }).textStyleId,
+    ).toBeUndefined();
+  });
+
+  it("leaves a node alone when it can't accept a text style id", async () => {
+    const figma = liveFigma();
+    resetActiveFonts();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    (text as unknown as { fontName: unknown }).fontName = {
+      family: "Inter",
+      style: "Medium",
+    };
+    // A node type without setTextStyleIdAsync (the setter guard short-circuits).
+    (text as unknown as { setTextStyleIdAsync?: unknown }).setTextStyleIdAsync =
+      undefined;
+
+    await applyTextStyles(text as never, map);
+    expect(
+      (text as unknown as { textStyleId?: string }).textStyleId,
+    ).toBeUndefined();
+  });
+
   it("recurses into children", async () => {
     const figma = liveFigma();
     const map = await ensureTextStyles(await primitives());
@@ -240,5 +365,41 @@ describe("applyTextStyles", () => {
     expect(
       (heading as unknown as { textStyleId?: string }).textStyleId,
     ).toBeUndefined();
+  });
+
+  it("leaves a node alone when it carries no concrete font family", async () => {
+    const figma = liveFigma();
+    resetActiveFonts();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    // figma.mixed (a symbol) stands in for a node with mixed font styling:
+    // textNodeFamily can't read a string family, so the node is skipped.
+    (text as unknown as { fontName: unknown }).fontName = figma.mixed;
+
+    await applyTextStyles(text as never, map);
+    expect(
+      (text as unknown as { textStyleId?: string }).textStyleId,
+    ).toBeUndefined();
+  });
+
+  it("swallows a setTextStyleIdAsync rejection from the host", async () => {
+    const figma = liveFigma();
+    resetActiveFonts();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    (text as unknown as { fontName: unknown }).fontName = {
+      family: "Inter",
+      style: "Medium",
+    };
+    // The host rejects the style id; applyTextStyleToNode must swallow it.
+    (
+      text as unknown as { setTextStyleIdAsync: () => Promise<void> }
+    ).setTextStyleIdAsync = () => Promise.reject(new Error("rejected"));
+
+    await expect(applyTextStyles(text as never, map)).resolves.toBeUndefined();
   });
 });

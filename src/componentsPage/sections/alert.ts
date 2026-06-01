@@ -39,9 +39,7 @@ export async function addAlertSection(
 
   // Make variants fill the component set width.
   for (const child of componentSet.children) {
-    if ("layoutSizingHorizontal" in child) {
-      (child as FrameNode).layoutSizingHorizontal = "FILL";
-    }
+    (child as FrameNode).layoutSizingHorizontal = "FILL";
   }
 
   return countDescendants(componentSet);

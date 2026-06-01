@@ -18,7 +18,7 @@ import {
 } from "../layout";
 import type { BlocksInputs } from "../types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../types";
-import { countDescendants, fillWidth } from "../utils";
+import { countDescendants, fillWidth, growWidth } from "../utils";
 import { buildField, buildOutlineButton, buildPrimaryButton } from "../field";
 
 const FORM_WIDTH = 384;
@@ -103,12 +103,4 @@ export async function addSignupEmailBlock(
   canvas.appendChild(form);
   page.appendChild(canvas);
   return countDescendants(canvas);
-}
-
-function growWidth(node: SceneNode): void {
-  try {
-    (node as unknown as { layoutGrow: number }).layoutGrow = 1;
-  } catch {
-    // Keep intrinsic width.
-  }
 }

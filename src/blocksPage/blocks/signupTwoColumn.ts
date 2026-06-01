@@ -20,7 +20,7 @@ import {
 } from "../layout";
 import type { BlocksInputs } from "../types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../types";
-import { countDescendants, fillWidth } from "../utils";
+import { countDescendants, fillHeight, fillWidth } from "../utils";
 import { buildField, buildOutlineButton, buildPrimaryButton } from "../field";
 
 const PANE_WIDTH = CANVAS_WIDTH / 2;
@@ -170,13 +170,4 @@ function buildDescribedField(
   field.appendChild(desc);
   fillWidth(desc);
   return field;
-}
-
-function fillHeight(node: SceneNode): void {
-  try {
-    (node as unknown as { layoutSizingVertical: string }).layoutSizingVertical =
-      "FILL";
-  } catch {
-    // Keep intrinsic height.
-  }
 }

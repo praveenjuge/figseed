@@ -230,7 +230,6 @@ function layoutSectionsInColumns(page: PageNode) {
   const columnHeights = new Array<number>(COLUMN_COUNT).fill(0);
 
   page.children.forEach((child, index) => {
-    if (!("x" in child)) return;
     const node = child as SceneNode & {
       x: number;
       y: number;
@@ -249,7 +248,6 @@ function layoutSectionsInColumns(page: PageNode) {
     node.x = target * (SECTION_WIDTH + SECTION_GAP);
     node.y = columnHeights[target]!;
 
-    const height = node.height ?? 0;
-    columnHeights[target] = columnHeights[target]! + height + SECTION_GAP;
+    columnHeights[target] = columnHeights[target]! + node.height + SECTION_GAP;
   });
 }

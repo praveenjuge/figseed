@@ -9,6 +9,7 @@ import {
 import { decodePreset } from "../src/preset";
 import * as presetModule from "../src/preset";
 import type { PresetConfig } from "../src/preset";
+import themesData from "../src/data/themes.json";
 import {
   CHART_OVERRIDE_CODE,
   MENU_BOLD_CODE,
@@ -95,6 +96,38 @@ describe("resolvePreset", () => {
   it("resolves the minimal v1 code", () => {
     const result = resolvePreset(V1_MINIMAL_CODE);
     expect(result.ok).toBe(true);
+  });
+
+  it("tolerates theme entries that omit cssVars (defensive merge fallbacks)", () => {
+    // The bundled themes.json always carries cssVars, so the `cssVars?.light ??
+    // {}` guards in buildRegistry never fire in normal use. Temporarily strip
+    // cssVars from every theme the code references (base, theme, and chart) so
+    // the optional-chain + nullish-coalesce fallbacks run. The JSON import is
+    // the same cached object registry.ts reads, so this mutation is visible.
+    const code = "b2fA";
+    const config = decodePreset(code)!;
+    const names = new Set([config.baseColor, config.theme, config.chartColor]);
+    const themes = themesData as Array<{ name: string; cssVars?: unknown }>;
+    const saved = new Map<string, unknown>();
+    for (const theme of themes) {
+      if (names.has(theme.name)) {
+        saved.set(theme.name, theme.cssVars);
+        delete theme.cssVars;
+      }
+    }
+    try {
+      const result = resolvePreset(code);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        // With no cssVars to merge in, the resolved maps come out empty.
+        expect(Object.keys(result.data.cssVars.light)).toHaveLength(0);
+        expect(Object.keys(result.data.cssVars.dark)).toHaveLength(0);
+      }
+    } finally {
+      for (const theme of themes) {
+        if (saved.has(theme.name)) theme.cssVars = saved.get(theme.name);
+      }
+    }
   });
 });
 

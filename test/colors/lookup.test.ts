@@ -41,6 +41,13 @@ describe("findTailwindAlias", () => {
     expect(findTailwindAlias("")).toBeNull();
   });
 
+  it("returns null for a truthy-but-blank value that normalizes to empty", () => {
+    // A whitespace-only string is truthy (so it slips past the `!value` guard)
+    // but normalizeColorValue collapses it to "", hitting the `!normalized`
+    // branch.
+    expect(findTailwindAlias("   ")).toBeNull();
+  });
+
   it("returns null when the alpha component isn't a number", () => {
     // Normalizes to a blank alpha, which parses as NaN.
     expect(findTailwindAlias("oklch(1 0 0 / abc)")).toBeNull();
