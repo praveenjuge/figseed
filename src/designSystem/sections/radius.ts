@@ -1,6 +1,10 @@
 // Border radius scale: tile per token, corners bound to radius variables.
 
-import { RADIUS_TOKENS } from "../../primitives";
+import {
+  RADIUS_TOKENS,
+  radiusScaleForSlug,
+  scaleRadiusTokens,
+} from "../../primitives";
 import { applyFont } from "../../fonts";
 import { bindCornerRadii, bindFill } from "../bindings";
 import {
@@ -19,7 +23,15 @@ export async function addRadiusScale(
 
   const row = createWrappingRow(section, 16);
 
-  for (const token of RADIUS_TOKENS) {
+  // Scale the displayed tokens by the preset's `--radius` ratio so the preview
+  // matches the values components actually bind to (the `radius/*` primitives
+  // are scaled the same way in the generator).
+  const tokens = scaleRadiusTokens(
+    RADIUS_TOKENS,
+    radiusScaleForSlug(inputs.presetSummary?.["radius"]),
+  );
+
+  for (const token of tokens) {
     const cell = createVertical(row, 6);
     const tile = figma.createFrame();
     tile.resize(72, 72);

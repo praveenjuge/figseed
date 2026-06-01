@@ -37,6 +37,7 @@ export async function generateFromRegistry(
   const colorVars = await ensureTailwindColorCollection();
   const primitives = await ensurePrimitivesCollection({
     fontFamily: resolveFontFamily(options.presetSummary?.["font"]),
+    radius: options.presetSummary?.["radius"],
   });
   const themeResult = await ensureThemeCollection(data, colorVars);
 

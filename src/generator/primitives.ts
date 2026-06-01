@@ -16,6 +16,8 @@ import {
   OPACITY_TOKENS,
   PRESET_FONT_FAMILY_MAP,
   RADIUS_TOKENS,
+  radiusScaleForSlug,
+  scaleRadiusTokens,
   SKEW_TOKENS,
   SPACING_TOKENS,
   type NumberToken,
@@ -28,7 +30,13 @@ import {
 import { COLLECTION_PRIMITIVES } from "./constants";
 import type { PrimitiveVariableMap, ResolvedFontFamily } from "./types";
 
-type PrimitivesOpts = { fontFamily: ResolvedFontFamily };
+type PrimitivesOpts = {
+  fontFamily: ResolvedFontFamily;
+  // shadcn's create-preset radius slug (none/small/medium/large/default). The
+  // `radius/*` tokens scale by its `--radius` ratio so the chosen rounding
+  // shows up in every component that binds to them. Absent → default (no scale).
+  radius?: string;
+};
 
 export async function ensurePrimitivesCollection(
   opts: PrimitivesOpts,
@@ -39,7 +47,11 @@ export async function ensurePrimitivesCollection(
 
   const map: PrimitiveVariableMap = new Map();
 
-  await writeNumberGroup(collection, modeId, "radius", RADIUS_TOKENS, map);
+  const radiusTokens = scaleRadiusTokens(
+    RADIUS_TOKENS,
+    radiusScaleForSlug(opts.radius),
+  );
+  await writeNumberGroup(collection, modeId, "radius", radiusTokens, map);
   await writeNumberGroup(
     collection,
     modeId,
