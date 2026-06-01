@@ -12,6 +12,7 @@ import {
 import { applyFont } from "../fonts";
 import { applyEffectStyle } from "../effectStyles";
 import { solidPaint } from "../componentsPage/paints";
+import { createIcon, resolveIconLibrary } from "../icons";
 import type { BlocksInputs } from "./types";
 
 // The outer frame for a single block: a named, fixed-width canvas painted with
@@ -133,6 +134,130 @@ export function createBody(
   node.fontSize = size;
   bindFill(node, t.get(colorKey));
   return node;
+}
+
+// A brand lockup — an `Acme Inc.` logo mark + wordmark. shadcn's auth pages use
+// a `GalleryVerticalEnd` glyph inside a small rounded square. `variant` picks
+// the treatment: `inline` (a primary-filled square + wordmark in a row, as in
+// the two-column login/signup pages) or `stacked` (a bare centered square, as
+// in the email-only pages with the wordmark rendered separately by the caller).
+export function createBrand(
+  inputs: BlocksInputs,
+  variant: "inline" | "stacked" = "inline",
+): FrameNode {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
+
+  const row = createRow("Brand", 8);
+  row.counterAxisAlignItems = "CENTER";
+
+  const mark = figma.createFrame();
+  mark.name = "Logo";
+  mark.layoutMode = "HORIZONTAL";
+  mark.primaryAxisSizingMode = "FIXED";
+  mark.counterAxisSizingMode = "FIXED";
+  mark.primaryAxisAlignItems = "CENTER";
+  mark.counterAxisAlignItems = "CENTER";
+  const markSize = variant === "inline" ? 24 : 32;
+  mark.resize(markSize, markSize);
+  mark.cornerRadius = 6;
+  bindCornerRadii(mark, p.get("radius/md"));
+  if (variant === "inline") {
+    bindFill(mark, t.get("primary"));
+  } else {
+    mark.fills = [];
+  }
+  mark.strokes = [];
+
+  const glyph = createIcon({
+    library: resolveIconLibrary(inputs.presetSummary),
+    name: "folder",
+    size: variant === "inline" ? 16 : 24,
+    color:
+      variant === "inline" ? t.get("primary-foreground") : t.get("foreground"),
+  });
+  if (glyph) {
+    glyph.name = "Glyph";
+    mark.appendChild(glyph);
+  }
+  row.appendChild(mark);
+
+  if (variant === "inline") {
+    const wordmark = createBody(
+      inputs,
+      "Acme Inc.",
+      14,
+      "foreground",
+      "Medium",
+    );
+    row.appendChild(wordmark);
+  }
+
+  return row;
+}
+
+// A labelled divider (`<FieldSeparator>Or continue with</FieldSeparator>`): a
+// horizontal rule with centered copy laid over it. Renders as a row of
+// rule / label / rule so it stretches with its parent.
+export function createSeparatorLabel(
+  inputs: BlocksInputs,
+  text: string,
+): FrameNode {
+  const t = inputs.theme.light;
+
+  const row = createRow("Separator", 12);
+  row.counterAxisAlignItems = "CENTER";
+  row.primaryAxisSizingMode = "FIXED";
+
+  const left = figma.createRectangle();
+  left.name = "Rule";
+  left.resize(10, 1);
+  bindFill(left, t.get("border"));
+  row.appendChild(left);
+  try {
+    (left as unknown as { layoutGrow: number }).layoutGrow = 1;
+  } catch {
+    // Keep intrinsic width.
+  }
+
+  const label = createBody(inputs, text, 14, "muted-foreground");
+  row.appendChild(label);
+
+  const right = figma.createRectangle();
+  right.name = "Rule";
+  right.resize(10, 1);
+  bindFill(right, t.get("border"));
+  row.appendChild(right);
+  try {
+    (right as unknown as { layoutGrow: number }).layoutGrow = 1;
+  } catch {
+    // Keep intrinsic width.
+  }
+
+  return row;
+}
+
+// The muted cover panel the two-column auth pages show beside the form
+// (`relative hidden bg-muted lg:block` with an `object-cover` image). We render
+// it as a flat muted rectangle so the split layout reads correctly without a
+// real asset (manifest blocks network access).
+export function createCoverPanel(
+  inputs: BlocksInputs,
+  width: number,
+  height: number,
+): FrameNode {
+  const t = inputs.theme.light;
+
+  const panel = figma.createFrame();
+  panel.name = "Cover";
+  panel.layoutMode = "VERTICAL";
+  panel.primaryAxisSizingMode = "FIXED";
+  panel.counterAxisSizingMode = "FIXED";
+  panel.resize(width, height);
+  panel.clipsContent = true;
+  bindFill(panel, t.get("muted"));
+  panel.strokes = [];
+  return panel;
 }
 
 // A neutral region-header card matching the Design System / Components headers,

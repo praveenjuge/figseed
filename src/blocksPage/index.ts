@@ -1,9 +1,10 @@
-// Builds a "Blocks" region: pre-composed shadcn screens (login, signup,
-// dashboard) assembled from live instances of the components the Components
-// page already published. Each block embeds real component instances (Button,
-// Input, Label, Card, Chart, Table, Sidebar) so editing a component once flows
-// through every block — the same reuse model the Components page's Form section
-// uses, scaled up to whole screens.
+// Builds a "Blocks" region: pre-composed shadcn screens (login and signup in
+// several layouts, a sidebar app shell, and a dashboard) assembled from live
+// instances of the components the Components page already published. Each block
+// embeds real component instances (Button, Input, Label, Card, Chart, Table,
+// Sidebar, Breadcrumb) so editing a component once flows through every block —
+// the same reuse model the Components page's Form section uses, scaled up to
+// whole screens.
 //
 // Figma's free/Starter tier caps a file at 3 pages (Design System, Components,
 // and the user's own page), so the blocks render as a distinct region on the
@@ -14,10 +15,17 @@
 
 import { addHeader } from "./blocks/header";
 import { addLoginBlock } from "./blocks/login";
+import { addLoginTwoColumnBlock } from "./blocks/loginTwoColumn";
+import { addLoginEmailBlock } from "./blocks/loginEmail";
 import { addSignupBlock } from "./blocks/signup";
+import { addSignupTwoColumnBlock } from "./blocks/signupTwoColumn";
+import { addSignupEmailBlock } from "./blocks/signupEmail";
+import { addSidebarBlock } from "./blocks/sidebar";
 import { addDashboardBlock } from "./blocks/dashboard";
 import {
   BLOCK_GAP,
+  BLOCK_COLUMN_GAP,
+  CANVAS_WIDTH,
   REGION_GAP,
   type BlockBuilder,
   type BlocksInputs,
@@ -30,15 +38,26 @@ import { applyTokenBindings } from "../tokenBindings";
 
 export type { BlocksInputs, BlocksResult } from "./types";
 
-// The header renders first; the blocks follow in a fixed, curated order
-// (auth screens first, then the dashboard) since they read as a showcase rather
-// than an alphabetical index.
-const HEADER_BLOCK: BlockBuilder = { label: "Header", build: addHeader };
+// The header renders first and pins to the top of the left column; the blocks
+// follow in a fixed, curated order laid out across two columns (mirroring the
+// Design System page). Login variants stack in the left column and signup
+// variants in the right, with the two app-shell blocks (sidebar, dashboard) at
+// the bottom of each, so the region reads as a grouped showcase.
+const HEADER_BLOCK: BlockBuilder = {
+  label: "Header",
+  column: 0,
+  build: addHeader,
+};
 
 const BLOCKS: BlockBuilder[] = [
-  { label: "Login", build: addLoginBlock },
-  { label: "Signup", build: addSignupBlock },
-  { label: "Dashboard", build: addDashboardBlock },
+  { label: "Login", column: 0, build: addLoginBlock },
+  { label: "Login (Two Column)", column: 0, build: addLoginTwoColumnBlock },
+  { label: "Login (Email)", column: 0, build: addLoginEmailBlock },
+  { label: "Sidebar", column: 0, build: addSidebarBlock },
+  { label: "Signup", column: 1, build: addSignupBlock },
+  { label: "Signup (Two Column)", column: 1, build: addSignupTwoColumnBlock },
+  { label: "Signup (Email)", column: 1, build: addSignupEmailBlock },
+  { label: "Dashboard", column: 1, build: addDashboardBlock },
 ];
 
 const ORDERED_BLOCKS: BlockBuilder[] = [HEADER_BLOCK, ...BLOCKS];
@@ -100,23 +119,35 @@ export async function buildBlocksRegion(
   return { nodeCount: count };
 }
 
-// Stack the region's header and blocks top-to-bottom in a single column placed
-// to the right of the existing component grid, so the two areas read as clearly
-// separate zones on the same page.
+// Lay the region's header and blocks out across two columns, placed to the
+// right of the existing component grid so the two areas read as clearly
+// separate zones on the same page. Each block stays in its assigned column
+// (login variants left, signup variants right) and stacks top-to-bottom within
+// it — the same model the Design System page uses.
 function layoutBlocksRegion(
   page: PageNode,
   preexisting: Set<SceneNode>,
   newNodes: SceneNode[],
 ) {
   const originX = regionOriginX(page, preexisting);
-  let y = 0;
-  for (const child of newNodes) {
-    if (!("x" in child)) continue;
+  // Track the next free y in each column so blocks stack within their column.
+  const columnHeights = [0, 0];
+  // Every block renders on the full-width canvas, so each column is one canvas
+  // wide and the right column sits a canvas-plus-gap to the right.
+  const columnStride = CANVAS_WIDTH + BLOCK_COLUMN_GAP;
+
+  // newNodes mirrors ORDERED_BLOCKS order, since each builder appends exactly
+  // one top-level frame in sequence. Use that to read each block's column.
+  newNodes.forEach((child, index) => {
+    if (!("x" in child)) return;
     const node = child as SceneNode & { x: number; y: number; height: number };
-    node.x = originX;
-    node.y = y;
-    y += (node.height ?? 0) + BLOCK_GAP;
-  }
+    const target = ORDERED_BLOCKS[index]?.column ?? 0;
+
+    node.x = originX + target * columnStride;
+    node.y = columnHeights[target]!;
+    columnHeights[target] =
+      columnHeights[target]! + (node.height ?? 0) + BLOCK_GAP;
+  });
 }
 
 // The x where the blocks region starts: just past the right edge of the

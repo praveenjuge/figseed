@@ -65,8 +65,9 @@ describe("buildBlocksRegion", () => {
 
     const after = (inputs.targetPage as unknown as { children: unknown[] })
       .children.length;
-    // Header + Login + Signup + Dashboard add 4 top-level frames.
-    expect(after - before).toBe(4);
+    // Header + 8 blocks (Login, Login Two Column, Login Email, Signup, Signup
+    // Two Column, Signup Email, Sidebar, Dashboard) add 9 top-level frames.
+    expect(after - before).toBe(9);
   });
 
   it("does not create a new page (Starter tier 3-page cap)", async () => {
@@ -94,9 +95,9 @@ describe("buildBlocksRegion", () => {
       ...(await makeInputsOnComponentsPage()),
       onProgress,
     });
-    // Header + Login + Signup + Dashboard = 4 builders, plus the final Done.
-    expect(onProgress).toHaveBeenCalledTimes(5);
-    expect(onProgress).toHaveBeenLastCalledWith(4, 4, "Done");
+    // Header + 8 blocks = 9 builders, plus the final Done.
+    expect(onProgress).toHaveBeenCalledTimes(10);
+    expect(onProgress).toHaveBeenLastCalledWith(9, 9, "Done");
   });
 
   it("embeds live instances of the page's components", async () => {
@@ -140,6 +141,29 @@ describe("buildBlocksRegion", () => {
     }
   });
 
+  it("lays the blocks out in two columns", async () => {
+    const inputs = await makeInputsOnComponentsPage();
+    const page = inputs.targetPage as unknown as {
+      children: (SceneNode & { x: number })[];
+    };
+    const existing = [...page.children];
+
+    await buildBlocksRegion(inputs);
+
+    const added = page.children.filter((c) => !existing.includes(c));
+    // The header plus the 8 blocks split across exactly two x positions.
+    const columnXs = [...new Set(added.map((node) => node.x))].sort(
+      (a, b) => a - b,
+    );
+    expect(columnXs.length).toBe(2);
+    // The left column anchors the header; each column holds multiple blocks.
+    const leftCount = added.filter((n) => n.x === columnXs[0]).length;
+    const rightCount = added.filter((n) => n.x === columnXs[1]).length;
+    expect(leftCount).toBeGreaterThan(1);
+    expect(rightCount).toBeGreaterThan(1);
+    expect(leftCount + rightCount).toBe(added.length);
+  });
+
   it("falls back to drawn stand-ins on a bare page (no components)", async () => {
     // Render onto an empty page that holds no component sets. Every reuse
     // misses, so each block draws its fallback Button/Input/Label/Sidebar/etc.
@@ -159,13 +183,19 @@ describe("buildBlocksRegion", () => {
     });
 
     // The blocks still render (via fallbacks) and the region anchors at x=0
-    // since there's no grid to sit beside.
+    // since there's no grid to sit beside. Blocks lay out in two columns, so
+    // the left column sits at x=0 and the right column is offset to the right.
     expect(result.nodeCount).toBeGreaterThan(0);
     const children = (
       barePage as unknown as { children: (SceneNode & { x: number })[] }
     ).children;
-    expect(children.length).toBe(4);
-    for (const node of children) expect(node.x).toBe(0);
+    expect(children.length).toBe(9);
+    // Every block starts at x >= 0, and at least one anchors the left column.
+    for (const node of children) expect(node.x).toBeGreaterThanOrEqual(0);
+    expect(children.some((node) => node.x === 0)).toBe(true);
+    // The two-column split produces blocks at two distinct x positions.
+    const columnXs = new Set(children.map((node) => node.x));
+    expect(columnXs.size).toBe(2);
     // No component instances exist on a bare page — everything is drawn.
     expect(
       countInstances(

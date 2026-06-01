@@ -21,6 +21,9 @@ import type { ResolvedFonts } from "../primitives";
 
 // Blocks stack in a single column with generous breathing room between them.
 export const BLOCK_GAP = 64;
+// Horizontal gap between the two block columns, matching the vertical rhythm so
+// the region reads as an even grid (mirrors the Design System page's layout).
+export const BLOCK_COLUMN_GAP = 64;
 // Horizontal gap between the component grid and the blocks region, so the two
 // areas read as clearly separate zones on the same page.
 export const REGION_GAP = 200;
@@ -61,5 +64,10 @@ export type BlocksResult = { nodeCount: number };
 
 export type BlockBuilder = {
   label: string;
+  // Pins the block to a specific column in the two-column layout (mirrors the
+  // Design System page). The header spans the top of the left column; the
+  // blocks below fill the two columns. Optional so isolated callers/tests that
+  // build a single block don't need to specify it.
+  column?: 0 | 1;
   build: (page: PageNode, inputs: BlocksInputs) => Promise<number>;
 };
