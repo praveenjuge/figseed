@@ -7,7 +7,6 @@ import { addEmptySection } from "../../src/componentsPage/sections/empty";
 import { addKbdSection } from "../../src/componentsPage/sections/kbd";
 import { addSheetSection } from "../../src/componentsPage/sections/sheet";
 import { addDialogSection } from "../../src/componentsPage/sections/dialog";
-import { addSidebarSection } from "../../src/componentsPage/sections/sidebar";
 import type { ComponentsInputs } from "../../src/componentsPage";
 
 // Minimal inputs with empty token maps: the binding helpers no-op on missing
@@ -75,11 +74,6 @@ describe("section fallbacks without an icon library", () => {
 
   it("dialog uses a drawn close glyph when no close icon resolves", async () => {
     const count = await addDialogSection(newPage(), emptyInputs());
-    expect(count).toBeGreaterThan(0);
-  });
-
-  it("sidebar resolves tokens through the neutral fallback when sidebar vars are absent", async () => {
-    const count = await addSidebarSection(newPage(), emptyInputs());
     expect(count).toBeGreaterThan(0);
   });
 });

@@ -17,13 +17,18 @@ Start with these files before changing behavior:
 3. `src/designSystem/index.ts` - Design System page sections and layout.
 4. `src/componentsPage/index.ts` - component section registry, deferred
    sections, and column layout.
-5. `src/blocksPage/index.ts` - login, signup, and dashboard Blocks region
-   appended to the Components page.
+5. `src/blocksPage/index.ts` - login, signup, sidebar, and dashboard Blocks
+   region appended to the Components page.
 
 Recent product surface to preserve:
 
-- The Components page has 58 shadcn-style sections, including charts, form,
-  typography, data table, sidebar, icon-backed controls, and overlays.
+- The Components page has 57 shadcn-style sections, including charts, form,
+  typography, data table, icon-backed controls, and overlays.
+- The Sidebar is a Blocks region component set: one Figma component named
+  "Sidebar" with all 16 shadcn sidebar block layouts
+  (https://ui.shadcn.com/blocks/sidebar) as variants (Variant=sidebar-01 …
+  sidebar-16), each a fixed 982px tall. It lives in `src/blocksPage/blocks/
+sidebar/` (primitives + 16 variant builders), not as a Components section.
 - Blocks are not a separate page. They live as a region on the Components page
   to stay within Figma Starter/free page limits and reuse live component
   instances.
