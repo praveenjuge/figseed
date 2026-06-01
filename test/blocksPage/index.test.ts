@@ -116,7 +116,8 @@ describe("buildBlocksRegion", () => {
       },
     );
     // The blocks region adds INSTANCE nodes (reused Button/Input/Label/Card/
-    // Chart/Table/Sidebar) on top of whatever the component grid already had.
+    // Chart/Table) on top of whatever the component grid already had. (The
+    // Sidebar block is its own 16-variant component set, not reused instances.)
     expect(after).toBeGreaterThan(before);
   });
 
@@ -166,7 +167,8 @@ describe("buildBlocksRegion", () => {
 
   it("falls back to drawn stand-ins on a bare page (no components)", async () => {
     // Render onto an empty page that holds no component sets. Every reuse
-    // misses, so each block draws its fallback Button/Input/Label/Sidebar/etc.
+    // misses, so each block draws its fallback Button/Input/Label/etc. (The
+    // Sidebar block always draws its own variant set regardless.)
     const vars = await makeVars();
     const figma = (
       globalThis as unknown as { figma: { createPage: () => PageNode } }

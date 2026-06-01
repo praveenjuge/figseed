@@ -238,6 +238,56 @@ export function createIcon(options: CreateIconOptions): SceneNode | undefined {
   return node;
 }
 
+export type CreateNamedIconOptions = {
+  // Which icon library to draw from (use resolveIconLibrary on the preset).
+  library: IconLibraryName;
+  // One or more exact, library-specific icon names (e.g. lucide's
+  // "square-terminal"). Unlike createIcon's semantic names this is a direct
+  // lookup, but a candidate list is supported so callers can name the same
+  // glyph across libraries (e.g. ["chevron-right", "caret-right",
+  // "arrow-right-s-line"]) — the first name present in the active library wins.
+  // Used by the Sidebar blocks, which mirror shadcn's many lucide-specific
+  // glyphs while still rendering in whatever library the preset selected.
+  name: string | readonly string[];
+  // Target square size in px (geometry is scaled from the native 24px).
+  size: number;
+  // Theme colour variable the icon should follow.
+  color: Variable | undefined;
+};
+
+// Render a *named* (library-specific) icon as a Figma node recolored to `color`
+// and scaled to `size`. Returns undefined when the active library has no icon
+// matching any candidate name (callers fall back to a placeholder). Mirrors
+// createIcon but bypasses the small semantic lookup table so blocks can reach
+// the full curated icon subset by name.
+export function createNamedIcon(
+  options: CreateNamedIconOptions,
+): SceneNode | undefined {
+  const library = ICON_LIBRARIES[options.library];
+  const candidates =
+    typeof options.name === "string" ? [options.name] : options.name;
+
+  let inner: string | undefined;
+  for (const candidate of candidates) {
+    const found = library.icons[candidate];
+    if (found !== undefined) {
+      inner = found;
+      break;
+    }
+  }
+  if (inner === undefined) return undefined;
+
+  const node = figma.createNodeFromSvg(`${library.svgOpen}${inner}</svg>`);
+  node.name = "icon";
+  recolorIcon(node, options.color);
+
+  if (options.size !== NATIVE_ICON_SIZE && typeof node.rescale === "function") {
+    node.rescale(options.size / NATIVE_ICON_SIZE);
+  }
+
+  return node;
+}
+
 export type InstantiateIconOptions = {
   // The Design System icon component set's variants, keyed by library-specific
   // icon name (see buildDesignSystem's result).

@@ -103,15 +103,12 @@ export async function addDashboardBlock(
   canvas.layoutMode = "HORIZONTAL";
   canvas.itemSpacing = 0;
 
-  // --- Sidebar (reused) ---------------------------------------------------
-  const sidebar = instanceFromComponents(inputs, "Sidebar");
-  if (sidebar) {
-    sidebar.resize(SIDEBAR_WIDTH, CANVAS_HEIGHT);
-    canvas.appendChild(sidebar);
-    fillHeight(sidebar);
-  } else {
-    canvas.appendChild(buildFallbackSidebar(inputs));
-  }
+  // --- Sidebar ------------------------------------------------------------
+  // The dashboard draws its own dashboard-01 rail rather than reusing the
+  // Sidebar block's 16-variant set (those are a standalone showcase, and the
+  // dashboard's nav — Documents/Lifecycle/Analytics + a user row — is its own
+  // composition).
+  canvas.appendChild(buildFallbackSidebar(inputs));
 
   // --- Inset (the main content column) ------------------------------------
   const inset = createColumn("Inset", 0);
@@ -482,7 +479,10 @@ function fillHeight(node: SceneNode): void {
   }
 }
 
-// ----- Fallbacks (used only when the page has no matching components) -------
+// ----- Fallbacks ------------------------------------------------------------
+// `buildFallbackSidebar` always draws the dashboard's own left rail (the
+// dashboard doesn't reuse the Sidebar block's variant set); the Badge / panel
+// fallbacks below are used only when the page has no matching components.
 
 function buildFallbackSidebar(inputs: BlocksInputs): FrameNode {
   const t = inputs.theme.light;

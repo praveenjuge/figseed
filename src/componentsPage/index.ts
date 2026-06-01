@@ -51,7 +51,6 @@ import { addScrollAreaSection } from "./sections/scrollArea";
 import { addSelectSection } from "./sections/select";
 import { addSeparatorSection } from "./sections/separator";
 import { addSheetSection } from "./sections/sheet";
-import { addSidebarSection } from "./sections/sidebar";
 import { addSkeletonSection } from "./sections/skeleton";
 import { addSliderSection } from "./sections/slider";
 import { addSonnerSection } from "./sections/sonner";
@@ -130,7 +129,6 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Select", build: addSelectSection },
   { label: "Separator", build: addSeparatorSection },
   { label: "Sheet", build: addSheetSection },
-  { label: "Sidebar", build: addSidebarSection },
   { label: "Skeleton", build: addSkeletonSection },
   { label: "Slider", build: addSliderSection },
   { label: "Sonner", build: addSonnerSection },

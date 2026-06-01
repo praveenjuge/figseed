@@ -1,10 +1,11 @@
 // Builds a "Blocks" region: pre-composed shadcn screens (login and signup in
-// several layouts, a sidebar app shell, and a dashboard) assembled from live
-// instances of the components the Components page already published. Each block
-// embeds real component instances (Button, Input, Label, Card, Chart, Table,
-// Sidebar, Breadcrumb) so editing a component once flows through every block —
-// the same reuse model the Components page's Form section uses, scaled up to
-// whole screens.
+// several layouts, the Sidebar variant set, and a dashboard). The auth and
+// dashboard blocks are assembled from live instances of the components the
+// Components page already published — editing a component once flows through
+// every block (Button, Input, Label, Card, Chart, Table, Breadcrumb), the same
+// reuse model the Components page's Form section uses, scaled up to whole
+// screens. The Sidebar block is a self-contained component set (all 16 shadcn
+// sidebar layouts as variants), drawn from the radix-nova sidebar primitives.
 //
 // Figma's free/Starter tier caps a file at 3 pages (Design System, Components,
 // and the user's own page), so the blocks render as a distinct region on the
@@ -41,8 +42,9 @@ export type { BlocksInputs, BlocksResult } from "./types";
 // The header renders first and pins to the top of the left column; the blocks
 // follow in a fixed, curated order laid out across two columns (mirroring the
 // Design System page). Login variants stack in the left column and signup
-// variants in the right, with the two app-shell blocks (sidebar, dashboard) at
-// the bottom of each, so the region reads as a grouped showcase.
+// variants in the right, with the Sidebar variant set (left) and the dashboard
+// app shell (right) at the bottom of each, so the region reads as a grouped
+// showcase.
 const HEADER_BLOCK: BlockBuilder = {
   label: "Header",
   column: 0,
