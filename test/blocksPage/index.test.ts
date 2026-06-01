@@ -20,8 +20,9 @@ async function makeVars(code = "b2fA"): Promise<GeneratedVars> {
   return generated.variables;
 }
 
-// Build the Components page (the blocks render onto it) and return inputs that
-// target it, so blocks reuse the page's component instances.
+// Build the Components grid (the blocks render onto the same shared Figseed
+// page) and return inputs that target it, so blocks reuse the page's component
+// instances.
 async function makeInputsOnComponentsPage(
   code = "b2fA",
 ): Promise<BlocksInputs> {
@@ -34,7 +35,7 @@ async function makeInputsOnComponentsPage(
   };
   await buildComponentsPage(componentsInputs);
   const targetPage = (globalThis as unknown as Root).figma.root.children.find(
-    (c) => c.type === "PAGE" && c.name === "Components",
+    (c) => c.type === "PAGE" && c.name === "Figseed",
   ) as unknown as PageNode;
   return { ...componentsInputs, targetPage };
 }

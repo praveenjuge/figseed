@@ -1,8 +1,10 @@
-// Builds a "Components" page with real Figma components (ComponentNode /
-// ComponentSetNode) so designers can drag instances and swap variants.
+// Builds the "Components" region of the shared `Figseed` page — real Figma
+// components (ComponentNode / ComponentSetNode) so designers can drag instances
+// and swap variants. The region is appended beneath the Design System region;
+// the Blocks region is later appended to its right.
 //
 // Each component is created via figma.createComponent(), grouped into a
-// ComponentSet when there are multiple variants. The page only holds the
+// ComponentSet when there are multiple variants. The region only holds the
 // components themselves — no example frames or showcases.
 
 import { addAccordionSection } from "./sections/accordion";
@@ -65,6 +67,7 @@ import { addTooltipSection } from "./sections/tooltip";
 import { addTypographySection } from "./sections/typography";
 import {
   PAGE_NAME,
+  REGION_GAP,
   SECTION_GAP,
   SECTION_WIDTH,
   type ComponentsInputs,
@@ -77,6 +80,15 @@ import { ensureTextStyles, applyTextStyles } from "../textStyles";
 import { applyTokenBindings } from "../tokenBindings";
 
 export type { ComponentsInputs, ComponentsResult } from "./types";
+
+// Everything Figseed generates shares one page (Figma Starter/free files cap at
+// 3 pages). The Design System builder owns page creation and renders its
+// sections first; this builder appends the component grid beneath that region.
+// Each builder tags the top-level frames it owns with this plugin-data key so
+// a re-run clears and rebuilds only its own region.
+const REGION_KEY = "figseedRegion";
+const REGION_ID = "components";
+const DESIGN_SYSTEM_REGION_ID = "design-system";
 
 // The header is always rendered first; every other section is laid out in
 // alphabetical order so newly added components slot into the right place
@@ -165,12 +177,19 @@ export async function buildComponentsPage(
 ): Promise<ComponentsResult> {
   await figma.loadAllPagesAsync();
 
+  // Find the shared Figseed page. The Design System builder normally creates it
+  // first; when this builder runs in isolation (tests, standalone callers) we
+  // create it so the grid still has a home.
   let page = figma.root.children.find(
     (child) => child.type === "PAGE" && child.name === PAGE_NAME,
   ) as PageNode | undefined;
 
   if (page) {
-    for (const node of [...page.children]) node.remove();
+    // Clear only the component frames a previous run tagged, leaving the Design
+    // System and Blocks regions on the page untouched.
+    for (const node of [...page.children]) {
+      if (node.getPluginData(REGION_KEY) === REGION_ID) node.remove();
+    }
   } else {
     page = figma.createPage();
     page.name = PAGE_NAME;
@@ -193,6 +212,10 @@ export async function buildComponentsPage(
   const total = ORDERED_SECTIONS.length;
   let count = 0;
 
+  // Remember the frames already on the page (other regions) so we tag, sweep,
+  // and lay out only the component frames this run appends.
+  const preexisting = new Set<SceneNode>(page.children as SceneNode[]);
+
   for (let i = 0; i < ORDERED_SECTIONS.length; i++) {
     const section = ORDERED_SECTIONS[i]!;
     inputs.onProgress?.(i, total, section.label);
@@ -201,33 +224,47 @@ export async function buildComponentsPage(
   }
   inputs.onProgress?.(total, total, "Done");
 
+  // The frames this run appended, in ORDERED_SECTIONS order. Tag them so a
+  // later re-run clears only this region.
+  const sectionNodes = (page.children as SceneNode[]).filter(
+    (child) => !preexisting.has(child),
+  );
+  for (const node of sectionNodes) node.setPluginData(REGION_KEY, REGION_ID);
+
   // Map eligible text nodes onto their Tailwind text style before the token
   // sweep, so the style owns each node's font size + line height.
-  for (const child of page.children) {
-    await applyTextStyles(child as SceneNode, textStyles);
+  for (const child of sectionNodes) {
+    await applyTextStyles(child, textStyles);
   }
 
   // Bind the remaining non-color primitives (spacing, padding, gaps, border
   // widths, radii, font sizes) wherever a literal matches a token, so later
   // variable edits reflow the components instead of leaving frozen literals.
-  for (const child of page.children) {
-    applyTokenBindings(child as SceneNode, inputs.primitives);
+  for (const child of sectionNodes) {
+    applyTokenBindings(child, inputs.primitives);
   }
 
-  layoutSectionsInColumns(page);
+  layoutSectionsInColumns(page, sectionNodes);
   return { nodeCount: count };
 }
 
-// Lay the section frames out across three equal-width columns (mirroring the
-// Design System page) so the page stays compact instead of running down a
-// single tall column. The header pins to the top-left; every other section is
-// placed into whichever column is currently shortest, preserving the
-// alphabetical build order while keeping the columns balanced in height.
-function layoutSectionsInColumns(page: PageNode) {
+// Lay this region's section frames out across four equal-width columns
+// (mirroring the Design System region) so the grid stays compact instead of
+// running down a single tall column. The grid is placed to the right of the
+// Design System region on the shared page, so the page reads left-to-right:
+// Design System → Components → Blocks. The header pins to the top-left of the
+// grid; every other section drops into whichever column is currently shortest,
+// preserving the alphabetical build order while keeping the columns balanced in
+// height.
+function layoutSectionsInColumns(page: PageNode, sectionNodes: SceneNode[]) {
   const COLUMN_COUNT = 4;
   const columnHeights = new Array<number>(COLUMN_COUNT).fill(0);
 
-  page.children.forEach((child, index) => {
+  // Start the grid to the right of the Design System region (if present) so the
+  // two read as side-by-side zones on the same page.
+  const originX = regionOriginX(page, sectionNodes);
+
+  sectionNodes.forEach((child, index) => {
     if (!("x" in child)) return;
     const node = child as SceneNode & {
       x: number;
@@ -235,7 +272,7 @@ function layoutSectionsInColumns(page: PageNode) {
       height: number;
     };
 
-    // The header (first child) always anchors the top of the left column.
+    // The header (first frame) always anchors the top of the left column.
     let target = 0;
     if (index > 0) {
       // Pick the shortest column so the stacks stay balanced.
@@ -244,10 +281,29 @@ function layoutSectionsInColumns(page: PageNode) {
       }
     }
 
-    node.x = target * (SECTION_WIDTH + SECTION_GAP);
+    node.x = originX + target * (SECTION_WIDTH + SECTION_GAP);
     node.y = columnHeights[target]!;
 
     const height = node.height ?? 0;
     columnHeights[target] = columnHeights[target]! + height + SECTION_GAP;
   });
+}
+
+// The x where the component grid starts: just past the right edge of the Design
+// System region, plus a gutter. Falls back to 0 when no Design System region
+// exists (isolated callers / tests rendering onto a bare page).
+function regionOriginX(page: PageNode, sectionNodes: SceneNode[]): number {
+  const own = new Set<SceneNode>(sectionNodes);
+  let maxRight = 0;
+  let seen = false;
+  for (const child of page.children as SceneNode[]) {
+    if (own.has(child)) continue;
+    if (child.getPluginData(REGION_KEY) !== DESIGN_SYSTEM_REGION_ID) continue;
+    if (!("x" in child)) continue;
+    const node = child as SceneNode & { x: number; width: number };
+    const right = (node.x ?? 0) + (node.width ?? 0);
+    if (right > maxRight) maxRight = right;
+    seen = true;
+  }
+  return seen ? maxRight + REGION_GAP : 0;
 }

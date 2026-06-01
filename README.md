@@ -13,15 +13,15 @@ surface around it:
   free-tier compatibility.
 - Tailwind typography text styles and shadow, inner shadow, blur, and backdrop
   blur effect styles.
-- A `Design System` page for colors, type, spacing, radii, effects, opacity,
-  border widths, and icons.
-- A `Components` page with 58 shadcn-style sections, including charts, forms,
-  typography, data tables, sidebars, icon-backed controls, and common overlays.
-- A Blocks region on the `Components` page with login, signup, and a
-  shadcn-structured dashboard assembled from generated component instances.
+- A single `Figseed` page that hosts three regions: a Design System region for
+  colors, type, spacing, radii, effects, opacity, border widths, and icons; a
+  Components region with 58 shadcn-style sections (charts, forms, typography,
+  data tables, sidebars, icon-backed controls, and common overlays); and a
+  Blocks region with login, signup, and a shadcn-structured dashboard assembled
+  from generated component instances.
 
 Re-running with a different preset updates the same variables, styles, and
-pages in place.
+page in place.
 
 ## Usage
 
@@ -38,8 +38,8 @@ network requests. It does not use analytics, telemetry, CDNs, or third-party
 services.
 
 The plugin only writes to the file where you run it: the three variable
-collections, generated text/effect styles, and the `Design System` and
-`Components` pages.
+collections, generated text/effect styles, and the single `Figseed` page
+(Design System, Components, and Blocks regions).
 
 ## Development
 

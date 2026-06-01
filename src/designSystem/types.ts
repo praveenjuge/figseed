@@ -11,7 +11,10 @@ import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
 import type { IconComponentMap } from "../icons";
 
-export const PAGE_NAME = "Design System";
+// Everything Figseed generates lives on a single page so the file stays within
+// Figma Starter/free page limits. The Design System sections sit at the top,
+// the Components grid below, and the Blocks region to the right.
+export const PAGE_NAME = "Figseed";
 
 // Each section is now its own top-level frame so designers can move them
 // independently. The page just lays them out in a vertical stack.

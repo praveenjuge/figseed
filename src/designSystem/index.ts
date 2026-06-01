@@ -1,6 +1,9 @@
-// Builds a "Design System" page in Figma that visualizes every variable
-// produced by the generator: theme colors (light + dark), Tailwind palette,
-// typography, radius, spacing, opacity, blur, border widths, and shadows.
+// Builds the "Design System" region of the shared `Figseed` page: it visualizes
+// every variable produced by the generator — theme colors (light + dark),
+// Tailwind palette, typography, radius, spacing, opacity, blur, border widths,
+// and shadows. This builder owns the page (creates it, and on a re-run clears
+// only the section frames it previously tagged); the Components grid and Blocks
+// region are appended afterwards by their own builders.
 //
 // All visual nodes bind to the corresponding Figma variables, so any later
 // edit to the variables flows through the page.
@@ -31,6 +34,13 @@ import { applyTokenBindings } from "../tokenBindings";
 import { collectIconComponents } from "../icons";
 
 export type { DesignSystemInputs, DesignSystemResult } from "./types";
+
+// Everything Figseed generates shares one page (Figma Starter/free files cap at
+// 3 pages). Each builder tags the top-level frames it owns with this plugin-data
+// key so re-runs clear and rebuild only their own region, leaving the other
+// regions on the page untouched and the whole flow order-independent.
+const REGION_KEY = "figseedRegion";
+const REGION_ID = "design-system";
 
 const SECTIONS: SectionBuilder[] = [
   // Left column: the color-related sections, grouped together.
@@ -66,13 +76,18 @@ export async function buildDesignSystem(
   // we can search for an existing page by name.
   await figma.loadAllPagesAsync();
 
-  // Reset (or create) the page so the layout stays clean across re-runs.
+  // Reset (or create) the shared Figseed page. The Design System builder runs
+  // first and owns page creation; on a re-run it clears only the section frames
+  // it previously tagged, leaving any Components/Blocks regions intact until
+  // their own builders rebuild them.
   let page = figma.root.children.find(
     (child) => child.type === "PAGE" && child.name === PAGE_NAME,
   ) as PageNode | undefined;
 
   if (page) {
-    for (const node of [...page.children]) node.remove();
+    for (const node of [...page.children]) {
+      if (node.getPluginData(REGION_KEY) === REGION_ID) node.remove();
+    }
   } else {
     page = figma.createPage();
     page.name = PAGE_NAME;
@@ -99,6 +114,10 @@ export async function buildDesignSystem(
   const total = SECTIONS.length;
   let count = 0;
 
+  // Remember which top-level frames already existed (other regions) so we tag,
+  // sweep, and lay out only the section frames this run appends.
+  const preexisting = new Set<SceneNode>(page.children as SceneNode[]);
+
   for (let i = 0; i < SECTIONS.length; i++) {
     const section = SECTIONS[i]!;
     inputs.onProgress?.(i, total, section.label);
@@ -108,28 +127,36 @@ export async function buildDesignSystem(
   }
   inputs.onProgress?.(total, total, "Done");
 
+  // The frames this run appended, in SECTIONS order (each builder appends
+  // exactly one top-level frame in sequence). Tag them so a later re-run clears
+  // only this region.
+  const sectionNodes = (page.children as SceneNode[]).filter(
+    (child) => !preexisting.has(child),
+  );
+  for (const node of sectionNodes) node.setPluginData(REGION_KEY, REGION_ID);
+
   // Map every eligible text node onto its Tailwind text style first, so the
   // style owns the node's font size + line height. The token sweep below then
   // skips those fields (a node with a text style needs no literal bindings).
-  for (const child of page.children) {
-    await applyTextStyles(child as SceneNode, textStyles);
+  for (const child of sectionNodes) {
+    await applyTextStyles(child, textStyles);
   }
 
   // Bind the remaining non-color primitives (spacing, padding, gaps, border
   // widths, radii, font sizes) wherever a literal matches a token, so later
   // variable edits reflow the page instead of leaving frozen literals.
-  for (const child of page.children) {
-    applyTokenBindings(child as SceneNode, inputs.primitives);
+  for (const child of sectionNodes) {
+    applyTokenBindings(child, inputs.primitives);
   }
 
   // Lay out the section frames across two columns, keeping each section in
   // its assigned column (all color sections stay together).
-  layoutSectionsInColumns(page);
+  layoutSectionsInColumns(sectionNodes);
 
   // Move the user to the page and frame the result.
   await figma.setCurrentPageAsync(page);
-  if (page.children.length > 0) {
-    page.selection = [page.children[0] as SceneNode];
+  if (sectionNodes.length > 0) {
+    page.selection = [sectionNodes[0]!];
     figma.viewport.scrollAndZoomIntoView(page.children as SceneNode[]);
   }
 
@@ -140,16 +167,16 @@ export async function buildDesignSystem(
   return { nodeCount: count, iconComponents };
 }
 
-function layoutSectionsInColumns(page: PageNode) {
+// Lay this region's section frames out across two columns, keeping each section
+// in its assigned column (all color sections stay together). `sectionNodes`
+// mirrors the SECTIONS order, so its index maps to each section's pinned column.
+function layoutSectionsInColumns(sectionNodes: SceneNode[]) {
   const COLUMN_COUNT = 2;
   // Track the running height (next free y) of each column so sections stack
   // top-to-bottom within their assigned column.
   const columnHeights = new Array<number>(COLUMN_COUNT).fill(0);
 
-  // page.children mirrors the SECTIONS order, since each builder appends
-  // exactly one top-level frame in sequence. Use that to read each section's
-  // pinned column.
-  page.children.forEach((child, index) => {
+  sectionNodes.forEach((child, index) => {
     if (!("x" in child)) return;
     const node = child as SceneNode & {
       x: number;

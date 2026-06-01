@@ -3,9 +3,10 @@
 Figseed is a Figma plugin that turns a [shadcn/ui](https://ui.shadcn.com)
 preset code into native Figma variables, styles, components, and app blocks.
 It generates Tailwind colors, primitive tokens, a single-mode light/dark
-shadcn theme, Tailwind typography text styles, shadow/blur effect styles, a
-Design System page, a Components page, and a Blocks region on the Components
-page.
+shadcn theme, Tailwind typography text styles, shadow/blur effect styles, and a
+single `Figseed` page that hosts three regions: a Design System region, a
+Components region, and a Blocks region. Everything lives on one page to stay
+within Figma Starter/free page limits.
 
 ## Agent startup
 
@@ -14,24 +15,32 @@ Start with these files before changing behavior:
 1. `src/code.ts` - top-level generate flow and UI progress messages.
 2. `src/generator/index.ts` - variable collections, text styles, effect
    styles, and font loading.
-3. `src/designSystem/index.ts` - Design System page sections and layout.
+3. `src/designSystem/index.ts` - Design System region sections and layout. This
+   builder owns the shared `Figseed` page: it creates the page and, on a re-run,
+   clears only the section frames it previously tagged.
 4. `src/componentsPage/index.ts` - component section registry, deferred
-   sections, and column layout.
+   sections, and column layout. Appends the Components region beneath the
+   Design System region on the same page.
 5. `src/blocksPage/index.ts` - login, signup, sidebar, and dashboard Blocks
-   region appended to the Components page.
+   region appended to the right of the Components grid on the same page.
 
 Recent product surface to preserve:
 
-- The Components page has 57 shadcn-style sections, including charts, form,
+- Everything renders onto one page named `Figseed`. The three builders each own
+  a region of that page, tagged via the `figseedRegion` plugin-data key
+  (`design-system`, `components`, `blocks`) so each builder clears and rebuilds
+  only its own region. Do not split these back into separate pages — Figma's
+  Starter/free tier caps a file at 3 pages.
+- The Components region has 57 shadcn-style sections, including charts, form,
   typography, data table, icon-backed controls, and overlays.
 - The Sidebar is a Blocks region component set: one Figma component named
   "Sidebar" with all 16 shadcn sidebar block layouts
   (https://ui.shadcn.com/blocks/sidebar) as variants (Variant=sidebar-01 …
   sidebar-16), each a fixed 982px tall. It lives in `src/blocksPage/blocks/
 sidebar/` (primitives + 16 variant builders), not as a Components section.
-- Blocks are not a separate page. They live as a region on the Components page
-  to stay within Figma Starter/free page limits and reuse live component
-  instances.
+- Blocks are not a separate page. They live as a region on the shared `Figseed`
+  page (to the right of the component grid) to stay within Figma Starter/free
+  page limits and reuse live component instances.
 - The dashboard block should stay structurally close to shadcn's dashboard
   block patterns; avoid simplifying it into a static showcase.
 - `manifest.json` already has the published numeric plugin id. Do not restore
@@ -90,9 +99,9 @@ src/
   textStyles.ts      # idempotent Tailwind typography text styles
   tokenBindings.ts   # binds literal dimensions/effects/etc. back to variables
   generator/         # builds Figma collections, modes, variables
-  designSystem/      # rebuilds the "Design System" page
-  componentsPage/    # rebuilds the "Components" page (component registry)
-  blocksPage/        # app blocks appended to Components (reuses components)
+  designSystem/      # owns the shared "Figseed" page; builds the Design System region
+  componentsPage/    # appends the Components region (component registry) to the page
+  blocksPage/        # appends the Blocks region (reuses component instances) to the page
   data/themes.json   # snapshot of shadcn's apps/v4/registry/themes.ts
   data/avatars.ts    # base64 avatar photos (build-time fetch) for Avatar styles
   data/icons.ts      # shadcn icon-library subsets (build-time) for the Icons section
@@ -126,9 +135,16 @@ shadcn-ui/           # local clone, git-ignored, reference only
   `decodePreset` / `buildRegistryTheme` (chart-color overrides, menu-accent
   transform, radius override). Keep them in sync with `shadcn-ui/` when
   regenerating themes.
-- **Generated pages are rebuilt, not patched.** `buildDesignSystem` and
-  `buildComponentsPage` clear their owned page contents on each run. Keep page
-  generation idempotent and deterministic so snapshots stay stable.
+- **One page, three regions.** Everything renders onto a single page named
+  `Figseed`. `buildDesignSystem` creates the page; each builder tags the
+  top-level frames it owns with the `figseedRegion` plugin-data key
+  (`design-system`, `components`, `blocks`) and, on a re-run, clears and
+  rebuilds only its own region. Keep region generation idempotent and
+  deterministic so snapshots stay stable, and don't clear the whole page or
+  split a region onto its own page (Figma Starter/free caps a file at 3 pages).
+- **Region order on the page.** The Design System region sits at the top, the
+  Components grid is appended below it, and the Blocks region sits to the right
+  of the grid. `code.ts` runs the builders in that order so the offsets resolve.
 - **Blocks depend on Components.** Build or update reusable component sections
   before blocks that instance them. Blocks should bind text styles and token
   variables just like Design System and Components nodes.

@@ -19,12 +19,12 @@ async function makeInputs(code = "b2fA"): Promise<ComponentsInputs> {
 }
 
 describe("buildComponentsPage", () => {
-  it("builds the Components page with nodes", async () => {
+  it("builds the Components grid on the Figseed page with nodes", async () => {
     const result = await buildComponentsPage(await makeInputs());
     expect(result.nodeCount).toBeGreaterThan(0);
     const page = (
       globalThis as { figma: { root: { children: { name: string }[] } } }
-    ).figma.root.children.find((c) => c.name === "Components");
+    ).figma.root.children.find((c) => c.name === "Figseed");
     expect(page).toBeDefined();
   });
 
@@ -35,16 +35,16 @@ describe("buildComponentsPage", () => {
     expect(onProgress).toHaveBeenLastCalledWith(58, 58, "Done");
   });
 
-  it("reuses and clears an existing Components page on rebuild", async () => {
+  it("reuses and clears its region on the Figseed page on rebuild", async () => {
     const inputs = await makeInputs();
     await buildComponentsPage(inputs);
     await buildComponentsPage(inputs);
 
     const pages = (
       globalThis as { figma: { root: { children: { name: string }[] } } }
-    ).figma.root.children.filter((c) => c.name === "Components");
-    // The second build clears the existing page's children rather than minting
-    // a duplicate page (idempotent rebuild).
+    ).figma.root.children.filter((c) => c.name === "Figseed");
+    // The second build clears its own region's frames rather than minting a
+    // duplicate page (idempotent rebuild on the shared page).
     expect(pages).toHaveLength(1);
   });
 });

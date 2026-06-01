@@ -26,10 +26,15 @@ export async function addRadiusScale(
   // Scale the displayed tokens by the preset's `--radius` ratio so the preview
   // matches the values components actually bind to (the `radius/*` primitives
   // are scaled the same way in the generator).
-  const tokens = scaleRadiusTokens(
-    RADIUS_TOKENS,
-    radiusScaleForSlug(inputs.presetSummary?.["radius"]),
-  );
+  const scale = radiusScaleForSlug(inputs.presetSummary?.["radius"]);
+
+  // `radius=none` (and radius-locked styles) resolve to a 0 scale, which zeroes
+  // every derived token (sm…4xl) and would collapse this reference legend into
+  // a row of identical squares. Fall back to the canonical scale so the section
+  // still documents the rounding ramp; binding to the zeroed variables is also
+  // skipped below so the literal radii actually render.
+  const collapsed = scale === 0;
+  const tokens = scaleRadiusTokens(RADIUS_TOKENS, collapsed ? 1 : scale);
 
   for (const token of tokens) {
     const cell = createVertical(row, 6);
@@ -41,7 +46,9 @@ export async function addRadiusScale(
     tile.topRightRadius = radius;
     tile.bottomLeftRadius = radius;
     tile.bottomRightRadius = radius;
-    bindCornerRadii(tile, inputs.primitives.get(`radius/${token.name}`));
+    if (!collapsed) {
+      bindCornerRadii(tile, inputs.primitives.get(`radius/${token.name}`));
+    }
 
     const label = figma.createText();
     label.characters = token.name;

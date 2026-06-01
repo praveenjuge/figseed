@@ -56,7 +56,7 @@ async function handleGenerate(rawCode: string) {
       presetSummary,
     });
 
-    post({ type: "progress", message: "Building Design System page…" });
+    post({ type: "progress", message: "Building Design System…" });
 
     const ds = await buildDesignSystem({
       presetCode: result.presetCode,
@@ -78,7 +78,7 @@ async function handleGenerate(rawCode: string) {
       },
     });
 
-    post({ type: "progress", message: "Building Components page…" });
+    post({ type: "progress", message: "Building Components…" });
 
     const components = await buildComponentsPage({
       presetCode: result.presetCode,
@@ -103,13 +103,14 @@ async function handleGenerate(rawCode: string) {
 
     post({ type: "progress", message: "Building Blocks…" });
 
-    // Render the blocks region onto the Components page itself — Figma's
-    // Starter tier caps a file at 3 pages, so blocks live alongside the
-    // component grid rather than on a 4th page. The page is resolvable by name
-    // here (loadAllPagesAsync ran inside buildComponentsPage) and already holds
-    // every component the blocks reuse as live instances.
+    // Everything Figseed generates lives on one page (Figma's Starter tier caps
+    // a file at 3 pages). The Design System sections render at the top, the
+    // Components grid below them, and the blocks region to the right of the
+    // grid. The page is resolvable by name here (loadAllPagesAsync ran inside
+    // buildComponentsPage) and already holds every component the blocks reuse as
+    // live instances.
     const componentsPage = figma.root.children.find(
-      (child) => child.type === "PAGE" && child.name === "Components",
+      (child) => child.type === "PAGE" && child.name === "Figseed",
     ) as PageNode | undefined;
 
     const blocks = componentsPage

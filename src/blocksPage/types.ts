@@ -6,8 +6,8 @@
 // Input radius once flows through every block that embeds it.
 //
 // Figma's free/Starter tier caps a file at 3 pages, so the blocks are rendered
-// as a distinct region on the *Components* page (to the right of the component
-// grid) rather than on a page of their own.
+// as a distinct region on the shared `Figseed` page (to the right of the
+// component grid) rather than on a page of their own.
 
 import type {
   PrimitiveVariableMap,
