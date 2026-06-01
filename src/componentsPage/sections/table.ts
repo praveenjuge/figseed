@@ -152,6 +152,7 @@ function buildRow(
 
   for (let i = 0; i < COLUMNS.length; i++) {
     const column = COLUMNS[i]!;
+    /* v8 ignore next -- defensive: every header/body/footer row supplies a cell per column, so the `?? ""` fallback never fires */
     row.appendChild(buildCell(inputs, cells[i] ?? "", column, opts));
   }
 

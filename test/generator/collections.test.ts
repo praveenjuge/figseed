@@ -41,6 +41,16 @@ describe("ensureSingleMode", () => {
     expect(collection.modes[0]!.name).toBe("Default");
   });
 
+  it("leaves the mode name untouched when it already matches", async () => {
+    const collection = await getOrCreateCollection("C");
+    ensureSingleMode(collection, "Default");
+    // A second pass finds the sole mode already named "Default", so the rename
+    // branch is skipped.
+    ensureSingleMode(collection, "Default");
+    expect(collection.modes).toHaveLength(1);
+    expect(collection.modes[0]!.name).toBe("Default");
+  });
+
   it("trims extra modes down to one", async () => {
     const collection = await getOrCreateCollection("C");
     // Seed a second mode the way a paid-tier run might have.
@@ -51,5 +61,17 @@ describe("ensureSingleMode", () => {
     ensureSingleMode(collection, "Default");
     expect(collection.modes).toHaveLength(1);
     expect(collection.modes[0]!.name).toBe("Default");
+  });
+
+  it("swallows a host that refuses to remove an extra mode", async () => {
+    const collection = await getOrCreateCollection("C");
+    (
+      collection as unknown as { __addModeForTest(n: string): string }
+    ).__addModeForTest("Dark");
+    // Simulate a host that rejects removeMode; ensureSingleMode must not throw.
+    (collection as unknown as { removeMode: () => void }).removeMode = () => {
+      throw new Error("cannot remove mode");
+    };
+    expect(() => ensureSingleMode(collection, "Default")).not.toThrow();
   });
 });

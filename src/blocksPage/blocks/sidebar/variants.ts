@@ -1118,14 +1118,13 @@ function applyFontText(
   applyFont(node, "body", weight);
   node.characters = text;
   node.fontSize = size;
-  const sizeToken =
-    size === 12
-      ? "font/size/xs"
-      : size === 14
-        ? "font/size/sm"
-        : size === 16
-          ? "font/size/base"
-          : undefined;
+  const SIZE_TOKENS: Record<number, string> = {
+    12: "font/size/xs",
+    14: "font/size/sm",
+    16: "font/size/base",
+  };
+  const sizeToken = SIZE_TOKENS[size];
+  /* v8 ignore next -- defensive: every caller passes a mapped size (12/14/16) */
   if (sizeToken) bindFontSize(node, inputs.primitives.get(sizeToken));
   if (colorKey) bindFill(node, inputs.theme.light.get(colorKey));
 }

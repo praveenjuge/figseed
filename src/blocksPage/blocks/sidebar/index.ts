@@ -49,6 +49,7 @@ export async function addSidebarBlock(
 
   // styleComponentSet pins the set to the component-grid SECTION_WIDTH (1120);
   // widen it to the full block-canvas width and let the height keep hugging.
+  /* v8 ignore next -- the `|| 1` guards a 0-height set; a real combined set always reports a positive height */
   set.resize(SET_WIDTH, set.height || 1);
   set.counterAxisSizingMode = "AUTO";
 

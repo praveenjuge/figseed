@@ -85,6 +85,7 @@ export async function addIconLibrary(
   const components: ComponentNode[] = [];
   for (const name of names) {
     const inner = library.icons[name];
+    /* v8 ignore next -- defensive: `names` is Object.keys(library.icons), so every lookup resolves */
     if (inner === undefined) continue;
     const svg = `${library.svgOpen}${inner}</svg>`;
     const comp = buildIconComponent(name, svg, foreground);

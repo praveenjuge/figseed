@@ -130,6 +130,22 @@ describe("createNamedIcon", () => {
     expect(icon).toBeUndefined();
   });
 
+  it("rescales the geometry when the target size differs from 24px", () => {
+    const calls: number[] = [];
+    const figmaAny = fig() as unknown as {
+      createNodeFromSvg: (svg: string) => FakeNode;
+    };
+    const orig = figmaAny.createNodeFromSvg.bind(figmaAny);
+    figmaAny.createNodeFromSvg = (svg: string) => {
+      const node = orig(svg);
+      node.rescale = (factor: number) => calls.push(factor);
+      return node;
+    };
+
+    createNamedIcon({ library: "lucide", name: "chevron-right", size: 12 });
+    expect(calls).toEqual([12 / 24]);
+  });
+
   it("falls back to the first candidate present in the active library", () => {
     // The Sidebar blocks pass cross-library candidate lists so a chevron still
     // renders as phosphor's caret instead of dropping out.

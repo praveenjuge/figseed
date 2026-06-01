@@ -147,6 +147,7 @@ function buildPasswordField(inputs: BlocksInputs, width: number): FrameNode {
   // Wrap it together with a "forgot" link in a space-between row so the link
   // sits flush right.
   const labelNode = field.children[0] as SceneNode | undefined;
+  /* v8 ignore next -- defensive: the built field always has a label child, so this guard never returns early */
   if (!labelNode) return field;
 
   const row = createRow("Label Row", 8);

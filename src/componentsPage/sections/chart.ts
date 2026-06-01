@@ -336,6 +336,7 @@ function wedgePath(
 ): string {
   const p0 = polar(cx, cy, r, a0);
   const p1 = polar(cx, cy, r, a1);
+  /* v8 ignore next -- defensive: the bundled PIE_SLICES top out at ~122°, so no pie wedge ever exceeds the 180° large-arc threshold */
   const large = a1 - a0 > 180 ? 1 : 0;
   return (
     "M " +

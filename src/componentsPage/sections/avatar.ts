@@ -110,7 +110,8 @@ function buildAvatarComponent(
   if (kind === "image") {
     // Prefer a real bundled photo via its paint style; fall back to a tinted
     // fill + initials if no style is available (e.g. data module missing).
-    const styleId = imageSlot >= 0 ? styles.idAt(imageSlot) : undefined;
+    // imageSlot is always >= 0 here (only image variants reach this branch).
+    const styleId = styles.idAt(imageSlot);
     if (styleId) {
       return applyImageStyle(comp, styleId).then(finish);
     }

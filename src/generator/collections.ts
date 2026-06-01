@@ -44,6 +44,7 @@ export function ensureSingleMode(
   const [first, ...rest] = collection.modes;
   // Newly-created collections always come with exactly one mode, so this
   // branch is defensive — `addMode` would throw on the free tier.
+  /* v8 ignore next -- defensive: a collection always has at least one mode */
   if (!first) return;
   if (first.name !== modeName) collection.renameMode(first.modeId, modeName);
   // Drop extras to keep the collection clean (e.g. if a previous run created

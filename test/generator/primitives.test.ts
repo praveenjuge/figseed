@@ -57,4 +57,13 @@ describe("ensurePrimitivesCollection", () => {
     expect(soleValue(map.get("font/family/sans"))).toBe("Inter");
     expect(soleValue(map.get("font/family/serif"))).toBe("Georgia");
   });
+
+  it("overrides the serif bucket when a serif font is selected", async () => {
+    const map = await ensurePrimitivesCollection({
+      fontFamily: { family: "Lora", bucket: "serif" },
+    });
+    expect(soleValue(map.get("font/family/serif"))).toBe("Lora");
+    // The other buckets keep their defaults.
+    expect(soleValue(map.get("font/family/sans"))).toBe("Inter");
+  });
 });

@@ -19,10 +19,10 @@ export default defineConfig({
         "src/data/**", // generated data snapshots
       ],
       thresholds: {
-        lines: 90,
-        functions: 95,
-        branches: 80,
-        statements: 90,
+        lines: 100,
+        functions: 100,
+        branches: 100,
+        statements: 100,
       },
     },
   },

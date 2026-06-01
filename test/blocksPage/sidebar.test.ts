@@ -38,6 +38,25 @@ type FakeNode = {
 };
 
 describe("addSidebarBlock", () => {
+  it("renders with empty token maps, resolving sidebar vars through their neutral fallbacks", async () => {
+    // No `--sidebar-*` (or any) variables, so every `t.get(key) ?? t.get(
+    // fallback)` resolver falls through to its neutral fallback key.
+    const figma = (
+      globalThis as unknown as { figma: { createPage: () => PageNode } }
+    ).figma;
+    const page = figma.createPage();
+    const inputs = {
+      presetCode: "x",
+      primitives: { get: () => undefined },
+      tailwindColors: { get: () => undefined },
+      theme: { light: { get: () => undefined }, dark: { get: () => undefined } },
+      targetPage: page,
+    } as unknown as BlocksInputs;
+
+    const count = await addSidebarBlock(page as never, inputs);
+    expect(count).toBeGreaterThan(0);
+  });
+
   it("combines the 16 shadcn sidebar layouts into one component set", async () => {
     const inputs = await makeInputs();
     const page = inputs.targetPage as unknown as { children: FakeNode[] };

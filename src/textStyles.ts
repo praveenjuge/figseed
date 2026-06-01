@@ -122,10 +122,13 @@ export async function ensureTextStyles(
   for (const size of FONT_SIZE_TOKENS) {
     const leadingName = SIZE_LEADING[size.name];
     // line-height in px: the paired leading token, or the size itself (1×).
-    const lineHeightPx =
+    // Sizes with no paired leading (and any leading name not in the table)
+    // fall back to the font size, so the display sizes stay at line-height 1.
+    const pairedLeading =
       leadingName !== null && leadingName !== undefined
-        ? (LEADING_BY_NAME.get(leadingName) ?? size.value)
-        : size.value;
+        ? LEADING_BY_NAME.get(leadingName)
+        : undefined;
+    const lineHeightPx = pairedLeading ?? size.value;
 
     const sizeVar = primitives
       ? primitives.get(`font/size/${size.name}`)

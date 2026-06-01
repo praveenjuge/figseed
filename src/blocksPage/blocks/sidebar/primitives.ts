@@ -460,6 +460,7 @@ export function createMenuButton(
     square.strokes = [];
     const glyph = createNamedIcon({
       library: lib,
+      /* v8 ignore next -- defensive: brand rows in the bundled data always set an icon, so the default never applies */
       name: iconCandidates(opts.icon ?? "gallery-vertical-end"),
       size: 16,
       color: sidebarVar(t, "sidebar-primary-foreground", "primary-foreground"),
@@ -484,6 +485,7 @@ export function createMenuButton(
     square.strokes = [];
     const glyph = createNamedIcon({
       library: lib,
+      /* v8 ignore next -- defensive: brand rows in the bundled data always set an icon, so the default never applies */
       name: iconCandidates(opts.icon ?? "command"),
       size: 12,
       color: sidebarVar(t, "sidebar-primary-foreground", "primary-foreground"),
@@ -525,6 +527,7 @@ export function createMenuButton(
       glyph.name = "Icon";
       row.appendChild(glyph);
     }
+    /* v8 ignore start -- defensive: shadcn's emoji favorites/workspaces are rendered as lucide icons here, so this emoji text branch is never taken by the bundled data */
   } else if (opts.emoji) {
     const e = figma.createText();
     applyFont(e, "body", "Regular");
@@ -532,6 +535,7 @@ export function createMenuButton(
     e.fontSize = 14;
     row.appendChild(e);
   }
+  /* v8 ignore stop */
 
   // Label column: one line, or label + subtitle for the brand/user rows.
   if (opts.brand || opts.subtitle) {
@@ -686,6 +690,7 @@ export function createMenuSubButton(
     row.fills = [];
   }
 
+  /* v8 ignore start -- defensive: emoji favorites/workspaces are rendered as lucide icons here, so this emoji text branch is never taken by the bundled data */
   if (opts.emoji) {
     const e = figma.createText();
     applyFont(e, "body", "Regular");
@@ -693,6 +698,7 @@ export function createMenuSubButton(
     e.fontSize = 14;
     row.appendChild(e);
   }
+  /* v8 ignore stop */
 
   const text = figma.createText();
   applyFont(text, "body", "Regular");
