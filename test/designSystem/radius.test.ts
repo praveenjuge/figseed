@@ -1,14 +1,15 @@
-// Regression guard for the "Border radius" reference legend. A `radius=none`
-// preset zeroes every derived `radius/*` variable (sm…4xl), which used to make
-// this whole section render as a row of identical squares. The section must
-// fall back to the canonical radius ramp (and skip binding to the zeroed
-// variables) so it keeps documenting the rounding scale.
+// The "Border radius" section documents the FIXED Tailwind radius primitives.
+// It is a stable reference scale and must never collapse with the preset — the
+// preset's chosen `--radius` drives the separate shadcn radius scale that
+// components bind to, not this legend. Regression guard for the all-squares bug
+// where a `radius=none` preset zeroed the shared primitives.
 
 import { describe, expect, it } from "vitest";
 import { addRadiusScale } from "../../src/designSystem/sections/radius";
 import type { DesignSystemInputs } from "../../src/designSystem";
 import { generateFromRegistry } from "../../src/generator";
 import { resolvePreset } from "../../src/registry";
+import { RADIUS_TOKENS } from "../../src/primitives";
 
 type NodeLike = {
   type: string;
@@ -44,9 +45,6 @@ function page(): NodeLike {
   ).figma.createPage();
 }
 
-// Collect the radius tiles paired with the px value printed beneath them. The
-// section lays out vertical cells of [tile, label, sub] where `sub` reads
-// "<n>px".
 function collectTiles(
   section: NodeLike,
 ): Array<{ radius: number; bound: boolean; px: number }> {
@@ -77,36 +75,28 @@ function collectTiles(
 }
 
 describe("addRadiusScale", () => {
-  it("binds tiles to the scaled radius variables for a normal preset", async () => {
+  it("renders the fixed Tailwind radius scale, bound to the primitives", async () => {
     const inputs = await makeInputs("default");
     const p = page();
     await addRadiusScale(p as unknown as PageNode, inputs);
 
     const section = p.children.find((c) => c.name === "Border radius")!;
     const tiles = collectTiles(section);
-    expect(tiles.length).toBe(10);
-    // Default preset keeps the canonical ramp and binds every tile.
+    expect(tiles.length).toBe(RADIUS_TOKENS.length);
     expect(tiles.every((t) => t.bound)).toBe(true);
-    // A spread of distinct radii, not all-zero.
-    expect(new Set(tiles.map((t) => t.px)).size).toBeGreaterThan(3);
+    // The printed values are exactly the canonical Tailwind scale.
+    expect(tiles.map((t) => t.px)).toEqual(RADIUS_TOKENS.map((t) => t.value));
   });
 
-  it("falls back to the canonical ramp when radius=none collapses the scale", async () => {
+  it("does NOT collapse to squares even when the preset radius is none", async () => {
     const inputs = await makeInputs("none");
     const p = page();
     await addRadiusScale(p as unknown as PageNode, inputs);
 
     const section = p.children.find((c) => c.name === "Border radius")!;
     const tiles = collectTiles(section);
-    expect(tiles.length).toBe(10);
-
-    // The derived tokens must NOT all collapse to a square.
-    const derived = tiles.filter((t) => t.px > 0 && t.px < 9999);
-    expect(derived.length).toBeGreaterThan(3);
-
-    // Literal radii render (capped at 36) and are not bound to the zeroed
-    // variables, so the legend stays meaningful instead of square.
-    expect(tiles.every((t) => !t.bound)).toBe(true);
+    // Identical to the default preset: this legend is preset-independent.
+    expect(tiles.map((t) => t.px)).toEqual(RADIUS_TOKENS.map((t) => t.value));
     const rounded = tiles.filter((t) => t.radius > 0);
     expect(rounded.length).toBeGreaterThan(3);
   });

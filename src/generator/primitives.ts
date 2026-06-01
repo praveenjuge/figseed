@@ -16,8 +16,6 @@ import {
   OPACITY_TOKENS,
   PRESET_FONT_FAMILY_MAP,
   RADIUS_TOKENS,
-  radiusScaleForSlug,
-  scaleRadiusTokens,
   SKEW_TOKENS,
   SPACING_TOKENS,
   type NumberToken,
@@ -32,10 +30,6 @@ import type { PrimitiveVariableMap, ResolvedFontFamily } from "./types";
 
 type PrimitivesOpts = {
   fontFamily: ResolvedFontFamily;
-  // shadcn's create-preset radius slug (none/small/medium/large/default). The
-  // `radius/*` tokens scale by its `--radius` ratio so the chosen rounding
-  // shows up in every component that binds to them. Absent → default (no scale).
-  radius?: string;
 };
 
 export async function ensurePrimitivesCollection(
@@ -47,11 +41,11 @@ export async function ensurePrimitivesCollection(
 
   const map: PrimitiveVariableMap = new Map();
 
-  const radiusTokens = scaleRadiusTokens(
-    RADIUS_TOKENS,
-    radiusScaleForSlug(opts.radius),
-  );
-  await writeNumberGroup(collection, modeId, "radius", radiusTokens, map);
+  // The Tailwind primitive radius scale is fixed: it's a stable reference, not
+  // a preset-driven value. The create-preset `--radius` choice lives in the
+  // separate `shadcn/radius/*` scale (see generator/theme.ts), which is what
+  // components actually bind their corners to.
+  await writeNumberGroup(collection, modeId, "radius", RADIUS_TOKENS, map);
   await writeNumberGroup(
     collection,
     modeId,

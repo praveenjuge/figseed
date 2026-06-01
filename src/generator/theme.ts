@@ -4,7 +4,11 @@
 
 import { findTailwindAlias, parseColor, type Rgba } from "../colors";
 import { loadFontFamilies } from "../fonts";
-import { resolveFonts, type ResolvedFonts } from "../primitives";
+import {
+  resolveFonts,
+  shadcnRadiusScale,
+  type ResolvedFonts,
+} from "../primitives";
 import {
   ensureSingleMode,
   getOrCreateCollection,
@@ -26,6 +30,11 @@ export type ThemeResult = {
   // can load the fonts and bind text nodes to them.
   fonts: ResolvedFonts;
   fontVars: ThemeFontVars;
+  // The shadcn radius scale (`--radius-sm` … `--radius-4xl`) derived from the
+  // preset's `--radius`. Keyed by step name (sm/md/lg/xl/2xl/3xl/4xl). Lives in
+  // this collection because it is preset-driven; components bind their corners
+  // here so the create-preset radius choice flows through every component.
+  radiusScale: Map<string, Variable>;
 };
 
 // Maps a shadcn theme key to a friendly Figma variable name.
@@ -134,12 +143,30 @@ export async function ensureThemeCollection(
   headingVar.setValueForMode(modeId, fonts.heading);
   variableCount += 1;
 
+  // The shadcn radius scale derived from the preset's `--radius`. These live in
+  // the theme collection (not the fixed Tailwind primitives) because they are
+  // preset-driven. Components bind their corners to these so the create-preset
+  // radius choice shows up everywhere, while `Tailwind / Primitives` keeps a
+  // stable reference scale. Names are `radius/<step>` (e.g. "radius/lg").
+  const radiusScale = new Map<string, Variable>();
+  for (const token of shadcnRadiusScale(data.config.radius)) {
+    const variable = await getOrCreateVariable(
+      collection,
+      `radius/${token.name}`,
+      "FLOAT",
+    );
+    variable.setValueForMode(modeId, token.value);
+    radiusScale.set(token.name, variable);
+    variableCount += 1;
+  }
+
   return {
     variableCount,
     unaliasedCount,
     maps,
     fonts,
     fontVars: { body: bodyVar, heading: headingVar },
+    radiusScale,
   };
 }
 

@@ -4,7 +4,7 @@
 import { buildComponentsPage } from "./componentsPage";
 import { buildBlocksRegion } from "./blocksPage";
 import { buildDesignSystem } from "./designSystem";
-import { generateFromRegistry } from "./generator";
+import { generateFromRegistry, withShadcnRadius } from "./generator";
 import { decodePreset } from "./preset";
 import { resolvePreset } from "./registry";
 import type { PluginToUi, UiToPlugin } from "./messages";
@@ -56,6 +56,16 @@ async function handleGenerate(rawCode: string) {
       presetSummary,
     });
 
+    // Components and blocks bind their corners to the preset-driven shadcn
+    // radius scale (which lives in `shadcn / Theme`), not the fixed Tailwind
+    // `radius/*` primitives. Overlay that scale onto the primitives map so the
+    // create-preset radius choice flows through every component/block while the
+    // Design System reference keeps the canonical Tailwind scale.
+    const componentPrimitives = withShadcnRadius(
+      result.variables.primitives,
+      result.variables.radiusScale,
+    );
+
     post({ type: "progress", message: "Building Design System…" });
 
     const ds = await buildDesignSystem({
@@ -84,7 +94,7 @@ async function handleGenerate(rawCode: string) {
       presetCode: result.presetCode,
       presetSummary,
       tailwindColors: result.variables.tailwindColors,
-      primitives: result.variables.primitives,
+      primitives: componentPrimitives,
       theme: result.variables.theme,
       fonts: result.fonts,
       fontVars: result.variables.fonts,
@@ -118,7 +128,7 @@ async function handleGenerate(rawCode: string) {
           presetCode: result.presetCode,
           presetSummary,
           tailwindColors: result.variables.tailwindColors,
-          primitives: result.variables.primitives,
+          primitives: componentPrimitives,
           theme: result.variables.theme,
           fonts: result.fonts,
           fontVars: result.variables.fonts,

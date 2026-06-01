@@ -48,11 +48,11 @@ const PRESET_SCALED_RADIUS = new Set([
   "4xl",
 ]);
 
-// Ratio of the chosen preset's `--radius` to the default `--radius`. Components
-// bind their corners to the `radius/*` primitives, so scaling those primitive
-// values by this ratio is what makes the create-preset radius choice show up in
-// every generated component. Unknown / absent slugs fall back to 1 (no change),
-// keeping the default preset identical to the unscaled Tailwind scale.
+// Ratio of the chosen preset's `--radius` to the default `--radius`. The
+// `shadcn/radius/*` scale derives from this ratio (see `shadcnRadiusScale`), so
+// the create-preset radius choice shows up in every component that binds to it.
+// Unknown / absent slugs fall back to 1 (no change), keeping the default preset
+// identical to the canonical Tailwind scale.
 export function radiusScaleForSlug(slug: string | undefined): number {
   if (!slug) return 1;
   const px = PRESET_RADIUS_PX[slug];
@@ -75,6 +75,17 @@ export function scaleRadiusTokens(
       value: Math.round(token.value * scale * 100) / 100,
     };
   });
+}
+
+// The shadcn radius scale (`--radius-sm` … `--radius-4xl`) derived from the
+// preset's chosen `--radius`. These are SEPARATE from the fixed Tailwind
+// `radius/*` primitives: components bind their corners here so the create-preset
+// radius choice flows through every component, while the Tailwind primitive
+// scale stays a stable reference. At the default radius this matches the
+// Tailwind values; `radius=none` collapses every step to a sharp 0 corner.
+export function shadcnRadiusScale(slug: string | undefined): NumberToken[] {
+  const scaled = scaleRadiusTokens(RADIUS_TOKENS, radiusScaleForSlug(slug));
+  return scaled.filter((token) => PRESET_SCALED_RADIUS.has(token.name));
 }
 
 export const BORDER_WIDTH_TOKENS: NumberToken[] = [
