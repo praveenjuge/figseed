@@ -177,7 +177,6 @@ function layoutSectionsInColumns(sectionNodes: SceneNode[]) {
   const columnHeights = new Array<number>(COLUMN_COUNT).fill(0);
 
   sectionNodes.forEach((child, index) => {
-    if (!("x" in child)) return;
     const node = child as SceneNode & {
       x: number;
       y: number;

@@ -90,6 +90,21 @@ describe("buildBlocksRegion", () => {
     ).toBeUndefined();
   });
 
+  it("clears only its own tagged frames on a re-run (idempotent)", async () => {
+    const inputs = await makeInputsOnComponentsPage();
+    await buildBlocksRegion(inputs);
+    const afterFirst = (inputs.targetPage as unknown as { children: unknown[] })
+      .children.length;
+
+    // A second run finds the previously-tagged blocks frames and removes them
+    // before re-appending, so the region count stays stable (no duplicates).
+    await buildBlocksRegion(inputs);
+    const afterSecond = (
+      inputs.targetPage as unknown as { children: unknown[] }
+    ).children.length;
+    expect(afterSecond).toBe(afterFirst);
+  });
+
   it("reports progress for the header plus all blocks and Done", async () => {
     const onProgress = vi.fn();
     await buildBlocksRegion({

@@ -47,4 +47,47 @@ describe("buildComponentsPage", () => {
     // duplicate page (idempotent rebuild on the shared page).
     expect(pages).toHaveLength(1);
   });
+
+  it("offsets the grid to the right of an existing Design System region", async () => {
+    type FakeNode = {
+      x: number;
+      name: string;
+      resize: (w: number, h: number) => void;
+      setPluginData: (k: string, v: string) => void;
+      getPluginData: (k: string) => string;
+      appendChild: (c: unknown) => void;
+      children: FakeNode[];
+    };
+    const figmaApi = (
+      globalThis as unknown as {
+        figma: { createPage: () => FakeNode; createFrame: () => FakeNode };
+      }
+    ).figma;
+
+    // Pre-build the shared page with a tagged Design System region: a wide
+    // frame (sets the right edge), a narrower one (exercises the
+    // `right > maxRight` false branch), and an untagged frame (the
+    // not-our-region skip branch).
+    const page = figmaApi.createPage();
+    page.name = "Figseed";
+    const tag = (n: FakeNode, w: number, region?: string) => {
+      n.x = 0;
+      n.resize(w, 100);
+      if (region) n.setPluginData("figseedRegion", region);
+      page.appendChild(n);
+    };
+    tag(figmaApi.createFrame(), 1000, "design-system");
+    tag(figmaApi.createFrame(), 500, "design-system");
+    tag(figmaApi.createFrame(), 200); // untagged, neither own nor DS
+
+    await buildComponentsPage(await makeInputs());
+
+    const sectionNodes = page.children.filter(
+      (n) => n.getPluginData("figseedRegion") === "components",
+    );
+    expect(sectionNodes.length).toBeGreaterThan(0);
+    // Every section starts past the Design System region's right edge (1000).
+    const minX = Math.min(...sectionNodes.map((n) => n.x));
+    expect(minX).toBeGreaterThanOrEqual(1000);
+  });
 });

@@ -265,7 +265,6 @@ function layoutSectionsInColumns(page: PageNode, sectionNodes: SceneNode[]) {
   const originX = regionOriginX(page, sectionNodes);
 
   sectionNodes.forEach((child, index) => {
-    if (!("x" in child)) return;
     const node = child as SceneNode & {
       x: number;
       y: number;
@@ -298,9 +297,8 @@ function regionOriginX(page: PageNode, sectionNodes: SceneNode[]): number {
   for (const child of page.children as SceneNode[]) {
     if (own.has(child)) continue;
     if (child.getPluginData(REGION_KEY) !== DESIGN_SYSTEM_REGION_ID) continue;
-    if (!("x" in child)) continue;
     const node = child as SceneNode & { x: number; width: number };
-    const right = (node.x ?? 0) + (node.width ?? 0);
+    const right = node.x + node.width;
     if (right > maxRight) maxRight = right;
     seen = true;
   }
