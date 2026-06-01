@@ -47,7 +47,7 @@ export async function addDrawerSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Drawer";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

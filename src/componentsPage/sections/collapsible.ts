@@ -38,7 +38,7 @@ export async function addCollapsibleSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Collapsible";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

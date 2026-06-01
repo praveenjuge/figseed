@@ -33,16 +33,9 @@ export async function addAlertSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Alert";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
-
-  // Make variants fill the component set width.
-  for (const child of componentSet.children) {
-    if ("layoutSizingHorizontal" in child) {
-      (child as FrameNode).layoutSizingHorizontal = "FILL";
-    }
-  }
 
   return countDescendants(componentSet);
 }

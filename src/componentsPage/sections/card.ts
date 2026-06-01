@@ -34,7 +34,7 @@ export async function addCardSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Card";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

@@ -131,7 +131,7 @@ export async function addTypographySection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Typography";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 24;
   styleComponentSet(componentSet);
 

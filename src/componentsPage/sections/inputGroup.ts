@@ -43,7 +43,7 @@ export async function addInputGroupSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Input Group";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

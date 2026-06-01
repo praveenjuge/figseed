@@ -41,7 +41,7 @@ export async function addSkeletonSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Skeleton";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 12;
   styleComponentSet(componentSet);
 

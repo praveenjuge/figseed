@@ -96,7 +96,7 @@ export async function addInputOtpSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Input OTP";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
   return countDescendants(componentSet);

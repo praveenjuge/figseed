@@ -47,16 +47,9 @@ export async function addSonnerSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Sonner";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
-
-  // Let each toast fill the section width.
-  for (const child of componentSet.children) {
-    if ("layoutSizingHorizontal" in child) {
-      (child as FrameNode).layoutSizingHorizontal = "FILL";
-    }
-  }
 
   return countDescendants(componentSet);
 }

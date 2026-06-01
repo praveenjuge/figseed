@@ -36,7 +36,7 @@ export async function addInputSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Input";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

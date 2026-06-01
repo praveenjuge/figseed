@@ -44,7 +44,7 @@ export async function addItemSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Item";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

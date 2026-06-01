@@ -49,7 +49,7 @@ export async function addSheetSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Sheet";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

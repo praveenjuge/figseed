@@ -40,11 +40,10 @@ import { applyTokenBindings } from "../tokenBindings";
 export type { BlocksInputs, BlocksResult } from "./types";
 
 // The header renders first and pins to the top of the left column; the blocks
-// follow in a fixed, curated order laid out across two columns (mirroring the
-// Design System page). Login variants stack in the left column and signup
-// variants in the right, with the Sidebar variant set (left) and the dashboard
-// app shell (right) at the bottom of each, so the region reads as a grouped
-// showcase.
+// follow in a fixed, curated order laid out across three columns (mirroring the
+// Design System page). Login variants stack in the left column, signup variants
+// plus the dashboard app shell in the middle column, and the Sidebar variant
+// set gets its own column on the right so its 16-rail grid has room to wrap.
 const HEADER_BLOCK: BlockBuilder = {
   label: "Header",
   column: 0,
@@ -55,11 +54,11 @@ const BLOCKS: BlockBuilder[] = [
   { label: "Login", column: 0, build: addLoginBlock },
   { label: "Login (Two Column)", column: 0, build: addLoginTwoColumnBlock },
   { label: "Login (Email)", column: 0, build: addLoginEmailBlock },
-  { label: "Sidebar", column: 0, build: addSidebarBlock },
   { label: "Signup", column: 1, build: addSignupBlock },
   { label: "Signup (Two Column)", column: 1, build: addSignupTwoColumnBlock },
   { label: "Signup (Email)", column: 1, build: addSignupEmailBlock },
   { label: "Dashboard", column: 1, build: addDashboardBlock },
+  { label: "Sidebar", column: 2, build: addSidebarBlock },
 ];
 
 const ORDERED_BLOCKS: BlockBuilder[] = [HEADER_BLOCK, ...BLOCKS];
@@ -121,11 +120,12 @@ export async function buildBlocksRegion(
   return { nodeCount: count };
 }
 
-// Lay the region's header and blocks out across two columns, placed to the
+// Lay the region's header and blocks out across three columns, placed to the
 // right of the existing component grid so the two areas read as clearly
 // separate zones on the same page. Each block stays in its assigned column
-// (login variants left, signup variants right) and stacks top-to-bottom within
-// it — the same model the Design System page uses.
+// (login variants left, signup variants + dashboard middle, the Sidebar variant
+// set on the right) and stacks top-to-bottom within it — the same model the
+// Design System page uses.
 function layoutBlocksRegion(
   page: PageNode,
   preexisting: Set<SceneNode>,
@@ -133,9 +133,9 @@ function layoutBlocksRegion(
 ) {
   const originX = regionOriginX(page, preexisting);
   // Track the next free y in each column so blocks stack within their column.
-  const columnHeights = [0, 0];
+  const columnHeights = [0, 0, 0];
   // Every block renders on the full-width canvas, so each column is one canvas
-  // wide and the right column sits a canvas-plus-gap to the right.
+  // wide and successive columns sit a canvas-plus-gap further right.
   const columnStride = CANVAS_WIDTH + BLOCK_COLUMN_GAP;
 
   // newNodes mirrors ORDERED_BLOCKS order, since each builder appends exactly

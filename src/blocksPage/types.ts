@@ -64,10 +64,12 @@ export type BlocksResult = { nodeCount: number };
 
 export type BlockBuilder = {
   label: string;
-  // Pins the block to a specific column in the two-column layout (mirrors the
-  // Design System page). The header spans the top of the left column; the
-  // blocks below fill the two columns. Optional so isolated callers/tests that
-  // build a single block don't need to specify it.
-  column?: 0 | 1;
+  // Pins the block to a specific column in the multi-column layout (mirrors
+  // the Design System page). The header spans the top of the left column; the
+  // blocks below fill the columns: login variants (col 0), signup variants +
+  // dashboard (col 1), and the Sidebar variant set in its own column (col 2)
+  // so its 16-rail grid has room to breathe. Optional so isolated callers/tests
+  // that build a single block don't need to specify it.
+  column?: 0 | 1 | 2;
   build: (page: PageNode, inputs: BlocksInputs) => Promise<number>;
 };
