@@ -19,6 +19,9 @@ export async function addRadiusScale(
 
   const row = createWrappingRow(section, 16);
 
+  // This is the fixed Tailwind radius reference scale (the `radius/*`
+  // primitives). It does not change with the preset — the preset's chosen
+  // `--radius` drives the separate shadcn radius scale that components bind to.
   for (const token of RADIUS_TOKENS) {
     const cell = createVertical(row, 6);
     const tile = figma.createFrame();

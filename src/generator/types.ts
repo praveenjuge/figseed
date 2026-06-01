@@ -47,6 +47,11 @@ export type GenerateResult = {
     primitives: PrimitiveVariableMap;
     theme: ThemeVariableMaps;
     fonts: ThemeFontVars;
+    // The preset-driven shadcn radius scale (step name → variable), living in
+    // the `shadcn / Theme` collection. Components/blocks bind their corners to
+    // these (overlaid onto the primitives map via `withShadcnRadius`) so the
+    // create-preset radius choice flows everywhere.
+    radiusScale: Map<string, Variable>;
   };
 };
 

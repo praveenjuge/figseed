@@ -77,7 +77,7 @@ export async function addToggleGroupSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Toggle Group";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

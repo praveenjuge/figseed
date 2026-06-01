@@ -34,7 +34,7 @@ export async function addTextareaSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Textarea";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

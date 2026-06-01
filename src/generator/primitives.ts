@@ -28,7 +28,9 @@ import {
 import { COLLECTION_PRIMITIVES } from "./constants";
 import type { PrimitiveVariableMap, ResolvedFontFamily } from "./types";
 
-type PrimitivesOpts = { fontFamily: ResolvedFontFamily };
+type PrimitivesOpts = {
+  fontFamily: ResolvedFontFamily;
+};
 
 export async function ensurePrimitivesCollection(
   opts: PrimitivesOpts,
@@ -39,6 +41,10 @@ export async function ensurePrimitivesCollection(
 
   const map: PrimitiveVariableMap = new Map();
 
+  // The Tailwind primitive radius scale is fixed: it's a stable reference, not
+  // a preset-driven value. The create-preset `--radius` choice lives in the
+  // separate `shadcn/radius/*` scale (see generator/theme.ts), which is what
+  // components actually bind their corners to.
   await writeNumberGroup(collection, modeId, "radius", RADIUS_TOKENS, map);
   await writeNumberGroup(
     collection,

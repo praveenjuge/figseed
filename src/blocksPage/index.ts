@@ -7,12 +7,12 @@
 // screens. The Sidebar block is a self-contained component set (all 16 shadcn
 // sidebar layouts as variants), drawn from the radix-nova sidebar primitives.
 //
-// Figma's free/Starter tier caps a file at 3 pages (Design System, Components,
-// and the user's own page), so the blocks render as a distinct region on the
-// *Components* page — placed to the right of the component grid — rather than on
-// a page of their own. Idempotency is inherited from the Components page, which
-// clears all its children at the start of every rebuild before the components
-// and then this region are re-appended.
+// Figma's free/Starter tier caps a file at 3 pages, so Figseed renders
+// everything onto one page named `Figseed`: the Design System region on top,
+// the Components grid below, and this Blocks region to the right of the grid.
+// Idempotency: this builder tags the frames it appends with the `figseedRegion`
+// plugin-data key (`blocks`) and clears only those on a re-run, leaving the
+// Design System and Components regions untouched.
 
 import { addHeader } from "./blocks/header";
 import { addLoginBlock } from "./blocks/login";
@@ -39,12 +39,18 @@ import { applyTokenBindings } from "../tokenBindings";
 
 export type { BlocksInputs, BlocksResult } from "./types";
 
+// The blocks render onto the shared Figseed page alongside the Design System
+// and Components regions. This builder tags the top-level frames it owns with
+// this plugin-data key (matching the other builders) so a re-run clears and
+// rebuilds only the blocks region, leaving the other regions untouched.
+const REGION_KEY = "figseedRegion";
+const REGION_ID = "blocks";
+
 // The header renders first and pins to the top of the left column; the blocks
-// follow in a fixed, curated order laid out across two columns (mirroring the
-// Design System page). Login variants stack in the left column and signup
-// variants in the right, with the Sidebar variant set (left) and the dashboard
-// app shell (right) at the bottom of each, so the region reads as a grouped
-// showcase.
+// follow in a fixed, curated order laid out across three columns (mirroring the
+// Design System page). Login variants stack in the left column, signup variants
+// plus the dashboard app shell in the middle column, and the Sidebar variant
+// set gets its own column on the right so its 16-rail grid has room to wrap.
 const HEADER_BLOCK: BlockBuilder = {
   label: "Header",
   column: 0,
@@ -55,11 +61,11 @@ const BLOCKS: BlockBuilder[] = [
   { label: "Login", column: 0, build: addLoginBlock },
   { label: "Login (Two Column)", column: 0, build: addLoginTwoColumnBlock },
   { label: "Login (Email)", column: 0, build: addLoginEmailBlock },
-  { label: "Sidebar", column: 0, build: addSidebarBlock },
   { label: "Signup", column: 1, build: addSignupBlock },
   { label: "Signup (Two Column)", column: 1, build: addSignupTwoColumnBlock },
   { label: "Signup (Email)", column: 1, build: addSignupEmailBlock },
   { label: "Dashboard", column: 1, build: addDashboardBlock },
+  { label: "Sidebar", column: 2, build: addSidebarBlock },
 ];
 
 const ORDERED_BLOCKS: BlockBuilder[] = [HEADER_BLOCK, ...BLOCKS];
@@ -70,6 +76,14 @@ export async function buildBlocksRegion(
   const page = inputs.targetPage;
 
   await loadBlocksFonts(inputs);
+
+  // Clear only the blocks frames a previous run tagged, leaving the Design
+  // System and Components regions on the shared page untouched. (When the
+  // Components builder ran just before us it already cleared its own region;
+  // this keeps the blocks region idempotent on its own terms too.)
+  for (const node of [...(page.children as SceneNode[])]) {
+    if (node.getPluginData(REGION_KEY) === REGION_ID) node.remove();
+  }
 
   // Publish/refresh the shadow + blur effect styles (idempotent) so blocks can
   // reference real styles instead of literal effects.
@@ -102,6 +116,9 @@ export async function buildBlocksRegion(
     (child) => !preexisting.has(child),
   );
 
+  // Tag the frames this run appended so a later re-run clears only this region.
+  for (const node of newNodes) node.setPluginData(REGION_KEY, REGION_ID);
+
   // Map eligible text nodes onto their Tailwind text style before the token
   // sweep, so the style owns each node's font size + line height. (Instances
   // embedded from the component grid keep their own styling — the sweep only
@@ -121,11 +138,12 @@ export async function buildBlocksRegion(
   return { nodeCount: count };
 }
 
-// Lay the region's header and blocks out across two columns, placed to the
+// Lay the region's header and blocks out across three columns, placed to the
 // right of the existing component grid so the two areas read as clearly
 // separate zones on the same page. Each block stays in its assigned column
-// (login variants left, signup variants right) and stacks top-to-bottom within
-// it — the same model the Design System page uses.
+// (login variants left, signup variants + dashboard middle, the Sidebar variant
+// set on the right) and stacks top-to-bottom within it — the same model the
+// Design System page uses.
 function layoutBlocksRegion(
   page: PageNode,
   preexisting: Set<SceneNode>,
@@ -133,9 +151,9 @@ function layoutBlocksRegion(
 ) {
   const originX = regionOriginX(page, preexisting);
   // Track the next free y in each column so blocks stack within their column.
-  const columnHeights = [0, 0];
+  const columnHeights = [0, 0, 0];
   // Every block renders on the full-width canvas, so each column is one canvas
-  // wide and the right column sits a canvas-plus-gap to the right.
+  // wide and successive columns sit a canvas-plus-gap further right.
   const columnStride = CANVAS_WIDTH + BLOCK_COLUMN_GAP;
 
   // newNodes mirrors ORDERED_BLOCKS order, since each builder appends exactly

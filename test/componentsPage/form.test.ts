@@ -58,7 +58,8 @@ function findSet(root: FakeNode, name: string): FakeNode | undefined {
 
 function descendants(root: FakeNode): FakeNode[] {
   const out: FakeNode[] = [];
-  for (const child of root.children ?? []) out.push(child, ...descendants(child));
+  for (const child of root.children ?? [])
+    out.push(child, ...descendants(child));
   return out;
 }
 
@@ -71,7 +72,7 @@ describe("addFormSection", () => {
 
     const set = findSet(p, "Form");
     expect(set).toBeDefined();
-    expect(set!.layoutMode).toBe("VERTICAL");
+    expect(set!.layoutMode).toBe("HORIZONTAL");
     // One variant per field: Email + Password.
     const variants = set!.children.map((c) => c.name).sort();
     expect(variants).toEqual(["Field=Email", "Field=Password"]);
@@ -93,9 +94,7 @@ describe("addFormSection", () => {
     const p = page();
     // Publish the source components the form reuses.
     p.appendChild(comp("Label"));
-    p.appendChild(
-      componentSet("Input", [comp("State=default, Leading=none")]),
-    );
+    p.appendChild(componentSet("Input", [comp("State=default, Leading=none")]));
 
     await addFormSection(p as unknown as PageNode, inputs);
 

@@ -6,8 +6,8 @@
 // Input radius once flows through every block that embeds it.
 //
 // Figma's free/Starter tier caps a file at 3 pages, so the blocks are rendered
-// as a distinct region on the *Components* page (to the right of the component
-// grid) rather than on a page of their own.
+// as a distinct region on the shared `Figseed` page (to the right of the
+// component grid) rather than on a page of their own.
 
 import type {
   PrimitiveVariableMap,
@@ -64,10 +64,12 @@ export type BlocksResult = { nodeCount: number };
 
 export type BlockBuilder = {
   label: string;
-  // Pins the block to a specific column in the two-column layout (mirrors the
-  // Design System page). The header spans the top of the left column; the
-  // blocks below fill the two columns. Optional so isolated callers/tests that
-  // build a single block don't need to specify it.
-  column?: 0 | 1;
+  // Pins the block to a specific column in the multi-column layout (mirrors
+  // the Design System page). The header spans the top of the left column; the
+  // blocks below fill the columns: login variants (col 0), signup variants +
+  // dashboard (col 1), and the Sidebar variant set in its own column (col 2)
+  // so its 16-rail grid has room to breathe. Optional so isolated callers/tests
+  // that build a single block don't need to specify it.
+  column?: 0 | 1 | 2;
   build: (page: PageNode, inputs: BlocksInputs) => Promise<number>;
 };

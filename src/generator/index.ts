@@ -29,6 +29,7 @@ export type {
 } from "./types";
 export type { EffectStyleMap } from "../effectStyles";
 export type { TextStyleMap } from "../textStyles";
+export { withShadcnRadius } from "./radius";
 
 export async function generateFromRegistry(
   data: ResolvedRegistry,
@@ -75,6 +76,7 @@ export async function generateFromRegistry(
       primitives,
       theme: themeResult.maps,
       fonts: themeResult.fontVars,
+      radiusScale: themeResult.radiusScale,
     },
   };
 }

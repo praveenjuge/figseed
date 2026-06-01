@@ -11,8 +11,14 @@ import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
 import type { IconComponentMap } from "../icons";
 
-export const PAGE_NAME = "Components";
+// Shared with the Design System builder: every Figseed surface renders onto one
+// page (Design System sections on top, the Components grid below, the Blocks
+// region to the right) to stay within Figma Starter/free page limits.
+export const PAGE_NAME = "Figseed";
 export const SECTION_GAP = 32;
+// Vertical gutter between the Design System region (built first) and the
+// Components grid that this builder appends beneath it.
+export const REGION_GAP = 200;
 // Max width used for the page header and any wrapping component sets so
 // they align visually on the canvas.
 export const SECTION_WIDTH = 1120;

@@ -4,7 +4,7 @@
 import { buildComponentsPage } from "./componentsPage";
 import { buildBlocksRegion } from "./blocksPage";
 import { buildDesignSystem } from "./designSystem";
-import { generateFromRegistry } from "./generator";
+import { generateFromRegistry, withShadcnRadius } from "./generator";
 import { decodePreset } from "./preset";
 import { resolvePreset } from "./registry";
 import type { PluginToUi, UiToPlugin } from "./messages";
@@ -56,7 +56,17 @@ async function handleGenerate(rawCode: string) {
       presetSummary,
     });
 
-    post({ type: "progress", message: "Building Design System page…" });
+    // Components and blocks bind their corners to the preset-driven shadcn
+    // radius scale (which lives in `shadcn / Theme`), not the fixed Tailwind
+    // `radius/*` primitives. Overlay that scale onto the primitives map so the
+    // create-preset radius choice flows through every component/block while the
+    // Design System reference keeps the canonical Tailwind scale.
+    const componentPrimitives = withShadcnRadius(
+      result.variables.primitives,
+      result.variables.radiusScale,
+    );
+
+    post({ type: "progress", message: "Building Design System…" });
 
     const ds = await buildDesignSystem({
       presetCode: result.presetCode,
@@ -78,13 +88,13 @@ async function handleGenerate(rawCode: string) {
       },
     });
 
-    post({ type: "progress", message: "Building Components page…" });
+    post({ type: "progress", message: "Building Components…" });
 
     const components = await buildComponentsPage({
       presetCode: result.presetCode,
       presetSummary,
       tailwindColors: result.variables.tailwindColors,
-      primitives: result.variables.primitives,
+      primitives: componentPrimitives,
       theme: result.variables.theme,
       fonts: result.fonts,
       fontVars: result.variables.fonts,
@@ -103,13 +113,14 @@ async function handleGenerate(rawCode: string) {
 
     post({ type: "progress", message: "Building Blocks…" });
 
-    // Render the blocks region onto the Components page itself — Figma's
-    // Starter tier caps a file at 3 pages, so blocks live alongside the
-    // component grid rather than on a 4th page. The page is resolvable by name
-    // here (loadAllPagesAsync ran inside buildComponentsPage) and already holds
-    // every component the blocks reuse as live instances.
+    // Everything Figseed generates lives on one page (Figma's Starter tier caps
+    // a file at 3 pages). The Design System sections render at the top, the
+    // Components grid below them, and the blocks region to the right of the
+    // grid. The page is resolvable by name here (loadAllPagesAsync ran inside
+    // buildComponentsPage) and already holds every component the blocks reuse as
+    // live instances.
     const componentsPage = figma.root.children.find(
-      (child) => child.type === "PAGE" && child.name === "Components",
+      (child) => child.type === "PAGE" && child.name === "Figseed",
     ) as PageNode | undefined;
 
     const blocks = componentsPage
@@ -117,7 +128,7 @@ async function handleGenerate(rawCode: string) {
           presetCode: result.presetCode,
           presetSummary,
           tailwindColors: result.variables.tailwindColors,
-          primitives: result.variables.primitives,
+          primitives: componentPrimitives,
           theme: result.variables.theme,
           fonts: result.fonts,
           fontVars: result.variables.fonts,

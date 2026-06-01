@@ -59,7 +59,7 @@ export async function addFormSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Form";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 24;
   styleComponentSet(componentSet);
 

@@ -30,7 +30,7 @@ export async function addProgressSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Progress";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 

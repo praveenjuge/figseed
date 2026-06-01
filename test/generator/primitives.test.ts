@@ -66,4 +66,20 @@ describe("ensurePrimitivesCollection", () => {
     // The other buckets keep their defaults.
     expect(soleValue(map.get("font/family/sans"))).toBe("Inter");
   });
+
+  it("keeps the fixed Tailwind radius scale regardless of preset", async () => {
+    const map = await ensurePrimitivesCollection({
+      fontFamily: { family: "Inter", bucket: "sans" },
+    });
+    // The Tailwind primitive radius scale is a stable reference: it never
+    // changes with the preset (the preset drives the separate shadcn radius
+    // scale in `shadcn / Theme`).
+    expect(soleValue(map.get("radius/none"))).toBe(0);
+    expect(soleValue(map.get("radius/xs"))).toBe(2);
+    expect(soleValue(map.get("radius/sm"))).toBe(4);
+    expect(soleValue(map.get("radius/md"))).toBe(6);
+    expect(soleValue(map.get("radius/lg"))).toBe(8);
+    expect(soleValue(map.get("radius/xl"))).toBe(12);
+    expect(soleValue(map.get("radius/full"))).toBe(9999);
+  });
 });

@@ -20,8 +20,9 @@ async function makeVars(code = "b2fA"): Promise<GeneratedVars> {
   return generated.variables;
 }
 
-// Build the Components page (the blocks render onto it) and return inputs that
-// target it, so blocks reuse the page's component instances.
+// Build the Components grid (the blocks render onto the same shared Figseed
+// page) and return inputs that target it, so blocks reuse the page's component
+// instances.
 async function makeInputsOnComponentsPage(
   code = "b2fA",
 ): Promise<BlocksInputs> {
@@ -34,7 +35,7 @@ async function makeInputsOnComponentsPage(
   };
   await buildComponentsPage(componentsInputs);
   const targetPage = (globalThis as unknown as Root).figma.root.children.find(
-    (c) => c.type === "PAGE" && c.name === "Components",
+    (c) => c.type === "PAGE" && c.name === "Figseed",
   ) as unknown as PageNode;
   return { ...componentsInputs, targetPage };
 }
@@ -142,7 +143,7 @@ describe("buildBlocksRegion", () => {
     }
   });
 
-  it("lays the blocks out in two columns", async () => {
+  it("lays the blocks out in three columns", async () => {
     const inputs = await makeInputsOnComponentsPage();
     const page = inputs.targetPage as unknown as {
       children: (SceneNode & { x: number })[];
@@ -152,17 +153,21 @@ describe("buildBlocksRegion", () => {
     await buildBlocksRegion(inputs);
 
     const added = page.children.filter((c) => !existing.includes(c));
-    // The header plus the 8 blocks split across exactly two x positions.
+    // The header plus the 8 blocks split across exactly three x positions
+    // (login left, signup + dashboard middle, the Sidebar set on the right).
     const columnXs = [...new Set(added.map((node) => node.x))].sort(
       (a, b) => a - b,
     );
-    expect(columnXs.length).toBe(2);
-    // The left column anchors the header; each column holds multiple blocks.
+    expect(columnXs.length).toBe(3);
+    // The left column anchors the header and holds multiple blocks; the middle
+    // column holds multiple blocks; the right column holds the lone Sidebar.
     const leftCount = added.filter((n) => n.x === columnXs[0]).length;
-    const rightCount = added.filter((n) => n.x === columnXs[1]).length;
+    const middleCount = added.filter((n) => n.x === columnXs[1]).length;
+    const rightCount = added.filter((n) => n.x === columnXs[2]).length;
     expect(leftCount).toBeGreaterThan(1);
-    expect(rightCount).toBeGreaterThan(1);
-    expect(leftCount + rightCount).toBe(added.length);
+    expect(middleCount).toBeGreaterThan(1);
+    expect(rightCount).toBe(1);
+    expect(leftCount + middleCount + rightCount).toBe(added.length);
   });
 
   it("falls back to drawn stand-ins on a bare page (no components)", async () => {
@@ -185,8 +190,8 @@ describe("buildBlocksRegion", () => {
     });
 
     // The blocks still render (via fallbacks) and the region anchors at x=0
-    // since there's no grid to sit beside. Blocks lay out in two columns, so
-    // the left column sits at x=0 and the right column is offset to the right.
+    // since there's no grid to sit beside. Blocks lay out in three columns, so
+    // the left column sits at x=0 and the other columns are offset to the right.
     expect(result.nodeCount).toBeGreaterThan(0);
     const children = (
       barePage as unknown as { children: (SceneNode & { x: number })[] }
@@ -195,9 +200,9 @@ describe("buildBlocksRegion", () => {
     // Every block starts at x >= 0, and at least one anchors the left column.
     for (const node of children) expect(node.x).toBeGreaterThanOrEqual(0);
     expect(children.some((node) => node.x === 0)).toBe(true);
-    // The two-column split produces blocks at two distinct x positions.
+    // The three-column split produces blocks at three distinct x positions.
     const columnXs = new Set(children.map((node) => node.x));
-    expect(columnXs.size).toBe(2);
+    expect(columnXs.size).toBe(3);
     // No component instances exist on a bare page — everything is drawn.
     expect(
       countInstances(

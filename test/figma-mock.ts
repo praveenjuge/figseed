@@ -59,6 +59,8 @@ export type FakeNode = {
   resize(w: number, h: number): void;
   resizeWithoutConstraints(w: number, h: number): void;
   setBoundVariable(field: string, variable: { id: string }): void;
+  setPluginData(key: string, value: string): void;
+  getPluginData(key: string): string;
   setFillStyleIdAsync(styleId: string): Promise<void>;
   setEffectStyleIdAsync(styleId: string): Promise<void>;
   setTextStyleIdAsync(styleId: string): Promise<void>;
@@ -241,6 +243,17 @@ export function createFigmaMock() {
           type: "VARIABLE_ALIAS",
           id: variable.id,
         };
+      },
+      // Per-node plugin data store (figma.PluginDataMixin). The page builders
+      // tag the top-level frames they own with a region key so each builder can
+      // clear and rebuild only its own region on the shared Figseed page.
+      setPluginData(key: string, value: string) {
+        if (!node.__pluginData) node.__pluginData = {};
+        (node.__pluginData as Record<string, string>)[key] = value;
+      },
+      getPluginData(key: string): string {
+        const store = node.__pluginData as Record<string, string> | undefined;
+        return store && key in store ? store[key]! : "";
       },
       // Shared factory (see makeInstance below) rather than a fresh per-node
       // closure: a closure capturing `node` would add a node↔closure reference

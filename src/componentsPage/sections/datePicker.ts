@@ -38,7 +38,7 @@ export async function addDatePickerSection(
 
   const componentSet = figma.combineAsVariants(components, page);
   componentSet.name = "Date Picker";
-  componentSet.layoutMode = "VERTICAL";
+  componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
 
