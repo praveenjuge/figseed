@@ -1,4 +1,4 @@
-// In-memory fake of the slice of the Figma plugin API that figseed touches.
+// In-memory fake of the slice of the Figma plugin API that niram touches.
 //
 // Fidelity goal: make assertions about *which* variables/collections exist,
 // their resolved type, their per-mode value, and variable aliasing meaningful.
@@ -246,7 +246,7 @@ export function createFigmaMock() {
       },
       // Per-node plugin data store (figma.PluginDataMixin). The page builders
       // tag the top-level frames they own with a region key so each builder can
-      // clear and rebuild only its own region on the shared Figseed page.
+      // clear and rebuild only its own region on the shared Niram page.
       setPluginData(key: string, value: string) {
         if (!node.__pluginData) node.__pluginData = {};
         (node.__pluginData as Record<string, string>)[key] = value;

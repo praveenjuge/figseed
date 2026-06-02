@@ -1,5 +1,5 @@
 // Effect token tables — the source of truth for the Figma *effect styles*
-// figseed publishes (drop shadows, inner shadows, layer blur, backdrop blur).
+// niram publishes (drop shadows, inner shadows, layer blur, backdrop blur).
 // Values mirror Tailwind v4's defaults so the styles match the rest of the
 // generated design system.
 //

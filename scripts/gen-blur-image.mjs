@@ -8,7 +8,7 @@
 //
 // Override the source by passing a URL or a custom seed:
 //   node scripts/gen-blur-image.mjs https://example.com/foo.jpg
-//   FIGSEED_BLUR_SEED=anything node scripts/gen-blur-image.mjs
+//   NIRAM_BLUR_SEED=anything node scripts/gen-blur-image.mjs
 
 import { writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -18,7 +18,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 const outPath = resolve(root, "src/data/blurBackground.ts");
 
-const SEED = process.env.FIGSEED_BLUR_SEED || "figseed-blur";
+const SEED = process.env.NIRAM_BLUR_SEED || "niram-blur";
 const SIZE = 96;
 const DEFAULT_URL = `https://picsum.photos/seed/${SEED}/${SIZE}/${SIZE}`;
 const url = process.argv[2] || DEFAULT_URL;

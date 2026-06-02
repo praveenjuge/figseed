@@ -1,10 +1,10 @@
 # AGENTS.md
 
-Figseed is a Figma plugin that turns a [shadcn/ui](https://ui.shadcn.com)
+Niram is a Figma plugin that turns a [shadcn/ui](https://ui.shadcn.com)
 preset code into native Figma variables, styles, components, and app blocks.
 It generates Tailwind colors, primitive tokens, a single-mode light/dark
 shadcn theme, Tailwind typography text styles, shadow/blur effect styles, and a
-single `Figseed` page that hosts three regions: a Design System region, a
+single `Niram` page that hosts three regions: a Design System region, a
 Components region, and a Blocks region. Everything lives on one page to stay
 within Figma Starter/free page limits.
 
@@ -16,7 +16,7 @@ Start with these files before changing behavior:
 2. `src/generator/index.ts` - variable collections, text styles, effect
    styles, and font loading.
 3. `src/designSystem/index.ts` - Design System region sections and layout. This
-   builder owns the shared `Figseed` page: it creates the page and, on a re-run,
+   builder owns the shared `Niram` page: it creates the page and, on a re-run,
    clears only the section frames it previously tagged.
 4. `src/componentsPage/index.ts` - component section registry, deferred
    sections, and column layout. Appends the Components region beneath the
@@ -26,8 +26,8 @@ Start with these files before changing behavior:
 
 Recent product surface to preserve:
 
-- Everything renders onto one page named `Figseed`. The three builders each own
-  a region of that page, tagged via the `figseedRegion` plugin-data key
+- Everything renders onto one page named `Niram`. The three builders each own
+  a region of that page, tagged via the `niramRegion` plugin-data key
   (`design-system`, `components`, `blocks`) so each builder clears and rebuilds
   only its own region. Do not split these back into separate pages — Figma's
   Starter/free tier caps a file at 3 pages.
@@ -38,7 +38,7 @@ Recent product surface to preserve:
   (https://ui.shadcn.com/blocks/sidebar) as variants (Variant=sidebar-01 …
   sidebar-16), each a fixed 982px tall. It lives in `src/blocksPage/blocks/
 sidebar/` (primitives + 16 variant builders), not as a Components section.
-- Blocks are not a separate page. They live as a region on the shared `Figseed`
+- Blocks are not a separate page. They live as a region on the shared `Niram`
   page (to the right of the component grid) to stay within Figma Starter/free
   page limits and reuse live component instances.
 - The dashboard block should stay structurally close to shadcn's dashboard
@@ -99,7 +99,7 @@ src/
   textStyles.ts      # idempotent Tailwind typography text styles
   tokenBindings.ts   # binds literal dimensions/effects/etc. back to variables
   generator/         # builds Figma collections, modes, variables
-  designSystem/      # owns the shared "Figseed" page; builds the Design System region
+  designSystem/      # owns the shared "Niram" page; builds the Design System region
   componentsPage/    # appends the Components region (component registry) to the page
   blocksPage/        # appends the Blocks region (reuses component instances) to the page
   data/themes.json   # snapshot of shadcn's apps/v4/registry/themes.ts
@@ -136,8 +136,8 @@ shadcn-ui/           # local clone, git-ignored, reference only
   transform, radius override). Keep them in sync with `shadcn-ui/` when
   regenerating themes.
 - **One page, three regions.** Everything renders onto a single page named
-  `Figseed`. `buildDesignSystem` creates the page; each builder tags the
-  top-level frames it owns with the `figseedRegion` plugin-data key
+  `Niram`. `buildDesignSystem` creates the page; each builder tags the
+  top-level frames it owns with the `niramRegion` plugin-data key
   (`design-system`, `components`, `blocks`) and, on a re-run, clears and
   rebuilds only its own region. Keep region generation idempotent and
   deterministic so snapshots stay stable, and don't clear the whole page or

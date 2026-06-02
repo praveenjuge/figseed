@@ -8,10 +8,10 @@
 // set (all 16 shadcn sidebar layouts as variants), drawn from the radix-nova
 // sidebar primitives.
 //
-// Figma's free/Starter tier caps a file at 3 pages, so Figseed renders
-// everything onto one page named `Figseed`: the Design System region on top,
+// Figma's free/Starter tier caps a file at 3 pages, so Niram renders
+// everything onto one page named `Niram`: the Design System region on top,
 // the Components grid below, and this Blocks region to the right of the grid.
-// Idempotency: this builder tags the frames it appends with the `figseedRegion`
+// Idempotency: this builder tags the frames it appends with the `niramRegion`
 // plugin-data key (`blocks`) and clears only those on a re-run, leaving the
 // Design System and Components regions untouched.
 
@@ -44,11 +44,11 @@ import { applyTokenBindings } from "../tokenBindings";
 
 export type { BlocksInputs, BlocksResult } from "./types";
 
-// The blocks render onto the shared Figseed page alongside the Design System
+// The blocks render onto the shared Niram page alongside the Design System
 // and Components regions. This builder tags the top-level frames it owns with
 // this plugin-data key (matching the other builders) so a re-run clears and
 // rebuilds only the blocks region, leaving the other regions untouched.
-const REGION_KEY = "figseedRegion";
+const REGION_KEY = "niramRegion";
 const REGION_ID = "blocks";
 
 // The header renders first and pins to the top of the left column; the blocks

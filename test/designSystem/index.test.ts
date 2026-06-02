@@ -27,7 +27,7 @@ describe("buildDesignSystem", () => {
 
     const page = (
       globalThis as { figma: { root: { children: { name: string }[] } } }
-    ).figma.root.children.find((c) => c.name === "Figseed");
+    ).figma.root.children.find((c) => c.name === "Niram");
     expect(page).toBeDefined();
     expect(
       (page as unknown as { children: unknown[] }).children.length,
@@ -50,7 +50,7 @@ describe("buildDesignSystem", () => {
     const figma = (
       globalThis as { figma: { root: { children: { name: string }[] } } }
     ).figma;
-    const pages = figma.root.children.filter((c) => c.name === "Figseed");
+    const pages = figma.root.children.filter((c) => c.name === "Niram");
     expect(pages).toHaveLength(1);
   });
 
@@ -64,7 +64,7 @@ describe("buildDesignSystem", () => {
     expect(styles).toHaveLength(117);
 
     const page = figma.root.children.find(
-      (c) => (c as unknown as { name: string }).name === "Figseed",
+      (c) => (c as unknown as { name: string }).name === "Niram",
     );
     const styled = countStyledText(page as unknown as TreeNode);
     expect(styled).toBeGreaterThan(0);

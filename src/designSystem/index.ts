@@ -1,4 +1,4 @@
-// Builds the "Design System" region of the shared `Figseed` page: it visualizes
+// Builds the "Design System" region of the shared `Niram` page: it visualizes
 // every variable produced by the generator — theme colors (light + dark),
 // Tailwind palette, typography, radius, spacing, opacity, blur, border widths,
 // and shadows. This builder owns the page (creates it, and on a re-run clears
@@ -35,11 +35,11 @@ import { collectIconComponents } from "../icons";
 
 export type { DesignSystemInputs, DesignSystemResult } from "./types";
 
-// Everything Figseed generates shares one page (Figma Starter/free files cap at
+// Everything Niram generates shares one page (Figma Starter/free files cap at
 // 3 pages). Each builder tags the top-level frames it owns with this plugin-data
 // key so re-runs clear and rebuild only their own region, leaving the other
 // regions on the page untouched and the whole flow order-independent.
-const REGION_KEY = "figseedRegion";
+const REGION_KEY = "niramRegion";
 const REGION_ID = "design-system";
 
 const SECTIONS: SectionBuilder[] = [
@@ -76,7 +76,7 @@ export async function buildDesignSystem(
   // we can search for an existing page by name.
   await figma.loadAllPagesAsync();
 
-  // Reset (or create) the shared Figseed page. The Design System builder runs
+  // Reset (or create) the shared Niram page. The Design System builder runs
   // first and owns page creation; on a re-run it clears only the section frames
   // it previously tagged, leaving any Components/Blocks regions intact until
   // their own builders rebuild them.

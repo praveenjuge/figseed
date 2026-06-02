@@ -12,7 +12,7 @@ type Root = { figma: { root: { children: { type: string; name: string }[] } } };
 
 // Build the Components grid first so the new auth blocks can reuse live
 // instances of the page-built Button / Input / Label components, exactly like
-// the live run. Returns inputs that target the shared Figseed page.
+// the live run. Returns inputs that target the shared Niram page.
 async function makeInputsOnComponentsPage(
   code = "b2fA",
 ): Promise<BlocksInputs> {
@@ -29,7 +29,7 @@ async function makeInputsOnComponentsPage(
   };
   await buildComponentsPage(componentsInputs);
   const targetPage = (globalThis as unknown as Root).figma.root.children.find(
-    (c) => c.type === "PAGE" && c.name === "Figseed",
+    (c) => c.type === "PAGE" && c.name === "Niram",
   ) as unknown as PageNode;
   return { ...componentsInputs, targetPage };
 }

@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 const shadcnRoot = resolve(root, "shadcn-ui/apps/v4");
 
-const tmp = mkdtempSync(`${tmpdir()}/figseed-extract-`);
+const tmp = mkdtempSync(`${tmpdir()}/niram-extract-`);
 const out = resolve(tmp, "themes.mjs");
 
 await build({

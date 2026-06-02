@@ -11,10 +11,10 @@ import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
 import type { IconComponentMap } from "../icons";
 
-// Shared with the Design System builder: every Figseed surface renders onto one
+// Shared with the Design System builder: every Niram surface renders onto one
 // page (Design System sections on top, the Components grid below, the Blocks
 // region to the right) to stay within Figma Starter/free page limits.
-export const PAGE_NAME = "Figseed";
+export const PAGE_NAME = "Niram";
 export const SECTION_GAP = 32;
 // Vertical gutter between the Design System region (built first) and the
 // Components grid that this builder appends beneath it.

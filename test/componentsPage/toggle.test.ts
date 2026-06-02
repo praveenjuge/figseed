@@ -150,7 +150,7 @@ describe("addToggleGroupSection icons", () => {
     // The same map round-trips through collectIconComponents on the page.
     const dsPage = (
       globalThis as { figma: { root: { children: NodeLike[] } } }
-    ).figma.root.children.find((c) => c.name === "Figseed");
+    ).figma.root.children.find((c) => c.name === "Niram");
     expect(dsPage).toBeDefined();
     const recollected = collectIconComponents(dsPage as unknown as SceneNode);
     expect(recollected.has("bold")).toBe(true);

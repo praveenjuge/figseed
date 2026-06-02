@@ -53,10 +53,10 @@ if (watch) {
     ],
   });
   await Promise.all([codeCtx.watch(), uiCtx.watch()]);
-  console.log("[figseed] watching for changes…");
+  console.log("[niram] watching for changes…");
 } else {
   await build(codeOptions);
   await build(uiOptions);
   buildHtml();
-  console.log("[figseed] build complete.");
+  console.log("[niram] build complete.");
 }

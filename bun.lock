@@ -3,7 +3,7 @@
   "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "figseed",
+      "name": "niram",
       "devDependencies": {
         "@figma/plugin-typings": "^1.108.0",
         "@vitest/coverage-v8": "^2.1.9",

@@ -8,7 +8,7 @@ export async function addHeader(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
-  const frame = createSectionFrame("Figseed", {
+  const frame = createSectionFrame("Niram", {
     title: inputs.presetCode,
     titleSize: 28,
     subtitle: summarizePreset(inputs.presetSummary),

@@ -4,7 +4,7 @@
   width="1024"
   height="1024"
   role="img"
-  aria-label="Figseed"
+  aria-label="Niram"
 >
   <!-- shadcn-flavored squircle background -->
   <rect width="1024" height="1024" rx="232" ry="232" fill="#0a0a0a" />
@@ -19,6 +19,6 @@
     <rect x="256" y="448" width="392" height="144" rx="16" ry="16" />
   </g>
 
-  <!-- seed accent: a small dot just past the middle arm, hinting at "Figseed" -->
+  <!-- seed accent: a small dot just past the middle arm, hinting at "Niram" -->
   <circle cx="744" cy="520" r="56" fill="#ffffff" />
 </svg>

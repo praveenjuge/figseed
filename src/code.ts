@@ -113,14 +113,14 @@ async function handleGenerate(rawCode: string) {
 
     post({ type: "progress", message: "Building Blocks…" });
 
-    // Everything Figseed generates lives on one page (Figma's Starter tier caps
+    // Everything Niram generates lives on one page (Figma's Starter tier caps
     // a file at 3 pages). The Design System sections render at the top, the
     // Components grid below them, and the blocks region to the right of the
     // grid. The page is resolvable by name here (loadAllPagesAsync ran inside
     // buildComponentsPage) and already holds every component the blocks reuse as
     // live instances.
     const componentsPage = figma.root.children.find(
-      (child) => child.type === "PAGE" && child.name === "Figseed",
+      (child) => child.type === "PAGE" && child.name === "Niram",
     ) as PageNode | undefined;
 
     const blocks = componentsPage
@@ -163,13 +163,13 @@ async function handleGenerate(rawCode: string) {
       0,
     );
     figma.notify(
-      `Figseed: ${variableTotal} variables · Design System (${ds.nodeCount} nodes) · Components (${components.nodeCount} nodes) · Blocks (${blocks.nodeCount} nodes).`,
+      `Niram: ${variableTotal} variables · Design System (${ds.nodeCount} nodes) · Components (${components.nodeCount} nodes) · Blocks (${blocks.nodeCount} nodes).`,
     );
   } catch (error) {
     const messageText =
       error instanceof Error ? error.message : "Unknown error.";
     post({ type: "error", message: messageText });
-    figma.notify(`Figseed failed: ${messageText}`, { error: true });
+    figma.notify(`Niram failed: ${messageText}`, { error: true });
   }
 }
 

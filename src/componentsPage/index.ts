@@ -1,4 +1,4 @@
-// Builds the "Components" region of the shared `Figseed` page — real Figma
+// Builds the "Components" region of the shared `Niram` page — real Figma
 // components (ComponentNode / ComponentSetNode) so designers can drag instances
 // and swap variants. The region is appended beneath the Design System region;
 // the Blocks region is later appended to its right.
@@ -81,12 +81,12 @@ import { applyTokenBindings } from "../tokenBindings";
 
 export type { ComponentsInputs, ComponentsResult } from "./types";
 
-// Everything Figseed generates shares one page (Figma Starter/free files cap at
+// Everything Niram generates shares one page (Figma Starter/free files cap at
 // 3 pages). The Design System builder owns page creation and renders its
 // sections first; this builder appends the component grid beneath that region.
 // Each builder tags the top-level frames it owns with this plugin-data key so
 // a re-run clears and rebuilds only its own region.
-const REGION_KEY = "figseedRegion";
+const REGION_KEY = "niramRegion";
 const REGION_ID = "components";
 const DESIGN_SYSTEM_REGION_ID = "design-system";
 
@@ -177,7 +177,7 @@ export async function buildComponentsPage(
 ): Promise<ComponentsResult> {
   await figma.loadAllPagesAsync();
 
-  // Find the shared Figseed page. The Design System builder normally creates it
+  // Find the shared Niram page. The Design System builder normally creates it
   // first; when this builder runs in isolation (tests, standalone callers) we
   // create it so the grid still has a home.
   let page = figma.root.children.find(

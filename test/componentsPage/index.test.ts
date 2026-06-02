@@ -19,12 +19,12 @@ async function makeInputs(code = "b2fA"): Promise<ComponentsInputs> {
 }
 
 describe("buildComponentsPage", () => {
-  it("builds the Components grid on the Figseed page with nodes", async () => {
+  it("builds the Components grid on the Niram page with nodes", async () => {
     const result = await buildComponentsPage(await makeInputs());
     expect(result.nodeCount).toBeGreaterThan(0);
     const page = (
       globalThis as { figma: { root: { children: { name: string }[] } } }
-    ).figma.root.children.find((c) => c.name === "Figseed");
+    ).figma.root.children.find((c) => c.name === "Niram");
     expect(page).toBeDefined();
   });
 
@@ -35,14 +35,14 @@ describe("buildComponentsPage", () => {
     expect(onProgress).toHaveBeenLastCalledWith(58, 58, "Done");
   });
 
-  it("reuses and clears its region on the Figseed page on rebuild", async () => {
+  it("reuses and clears its region on the Niram page on rebuild", async () => {
     const inputs = await makeInputs();
     await buildComponentsPage(inputs);
     await buildComponentsPage(inputs);
 
     const pages = (
       globalThis as { figma: { root: { children: { name: string }[] } } }
-    ).figma.root.children.filter((c) => c.name === "Figseed");
+    ).figma.root.children.filter((c) => c.name === "Niram");
     // The second build clears its own region's frames rather than minting a
     // duplicate page (idempotent rebuild on the shared page).
     expect(pages).toHaveLength(1);

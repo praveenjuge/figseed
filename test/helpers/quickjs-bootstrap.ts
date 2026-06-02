@@ -3,7 +3,7 @@
 //
 // Responsibilities:
 //   1. Install a fresh figma mock + the `__html__` global the sandbox expects.
-//   2. Expose `globalThis.__figseedDrive(presetCode)` so the host can pump a
+//   2. Expose `globalThis.__niramDrive(presetCode)` so the host can pump a
 //      `generate` message through the handler dist/code.js registers, then read
 //      back a JSON-serializable result (no live handles cross the VM bridge).
 
@@ -21,7 +21,7 @@ g.figma = figma;
 // ignores it, but the reference must resolve under QuickJS.
 g.__html__ = "<html></html>";
 
-g.__figseedDrive = async function drive(presetCode: string): Promise<string> {
+g.__niramDrive = async function drive(presetCode: string): Promise<string> {
   const handler = (figma.ui as { onmessage: Handler | null }).onmessage;
   if (typeof handler !== "function") {
     throw new Error("dist/code.js did not register figma.ui.onmessage");

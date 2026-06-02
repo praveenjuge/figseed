@@ -11,8 +11,8 @@
 //   node scripts/gen-avatar-images.mjs
 //
 // Tunables (env):
-//   FIGSEED_AVATAR_COUNT  how many avatars to fetch (default 20)
-//   FIGSEED_AVATAR_SIZE   square pixel size to request (default 320)
+//   NIRAM_AVATAR_COUNT  how many avatars to fetch (default 20)
+//   NIRAM_AVATAR_SIZE   square pixel size to request (default 320)
 
 import { writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -22,8 +22,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 const outPath = resolve(root, "src/data/avatars.ts");
 
-const COUNT = Number(process.env.FIGSEED_AVATAR_COUNT || 20);
-const SIZE = Number(process.env.FIGSEED_AVATAR_SIZE || 320);
+const COUNT = Number(process.env.NIRAM_AVATAR_COUNT || 20);
+const SIZE = Number(process.env.NIRAM_AVATAR_SIZE || 320);
 
 // pravatar.cc serves royalty-free placeholder avatar photos meant exactly for
 // this kind of mock/design-system usage. `img=N` returns a distinct face.

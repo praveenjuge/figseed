@@ -113,7 +113,7 @@ function hugeiconToInner(data) {
 }
 
 function installPackages(specs) {
-  const dir = mkdtempSync(join(tmpdir(), "figseed-icons-"));
+  const dir = mkdtempSync(join(tmpdir(), "niram-icons-"));
   writeFileSync(join(dir, "package.json"), '{"private":true}');
   execFileSync(
     "npm",

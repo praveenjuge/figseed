@@ -6,8 +6,8 @@
 // gaps (e.g. a stray modern builtin) that the Vitest-transpiled unit tests,
 // which run src/*.ts through Vite, would silently let through.
 //
-// Flow: eval bootstrap (installs figma mock + __figseedDrive) → eval sandbox
-// bundle (registers figma.ui.onmessage) → call __figseedDrive(presetCode) →
+// Flow: eval bootstrap (installs figma mock + __niramDrive) → eval sandbox
+// bundle (registers figma.ui.onmessage) → call __niramDrive(presetCode) →
 // drain the VM job queue → read back the JSON result string.
 
 import { build } from "esbuild";
@@ -119,7 +119,7 @@ export async function runSandboxInQuickJS(
   const context = runtime.newContext();
 
   try {
-    // 1. Bootstrap: figma mock + __html__ + __figseedDrive.
+    // 1. Bootstrap: figma mock + __html__ + __niramDrive.
     const boot = context.evalCode(bootstrap);
     if (boot.error) {
       throw new Error(
@@ -140,7 +140,7 @@ export async function runSandboxInQuickJS(
 
     // 3. Kick off the async drive. Returns a VM promise handle.
     const driveCall = context.evalCode(
-      `__figseedDrive(${JSON.stringify(presetCode)})`,
+      `__niramDrive(${JSON.stringify(presetCode)})`,
     );
     if (driveCall.error) {
       throw new Error(

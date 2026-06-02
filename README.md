@@ -1,9 +1,11 @@
-# Figseed
+# Niram
 
-Figseed is a Figma plugin that turns a [shadcn/ui](https://ui.shadcn.com)
+shadcn/ui design system generator for Figma
+
+Niram is a Figma plugin that turns a [shadcn/ui](https://ui.shadcn.com)
 preset code into native Figma variables, styles, components, and app blocks.
 
-Paste a preset code, generate once, and Figseed builds the design-system
+Paste a preset code, generate once, and Niram builds the design-system
 surface around it:
 
 - `Tailwind / Colors` with the Tailwind v4 OKLCH palette.
@@ -13,7 +15,7 @@ surface around it:
   free-tier compatibility.
 - Tailwind typography text styles and shadow, inner shadow, blur, and backdrop
   blur effect styles.
-- A single `Figseed` page that hosts three regions: a Design System region for
+- A single `Niram` page that hosts three regions: a Design System region for
   colors, type, spacing, radii, effects, opacity, border widths, and icons; a
   Components region with 58 shadcn-style sections (charts, forms, typography,
   data tables, sidebars, icon-backed controls, and common overlays); and a
@@ -33,13 +35,13 @@ page in place.
 
 ## Privacy
 
-Figseed runs offline. `manifest.json` declares
+Niram runs offline. `manifest.json` declares
 `networkAccess.allowedDomains: ["none"]`, so the plugin cannot make external
 network requests. It does not use analytics, telemetry, CDNs, or third-party
 services.
 
 The plugin only writes to the file where you run it: the three variable
-collections, generated text/effect styles, and the single `Figseed` page
+collections, generated text/effect styles, and the single `Niram` page
 (Design System, Components, and Blocks regions).
 
 ## Development
@@ -69,7 +71,7 @@ See [AGENTS.md](./AGENTS.md) for architecture, commands, and constraints.
 
 ## Support
 
-Open issues at <https://github.com/praveenjuge/figseed/issues>.
+Open issues at <https://github.com/praveenjuge/niram/issues>.
 
 ## License
 

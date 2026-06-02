@@ -102,7 +102,7 @@ function buildInputGroupComponent(
   // The control: a flexible muted placeholder that grows to fill the shell.
   const control = figma.createText();
   applyFont(control, "body", "Regular");
-  control.characters = variant === "text" ? "figseed.dev" : "Search components";
+  control.characters = variant === "text" ? "niram.dev" : "Search components";
   control.fontSize = 14;
   bindFontSize(control, p.get("font/size/sm"));
   bindFill(
