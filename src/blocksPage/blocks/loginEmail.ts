@@ -18,7 +18,7 @@ import {
 } from "../layout";
 import type { BlocksInputs } from "../types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../types";
-import { countDescendants, fillWidth } from "../utils";
+import { countDescendants, fillWidth, growWidth } from "../utils";
 import { buildField, buildOutlineButton, buildPrimaryButton } from "../field";
 
 // `w-full max-w-sm` (384px) centered on the background.
@@ -104,14 +104,4 @@ export async function addLoginEmailBlock(
   canvas.appendChild(form);
   page.appendChild(canvas);
   return countDescendants(canvas);
-}
-
-// Stretch a node to share width equally with its siblings inside a fixed-width
-// horizontal auto-layout row.
-function growWidth(node: SceneNode): void {
-  try {
-    (node as unknown as { layoutGrow: number }).layoutGrow = 1;
-  } catch {
-    // Keep intrinsic width.
-  }
 }

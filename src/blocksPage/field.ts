@@ -13,9 +13,14 @@ import {
   bindStrokeColor,
 } from "../componentsPage/bindings";
 import { applyFont } from "../fonts";
-import { createColumn } from "./layout";
+import { createBody, createColumn, createRow } from "./layout";
 import type { BlocksInputs } from "./types";
-import { fillWidth, instanceFromComponents, overrideFirstText } from "./utils";
+import {
+  fillWidth,
+  growWidth,
+  instanceFromComponents,
+  overrideFirstText,
+} from "./utils";
 
 // Build one label-over-input field. Reuses the Label + Input instances when the
 // Components page is present; otherwise draws plain stand-ins.
@@ -63,7 +68,90 @@ export function buildField(
   return col;
 }
 
-// ----- Fallbacks (used only when the Components page isn't available) -----
+// A field carrying a muted `FieldDescription` line below the input, as several
+// signup blocks do. Built on top of buildField (so it reuses the page-built
+// Label + Input instances), then appends the description text.
+export function buildDescribedField(
+  inputs: BlocksInputs,
+  width: number,
+  label: string,
+  placeholder: string,
+  description: string,
+): FrameNode {
+  const field = buildField(inputs, width, label, placeholder);
+  const desc = createBody(inputs, description, 14, "muted-foreground");
+  field.appendChild(desc);
+  fillWidth(desc);
+  return field;
+}
+
+// A password field whose label row carries a right-aligned "Forgot your
+// password?" link (`<div className="flex items-center">` with `ml-auto` on the
+// link). Reuses the published Label + Input instances via buildField, then
+// wraps the field's label node together with a link in a space-between row.
+export function buildPasswordField(
+  inputs: BlocksInputs,
+  width: number,
+  link = "Forgot your password?",
+): FrameNode {
+  const field = buildField(inputs, width, "Password", "••••••••");
+
+  // The field's first child is the Label instance / fallback. Wrap it together
+  // with a "forgot" link in a space-between row so the link sits flush right.
+  const labelNode = field.children[0] as SceneNode | undefined;
+  if (!labelNode) return field;
+
+  const row = createRow("Label Row", 8);
+  row.primaryAxisSizingMode = "FIXED";
+  row.counterAxisAlignItems = "CENTER";
+  row.primaryAxisAlignItems = "SPACE_BETWEEN";
+  field.insertChild(0, row);
+  row.appendChild(labelNode);
+
+  const linkNode = createBody(inputs, link, 14, "foreground");
+  row.appendChild(linkNode);
+  fillWidth(row);
+
+  return field;
+}
+
+// A two-up Password / Confirm Password grid with a single shared description
+// line beneath it (`<Field className="grid grid-cols-2 gap-4">` wrapped in a
+// FieldGroup with a trailing FieldDescription), as signup-03 / signup-04 use.
+// Each cell reuses the page-built Label + Input instances via buildField.
+export function buildPasswordConfirmGrid(
+  inputs: BlocksInputs,
+  width: number,
+  description = "Must be at least 8 characters long.",
+): FrameNode {
+  const wrap = createColumn("Field", 8);
+  wrap.resize(width, 10);
+  wrap.primaryAxisSizingMode = "AUTO";
+  wrap.counterAxisSizingMode = "FIXED";
+
+  const grid = createRow("Password Grid", 16);
+  grid.resize(width, 10);
+  grid.primaryAxisSizingMode = "FIXED";
+  grid.counterAxisSizingMode = "AUTO";
+  grid.counterAxisAlignItems = "MIN";
+
+  const password = buildField(inputs, width, "Password", "••••••••");
+  grid.appendChild(password);
+  growWidth(password);
+
+  const confirm = buildField(inputs, width, "Confirm Password", "••••••••");
+  grid.appendChild(confirm);
+  growWidth(confirm);
+
+  wrap.appendChild(grid);
+  fillWidth(grid);
+
+  const desc = createBody(inputs, description, 14, "muted-foreground");
+  wrap.appendChild(desc);
+  fillWidth(desc);
+
+  return wrap;
+}
 
 function buildFallbackLabel(inputs: BlocksInputs, text: string): TextNode {
   const t = inputs.theme.light;
@@ -157,6 +245,33 @@ export function buildOutlineButton(
     return instance;
   }
   return buildFallbackButton(inputs, width, label, "outline");
+}
+
+// Build a square outline icon-button for the 3-up social grids (login-04 /
+// signup-04, `grid grid-cols-3`). Reuses the published outline *icon* Button
+// variant so the row reads as real, swappable icon buttons; falls back to a
+// drawn square outline button when the Components page isn't available. The
+// `label` is the screen-reader text (e.g. "Login with Apple") and retitles the
+// fallback's hidden glyph. `fill` (default true) stretches the button to share
+// its grid cell.
+export function buildOutlineIconButton(
+  inputs: BlocksInputs,
+  label: string,
+  fill = true,
+): SceneNode {
+  const instance = instanceFromComponents(
+    inputs,
+    "Button",
+    "Variant=outline, Size=icon, State=default",
+  );
+  if (instance) {
+    if (fill) fillWidth(instance);
+    return instance;
+  }
+  const button = buildFallbackButton(inputs, 32, label, "outline");
+  // Square it up so the drawn fallback reads as an icon button, not a label.
+  button.resize(32, 32);
+  return button;
 }
 
 function buildFallbackButton(

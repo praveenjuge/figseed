@@ -102,6 +102,41 @@ export function createRow(name: string, gap: number): FrameNode {
   return row;
 }
 
+// A split card surface for the two-column auth *cards* (login-04 / signup-04:
+// `<Card className="overflow-hidden p-0"><CardContent className="grid
+// md:grid-cols-2 p-0">`). Unlike createSurface this is a horizontal, zero-
+// padding card — the form pane carries its own padding and the cover panel
+// fills the other half — but it keeps the same card fill, ring, radius, clip,
+// and optional shadow so it reads as one card holding a form beside an image.
+export async function createSplitCard(
+  inputs: BlocksInputs,
+  width: number,
+  height: number,
+  opts: { shadow?: string } = {},
+): Promise<FrameNode> {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
+
+  const card = figma.createFrame();
+  card.name = "Card";
+  card.layoutMode = "HORIZONTAL";
+  card.primaryAxisSizingMode = "FIXED";
+  card.counterAxisSizingMode = "FIXED";
+  card.resize(width, height);
+  card.itemSpacing = 0;
+  card.clipsContent = true;
+  card.cornerRadius = 12;
+  bindCornerRadii(card, p.get("radius/xl"));
+  bindFill(card, t.get("card"));
+  bindStrokeColor(card, t.get("border"));
+  card.strokeWeight = 1;
+  card.strokeAlign = "INSIDE";
+  if (opts.shadow) {
+    await applyEffectStyle(card, inputs.effectStyles?.idFor(opts.shadow));
+  }
+  return card;
+}
+
 // A heading text node bound to a theme foreground colour.
 export function createHeading(
   inputs: BlocksInputs,

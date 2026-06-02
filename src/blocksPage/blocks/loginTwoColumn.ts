@@ -15,13 +15,17 @@ import {
   createBrand,
   createColumn,
   createCoverPanel,
-  createRow,
   createSeparatorLabel,
 } from "../layout";
 import type { BlocksInputs } from "../types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../types";
-import { countDescendants, fillWidth } from "../utils";
-import { buildField, buildOutlineButton, buildPrimaryButton } from "../field";
+import { countDescendants, fillHeight, fillWidth } from "../utils";
+import {
+  buildField,
+  buildOutlineButton,
+  buildPasswordField,
+  buildPrimaryButton,
+} from "../field";
 
 // The left pane is half the canvas; the form hugs `max-w-xs` (320px) centered
 // within it. The right pane is the muted cover.
@@ -134,40 +138,4 @@ export async function addLoginTwoColumnBlock(
 
   page.appendChild(canvas);
   return countDescendants(canvas);
-}
-
-// A password field whose label row carries a right-aligned "Forgot your
-// password?" link (`flex items-center` with `ml-auto` on the link). Reuses the
-// published Label + Input instances via buildField, then swaps the field's
-// label node for a label-plus-link row.
-function buildPasswordField(inputs: BlocksInputs, width: number): FrameNode {
-  const field = buildField(inputs, width, "Password", "••••••••");
-
-  // The label row: the field's first child is the Label instance / fallback.
-  // Wrap it together with a "forgot" link in a space-between row so the link
-  // sits flush right.
-  const labelNode = field.children[0] as SceneNode | undefined;
-  if (!labelNode) return field;
-
-  const row = createRow("Label Row", 8);
-  row.primaryAxisSizingMode = "FIXED";
-  row.counterAxisAlignItems = "CENTER";
-  row.primaryAxisAlignItems = "SPACE_BETWEEN";
-  field.insertChild(0, row);
-  row.appendChild(labelNode);
-
-  const link = createBody(inputs, "Forgot your password?", 14, "foreground");
-  row.appendChild(link);
-  fillWidth(row);
-
-  return field;
-}
-
-function fillHeight(node: SceneNode): void {
-  try {
-    (node as unknown as { layoutSizingVertical: string }).layoutSizingVertical =
-      "FILL";
-  } catch {
-    // Keep intrinsic height.
-  }
 }

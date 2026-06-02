@@ -1,11 +1,12 @@
-// Builds a "Blocks" region: pre-composed shadcn screens (login and signup in
-// several layouts, the Sidebar variant set, and a dashboard). The auth and
-// dashboard blocks are assembled from live instances of the components the
-// Components page already published — editing a component once flows through
-// every block (Button, Input, Label, Card, Chart, Table, Breadcrumb), the same
-// reuse model the Components page's Form section uses, scaled up to whole
-// screens. The Sidebar block is a self-contained component set (all 16 shadcn
-// sidebar layouts as variants), drawn from the radix-nova sidebar primitives.
+// Builds a "Blocks" region: pre-composed shadcn screens (the five login and
+// five signup layouts from ui.shadcn.com/blocks, the Sidebar variant set, and a
+// dashboard). The auth and dashboard blocks are assembled from live instances
+// of the components the Components page already published — editing a component
+// once flows through every block (Button, Input, Label, Card, Chart, Table,
+// Breadcrumb), the same reuse model the Components page's Form section uses,
+// scaled up to whole screens. The Sidebar block is a self-contained component
+// set (all 16 shadcn sidebar layouts as variants), drawn from the radix-nova
+// sidebar primitives.
 //
 // Figma's free/Starter tier caps a file at 3 pages, so Figseed renders
 // everything onto one page named `Figseed`: the Design System region on top,
@@ -17,9 +18,13 @@
 import { addHeader } from "./blocks/header";
 import { addLoginBlock } from "./blocks/login";
 import { addLoginTwoColumnBlock } from "./blocks/loginTwoColumn";
+import { addLoginSocialBlock } from "./blocks/loginSocial";
+import { addLoginCardBlock } from "./blocks/loginCard";
 import { addLoginEmailBlock } from "./blocks/loginEmail";
 import { addSignupBlock } from "./blocks/signup";
 import { addSignupTwoColumnBlock } from "./blocks/signupTwoColumn";
+import { addSignupSocialBlock } from "./blocks/signupSocial";
+import { addSignupCardBlock } from "./blocks/signupCard";
 import { addSignupEmailBlock } from "./blocks/signupEmail";
 import { addSidebarBlock } from "./blocks/sidebar";
 import { addDashboardBlock } from "./blocks/dashboard";
@@ -60,9 +65,13 @@ const HEADER_BLOCK: BlockBuilder = {
 const BLOCKS: BlockBuilder[] = [
   { label: "Login", column: 0, build: addLoginBlock },
   { label: "Login (Two Column)", column: 0, build: addLoginTwoColumnBlock },
+  { label: "Login (Social)", column: 0, build: addLoginSocialBlock },
+  { label: "Login (Card)", column: 0, build: addLoginCardBlock },
   { label: "Login (Email)", column: 0, build: addLoginEmailBlock },
   { label: "Signup", column: 1, build: addSignupBlock },
   { label: "Signup (Two Column)", column: 1, build: addSignupTwoColumnBlock },
+  { label: "Signup (Card)", column: 1, build: addSignupSocialBlock },
+  { label: "Signup (Split)", column: 1, build: addSignupCardBlock },
   { label: "Signup (Email)", column: 1, build: addSignupEmailBlock },
   { label: "Dashboard", column: 1, build: addDashboardBlock },
   { label: "Sidebar", column: 2, build: addSidebarBlock },

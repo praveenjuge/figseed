@@ -20,8 +20,13 @@ import {
 } from "../layout";
 import type { BlocksInputs } from "../types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../types";
-import { countDescendants, fillWidth } from "../utils";
-import { buildField, buildOutlineButton, buildPrimaryButton } from "../field";
+import { countDescendants, fillHeight, fillWidth } from "../utils";
+import {
+  buildDescribedField,
+  buildField,
+  buildOutlineButton,
+  buildPrimaryButton,
+} from "../field";
 
 const PANE_WIDTH = CANVAS_WIDTH / 2;
 const FORM_WIDTH = 320;
@@ -93,6 +98,7 @@ export async function addSignupTwoColumnBlock(
   // Email with a description line under the input.
   const email = buildDescribedField(
     inputs,
+    FORM_WIDTH,
     "Email",
     "m@example.com",
     "We'll use this to contact you. We will not share your email with anyone else.",
@@ -103,6 +109,7 @@ export async function addSignupTwoColumnBlock(
   // Password with description.
   const password = buildDescribedField(
     inputs,
+    FORM_WIDTH,
     "Password",
     "••••••••",
     "Must be at least 8 characters long.",
@@ -113,6 +120,7 @@ export async function addSignupTwoColumnBlock(
   // Confirm password with description.
   const confirm = buildDescribedField(
     inputs,
+    FORM_WIDTH,
     "Confirm Password",
     "••••••••",
     "Please confirm your password.",
@@ -154,29 +162,4 @@ export async function addSignupTwoColumnBlock(
 
   page.appendChild(canvas);
   return countDescendants(canvas);
-}
-
-// A field with a muted `FieldDescription` line below the input, as several
-// signup-02 fields carry. Built on top of buildField (so it reuses the
-// page-built Label + Input instances), then appends the description text.
-function buildDescribedField(
-  inputs: BlocksInputs,
-  label: string,
-  placeholder: string,
-  description: string,
-): FrameNode {
-  const field = buildField(inputs, FORM_WIDTH, label, placeholder);
-  const desc = createBody(inputs, description, 12, "muted-foreground");
-  field.appendChild(desc);
-  fillWidth(desc);
-  return field;
-}
-
-function fillHeight(node: SceneNode): void {
-  try {
-    (node as unknown as { layoutSizingVertical: string }).layoutSizingVertical =
-      "FILL";
-  } catch {
-    // Keep intrinsic height.
-  }
 }

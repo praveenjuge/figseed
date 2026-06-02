@@ -79,3 +79,27 @@ export function fillWidth(node: SceneNode): void {
     // Leave the node at its built width.
   }
 }
+
+// Best-effort `layoutSizingVertical = "FILL"` so a node stretches to its
+// parent's height (e.g. the cover panel inside a split auth card). Falls back
+// to the node's intrinsic height when the host rejects it.
+export function fillHeight(node: SceneNode): void {
+  try {
+    (node as unknown as { layoutSizingVertical: string }).layoutSizingVertical =
+      "FILL";
+  } catch {
+    // Keep intrinsic height.
+  }
+}
+
+// Best-effort `layoutGrow = 1` so a node shares the available primary-axis
+// space equally with its siblings inside a fixed-width auto-layout row (e.g.
+// the two-up social buttons or the password/confirm grid). Falls back to the
+// node's intrinsic width when the host rejects it.
+export function growWidth(node: SceneNode): void {
+  try {
+    (node as unknown as { layoutGrow: number }).layoutGrow = 1;
+  } catch {
+    // Keep intrinsic width.
+  }
+}

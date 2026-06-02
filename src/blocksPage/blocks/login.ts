@@ -1,6 +1,7 @@
-// Login block: shadcn's `login-03` — a centered card on a muted background
-// with a title, description, email + password fields, a primary submit button,
-// an outline social button, and a "sign up" footer line.
+// Login block: shadcn's `login-01` — a centered card on a plain background with
+// a title, description, an email field, a password field with a "Forgot your
+// password?" link beside its label, a primary submit button, an outline social
+// button, and a centered "sign up" footer line.
 //
 // The fields reuse the page-built Label + Input instances and the buttons reuse
 // the page-built Button instances (default + outline variants), so a designer
@@ -15,7 +16,12 @@ import {
 import type { BlocksInputs } from "../types";
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from "../types";
 import { countDescendants, fillWidth } from "../utils";
-import { buildField, buildOutlineButton, buildPrimaryButton } from "../field";
+import {
+  buildField,
+  buildOutlineButton,
+  buildPasswordField,
+  buildPrimaryButton,
+} from "../field";
 
 const CARD_WIDTH = 360;
 const FIELD_WIDTH = CARD_WIDTH - 48; // card width minus 24px padding each side
@@ -62,10 +68,8 @@ export async function addLoginBlock(
 
   // Fields.
   const fields = createColumn("Fields", 16);
-  fields.appendChild(
-    buildField(inputs, FIELD_WIDTH, "Email", "you@example.com"),
-  );
-  fields.appendChild(buildField(inputs, FIELD_WIDTH, "Password", "••••••••"));
+  fields.appendChild(buildField(inputs, FIELD_WIDTH, "Email", "m@example.com"));
+  fields.appendChild(buildPasswordField(inputs, FIELD_WIDTH));
   card.appendChild(fields);
   fillWidth(fields);
   for (const field of fields.children) fillWidth(field as SceneNode);

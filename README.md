@@ -17,8 +17,9 @@ surface around it:
   colors, type, spacing, radii, effects, opacity, border widths, and icons; a
   Components region with 58 shadcn-style sections (charts, forms, typography,
   data tables, sidebars, icon-backed controls, and common overlays); and a
-  Blocks region with login, signup, and a shadcn-structured dashboard assembled
-  from generated component instances.
+  Blocks region with all five shadcn login layouts, all five signup layouts, a
+  shadcn-structured dashboard, and the 16-variant Sidebar set — the auth and
+  dashboard blocks assembled from generated component instances.
 
 Re-running with a different preset updates the same variables, styles, and
 page in place.

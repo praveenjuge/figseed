@@ -66,9 +66,9 @@ describe("buildBlocksRegion", () => {
 
     const after = (inputs.targetPage as unknown as { children: unknown[] })
       .children.length;
-    // Header + 8 blocks (Login, Login Two Column, Login Email, Signup, Signup
-    // Two Column, Signup Email, Sidebar, Dashboard) add 9 top-level frames.
-    expect(after - before).toBe(9);
+    // Header + 12 blocks (5 Login variants, 5 Signup variants, Dashboard,
+    // Sidebar) add 13 top-level frames.
+    expect(after - before).toBe(13);
   });
 
   it("does not create a new page (Starter tier 3-page cap)", async () => {
@@ -96,9 +96,9 @@ describe("buildBlocksRegion", () => {
       ...(await makeInputsOnComponentsPage()),
       onProgress,
     });
-    // Header + 8 blocks = 9 builders, plus the final Done.
-    expect(onProgress).toHaveBeenCalledTimes(10);
-    expect(onProgress).toHaveBeenLastCalledWith(9, 9, "Done");
+    // Header + 12 blocks = 13 builders, plus the final Done.
+    expect(onProgress).toHaveBeenCalledTimes(14);
+    expect(onProgress).toHaveBeenLastCalledWith(13, 13, "Done");
   });
 
   it("embeds live instances of the page's components", async () => {
@@ -153,8 +153,9 @@ describe("buildBlocksRegion", () => {
     await buildBlocksRegion(inputs);
 
     const added = page.children.filter((c) => !existing.includes(c));
-    // The header plus the 8 blocks split across exactly three x positions
-    // (login left, signup + dashboard middle, the Sidebar set on the right).
+    // The header plus the 12 blocks split across exactly three x positions
+    // (login variants left, signup variants + dashboard middle, the Sidebar set
+    // on the right).
     const columnXs = [...new Set(added.map((node) => node.x))].sort(
       (a, b) => a - b,
     );
@@ -196,7 +197,7 @@ describe("buildBlocksRegion", () => {
     const children = (
       barePage as unknown as { children: (SceneNode & { x: number })[] }
     ).children;
-    expect(children.length).toBe(9);
+    expect(children.length).toBe(13);
     // Every block starts at x >= 0, and at least one anchors the left column.
     for (const node of children) expect(node.x).toBeGreaterThanOrEqual(0);
     expect(children.some((node) => node.x === 0)).toBe(true);
