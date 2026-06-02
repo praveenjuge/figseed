@@ -61,7 +61,6 @@ npm run test:coverage
 node scripts/extract-themes.mjs
 node scripts/gen-avatar-images.mjs
 node scripts/gen-icons.mjs
-node scripts/gen-plugin-icon.mjs
 ```
 
 Load locally with **Plugins -> Development -> Import plugin from manifest...**
