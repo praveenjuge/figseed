@@ -1,9 +1,9 @@
-// Signup (Card) block: shadcn's `signup-03` — a centered card on a muted
-// background with a centered "Create your account" heading + supporting copy, a
-// full-name field, an email field, a two-up Password / Confirm Password grid
-// with a single "Must be at least 8 characters long." description, a primary
-// "Create Account" submit, a centered "sign in" footer line, and a
-// terms-of-service note below the card.
+// Signup (Card) block: shadcn's `signup-03` — a centered "Acme Inc." brand
+// lockup above a card on a muted background with a centered "Create your
+// account" heading + supporting copy, a full-name field, an email field, a
+// two-up Password / Confirm Password grid with a single "Must be at least 8
+// characters long." description, a primary "Create Account" submit, a centered
+// "sign in" footer line, and a terms-of-service note below the card.
 //
 // Every field reuses the page-built Label + Input instances and the button
 // reuses the page-built default Button instance, so editing a component once
@@ -12,6 +12,7 @@
 import {
   createBody,
   createBlockCanvas,
+  createBrand,
   createColumn,
   createSurface,
 } from "../layout";
@@ -46,6 +47,10 @@ export async function addSignupSocialBlock(
   stack.resize(CARD_WIDTH, 10);
   stack.primaryAxisSizingMode = "AUTO";
   stack.counterAxisSizingMode = "FIXED";
+  stack.counterAxisAlignItems = "CENTER";
+
+  // Brand lockup centered above the card (`self-center` Acme Inc. link).
+  stack.appendChild(createBrand(inputs));
 
   const card = await createSurface(inputs, CARD_WIDTH, {
     gap: 24,

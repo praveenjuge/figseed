@@ -45,6 +45,16 @@ import { applyTokenBindingsChunked } from "../tokenBindings";
 import { yieldToUi } from "../async";
 
 export type { BlocksInputs, BlocksResult } from "./types";
+export {
+  BLOCK_MANIFEST,
+  SUPPORTED_BLOCK_IDS,
+  BLOCK_CANVAS_NAMES,
+  SIDEBAR_VARIANT_KEYS,
+  blockById,
+  type BlockManifestEntry,
+  type BlockFamily,
+  type BlockNode,
+} from "./manifest";
 
 // The blocks render onto the shared Niram page alongside the Design System
 // and Components regions. This builder tags the top-level frames it owns with

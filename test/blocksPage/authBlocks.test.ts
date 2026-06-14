@@ -76,6 +76,8 @@ describe("login-03 / login-05 social card block", () => {
     expect(allText).toContain("Welcome back");
     expect(allText).toContain("Or continue with");
     expect(allText).toContain("Forgot your password?");
+    // login-03 shows a centered brand lockup above the card.
+    expect(collect(block, (n) => n.name === "Brand").length).toBe(1);
     // Social-first + email/password + submit reuse live Button/Input instances.
     expect(collect(block, (n) => n.type === "INSTANCE").length).toBeGreaterThan(
       0,
@@ -116,6 +118,8 @@ describe("signup-03 social card block", () => {
     const allText = texts(block).join(" | ");
     expect(allText).toContain("Create your account");
     expect(allText).toContain("Must be at least 8 characters long.");
+    // signup-03 shows a centered brand lockup above the card.
+    expect(collect(block, (n) => n.name === "Brand").length).toBe(1);
     // The password/confirm grid holds two field cells side by side.
     const grid = collect(block, (n) => n.name === "Password Grid")[0];
     expect(grid).toBeDefined();

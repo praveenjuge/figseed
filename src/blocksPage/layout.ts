@@ -12,7 +12,7 @@ import {
 import { applyFont } from "../fonts";
 import { applyEffectStyle } from "../effectStyles";
 import { solidPaint } from "../componentsPage/paints";
-import { createIcon, resolveIconLibrary } from "../icons";
+import { createNamedIcon, resolveIconLibrary } from "../icons";
 import type { BlocksInputs } from "./types";
 
 // The outer frame for a single block: a named, fixed-width canvas painted with
@@ -204,9 +204,11 @@ export function createBrand(
   }
   mark.strokes = [];
 
-  const glyph = createIcon({
+  const glyph = createNamedIcon({
     library: resolveIconLibrary(inputs.presetSummary),
-    name: "folder",
+    // shadcn's auth pages use lucide's GalleryVerticalEnd inside the brand
+    // square; fall back to "folder" for icon libraries that lack it.
+    name: ["gallery-vertical-end", "folder"],
     size: variant === "inline" ? 16 : 24,
     color:
       variant === "inline" ? t.get("primary-foreground") : t.get("foreground"),

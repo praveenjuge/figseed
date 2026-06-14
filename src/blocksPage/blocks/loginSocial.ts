@@ -1,8 +1,8 @@
-// Login (Social) block: shadcn's `login-03` — a centered card on a muted
-// background led by two outline social buttons (Apple + Google), an "Or
-// continue with" separator, an email field, a password field with a "Forgot
-// your password?" link beside its label, a primary submit, a centered "sign up"
-// footer line, and a terms-of-service note below the card.
+// Login (Social) block: shadcn's `login-03` — a centered "Acme Inc." brand
+// lockup above a card on a muted background led by two outline social buttons
+// (Apple + Google), an "Or continue with" separator, an email field, a password
+// field with a "Forgot your password?" link beside its label, a primary submit,
+// a centered "sign up" footer line, and a terms-of-service note below the card.
 //
 // The fields reuse the page-built Label + Input instances and every button
 // reuses the page-built Button instances (default + outline), so editing a
@@ -11,6 +11,7 @@
 import {
   createBody,
   createBlockCanvas,
+  createBrand,
   createColumn,
   createSeparatorLabel,
   createSurface,
@@ -49,6 +50,10 @@ export async function addLoginSocialBlock(
   stack.resize(CARD_WIDTH, 10);
   stack.primaryAxisSizingMode = "AUTO";
   stack.counterAxisSizingMode = "FIXED";
+  stack.counterAxisAlignItems = "CENTER";
+
+  // Brand lockup centered above the card (`self-center` Acme Inc. link).
+  stack.appendChild(createBrand(inputs));
 
   const card = await createSurface(inputs, CARD_WIDTH, {
     gap: 24,
