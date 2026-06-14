@@ -13,6 +13,7 @@
 import { bindFill, bindFontSize, bindStrokeColor } from "../bindings";
 import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -64,19 +65,34 @@ function buildButtonGroupComponent(
   comp.fills = [];
   comp.strokes = [];
 
+  // The connected buttons live in a slot so instances can add/remove segments.
+  const segments: FrameNode[] = [];
   for (let i = 0; i < LABELS.length; i++) {
     const isFirst = i === 0;
     const isLast = i === LABELS.length - 1;
-    const item = buildSegment(inputs, LABELS[i]!, orientation, isFirst, isLast);
-    comp.appendChild(item);
-    // Stretch each segment across the counter axis so heights/widths match.
-    // Horizontal segments already share a fixed BUTTON_HEIGHT, so they match
-    // without FILL — and FILL would discard that fixed height, collapsing the
-    // hugging parent to the text's intrinsic height (a squished group). Only
-    // the vertical orientation needs FILL, to equalize the differing widths.
-    if (!horizontal) {
-      item.layoutSizingHorizontal = "FILL";
-    }
+    segments.push(
+      buildSegment(inputs, LABELS[i]!, orientation, isFirst, isLast),
+    );
+  }
+  const items = createConfiguredSlot(comp, "Items", segments, {
+    description: "Connected buttons.",
+    settings: { minChildren: 1 },
+  });
+  items.layoutMode = horizontal ? "HORIZONTAL" : "VERTICAL";
+  items.primaryAxisSizingMode = "AUTO";
+  items.counterAxisSizingMode = "AUTO";
+  items.primaryAxisAlignItems = "MIN";
+  items.counterAxisAlignItems = "MIN";
+  items.itemSpacing = 0;
+  items.fills = [];
+  items.strokes = [];
+  // Stretch each segment across the counter axis so heights/widths match.
+  // Horizontal segments already share a fixed BUTTON_HEIGHT, so they match
+  // without FILL — and FILL would discard that fixed height, collapsing the
+  // hugging parent to the text's intrinsic height (a squished group). Only
+  // the vertical orientation needs FILL, to equalize the differing widths.
+  if (!horizontal) {
+    for (const seg of segments) seg.layoutSizingHorizontal = "FILL";
   }
 
   return comp;

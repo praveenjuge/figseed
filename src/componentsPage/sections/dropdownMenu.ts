@@ -22,6 +22,7 @@ import {
   type SemanticIconName,
 } from "../../icons";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -75,33 +76,32 @@ function buildDropdownMenuComponent(inputs: ComponentsInputs): ComponentNode {
   comp.strokeWeight = 1;
   comp.strokeAlign = "INSIDE";
 
-  // Label: `px-1.5 py-1 text-xs font-medium text-muted-foreground`, wrapped in
-  // a padded row so its px/py read as auto-layout padding.
-  const labelRow = buildLabelRow(inputs, "My Account");
-  comp.appendChild(labelRow);
-  labelRow.layoutSizingHorizontal = "FILL";
+  // The menu body (label + items + separator + destructive item) lives in a
+  // slot so instances can add/remove/reorder rows without detaching.
+  const rows: SceneNode[] = [buildLabelRow(inputs, "My Account")];
+  for (const item of ITEMS) rows.push(buildItemRow(inputs, item));
+  rows.push(buildSeparator(inputs));
+  rows.push(
+    buildItemRow(inputs, {
+      label: "Delete",
+      icon: "close",
+      shortcut: "Del",
+      destructive: true,
+    }),
+  );
 
-  for (const item of ITEMS) {
-    const row = buildItemRow(inputs, item);
-    comp.appendChild(row);
-    row.layoutSizingHorizontal = "FILL";
-  }
-
-  // Separator: `-mx-1 my-1 h-px bg-border`. The negative margin makes it span
-  // the full panel width past the p-1 padding; we emulate with a full-width
-  // line plus 4px vertical spacers via padding on the separator wrapper.
-  const separator = buildSeparator(inputs);
-  comp.appendChild(separator);
-  separator.layoutSizingHorizontal = "FILL";
-
-  const destructive = buildItemRow(inputs, {
-    label: "Delete",
-    icon: "close",
-    shortcut: "Del",
-    destructive: true,
+  const items = createConfiguredSlot(comp, "Items", rows, {
+    description: "Menu items.",
+    settings: { minChildren: 1 },
   });
-  comp.appendChild(destructive);
-  destructive.layoutSizingHorizontal = "FILL";
+  items.layoutMode = "VERTICAL";
+  items.primaryAxisSizingMode = "AUTO";
+  items.counterAxisSizingMode = "FIXED";
+  items.itemSpacing = 0;
+  items.fills = [];
+  items.strokes = [];
+  items.layoutSizingHorizontal = "FILL";
+  for (const row of rows) (row as FrameNode).layoutSizingHorizontal = "FILL";
 
   return comp;
 }

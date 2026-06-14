@@ -8,6 +8,7 @@
 import { bindFill, bindFontSize, bindStrokeColor } from "../bindings";
 import { applyFont } from "../../fonts";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -71,21 +72,31 @@ function buildTableComponent(inputs: ComponentsInputs): ComponentNode {
   comp.appendChild(header);
   header.layoutSizingHorizontal = "FILL";
 
-  // Body rows. The last row drops its bottom border (`[&_tr:last-child]:
-  // border-0`). The second row is shown in the selected state
-  // (`data-[state=selected]:bg-muted`) so designers can see the row-selection
-  // treatment without building it by hand.
-  for (let i = 0; i < ROWS.length; i++) {
-    const row = buildRow(inputs, ROWS[i]!, {
+  // Body rows live in a Rows slot so instances can add/remove/reorder rows.
+  // (Cells stay fixed — column sizing and table semantics are brittle.) The
+  // last row drops its bottom border; the second row previews the selected
+  // (`data-[state=selected]:bg-muted`) treatment.
+  const bodyRows = ROWS.map((cells, i) =>
+    buildRow(inputs, cells, {
       bold: false,
       height: ROW_HEIGHT,
       withBorder: i < ROWS.length - 1,
       foreground: "foreground",
       selected: i === 1,
-    });
-    comp.appendChild(row);
-    row.layoutSizingHorizontal = "FILL";
-  }
+    }),
+  );
+  const rows = createConfiguredSlot(comp, "Rows", bodyRows, {
+    description: "Table body rows.",
+    settings: { minChildren: 1 },
+  });
+  rows.layoutMode = "VERTICAL";
+  rows.primaryAxisSizingMode = "AUTO";
+  rows.counterAxisSizingMode = "FIXED";
+  rows.itemSpacing = 0;
+  rows.fills = [];
+  rows.strokes = [];
+  rows.layoutSizingHorizontal = "FILL";
+  for (const row of bodyRows) row.layoutSizingHorizontal = "FILL";
 
   // Footer row: muted surface, medium weight, top border.
   const footer = buildRow(inputs, FOOTER, {

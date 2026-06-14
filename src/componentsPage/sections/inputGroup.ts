@@ -25,6 +25,7 @@ import {
 import { applyFont } from "../../fonts";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -93,7 +94,8 @@ function buildInputGroupComponent(
   comp.strokeWeight = 1;
   comp.strokeAlign = "INSIDE";
 
-  // Leading addon (icon or text prefix).
+  // Leading addon slot (icon or text prefix).
+  const leadingChildren: SceneNode[] = [];
   if (variant === "icon") {
     const icon = createIcon({
       library: resolveIconLibrary(inputs.presetSummary),
@@ -103,7 +105,7 @@ function buildInputGroupComponent(
     });
     if (icon) {
       icon.name = "Icon";
-      comp.appendChild(icon);
+      leadingChildren.push(icon);
     }
   } else if (variant === "text") {
     const prefix = figma.createText();
@@ -112,7 +114,19 @@ function buildInputGroupComponent(
     prefix.fontSize = 14;
     bindFontSize(prefix, p.get("font/size/sm"));
     bindFill(prefix, t.get("muted-foreground"));
-    comp.appendChild(prefix);
+    leadingChildren.push(prefix);
+  }
+  if (leadingChildren.length > 0) {
+    const leading = createConfiguredSlot(comp, "Leading", leadingChildren, {
+      description: "Leading add-on (icon, text, button).",
+    });
+    leading.layoutMode = "HORIZONTAL";
+    leading.primaryAxisSizingMode = "AUTO";
+    leading.counterAxisSizingMode = "AUTO";
+    leading.counterAxisAlignItems = "CENTER";
+    leading.itemSpacing = 6;
+    leading.fills = [];
+    leading.strokes = [];
   }
 
   // The control: a flexible muted placeholder that grows to fill the shell.
@@ -128,13 +142,26 @@ function buildInputGroupComponent(
   comp.appendChild(control);
   control.layoutGrow = 1;
 
-  // Trailing addons.
+  // Trailing addon slot.
+  const trailingChildren: SceneNode[] = [];
   if (variant === "button") {
-    comp.appendChild(buildAddonButton(inputs, "Submit"));
+    trailingChildren.push(buildAddonButton(inputs, "Submit"));
   } else if (variant === "kbd") {
-    comp.appendChild(buildKbd(inputs, "⌘K"));
+    trailingChildren.push(buildKbd(inputs, "⌘K"));
   } else if (variant === "spinner") {
-    comp.appendChild(buildSpinner(inputs));
+    trailingChildren.push(buildSpinner(inputs));
+  }
+  if (trailingChildren.length > 0) {
+    const trailing = createConfiguredSlot(comp, "Trailing", trailingChildren, {
+      description: "Trailing add-on (button, kbd, spinner).",
+    });
+    trailing.layoutMode = "HORIZONTAL";
+    trailing.primaryAxisSizingMode = "AUTO";
+    trailing.counterAxisSizingMode = "AUTO";
+    trailing.counterAxisAlignItems = "CENTER";
+    trailing.itemSpacing = 6;
+    trailing.fills = [];
+    trailing.strokes = [];
   }
 
   return comp;
@@ -189,7 +216,22 @@ function buildTextareaGroup(inputs: ComponentsInputs): ComponentNode {
   addon.strokes = [];
   comp.appendChild(addon);
   addon.layoutSizingHorizontal = "FILL";
-  addon.appendChild(buildAddonButton(inputs, "Send"));
+  // The block-end addon's content lives in a Trailing slot.
+  const trailing = createConfiguredSlot(
+    comp,
+    "Trailing",
+    [buildAddonButton(inputs, "Send")],
+    { description: "Trailing add-on." },
+  );
+  addon.appendChild(trailing);
+  trailing.layoutMode = "HORIZONTAL";
+  trailing.primaryAxisSizingMode = "FIXED";
+  trailing.counterAxisSizingMode = "AUTO";
+  trailing.primaryAxisAlignItems = "MAX";
+  trailing.counterAxisAlignItems = "CENTER";
+  trailing.fills = [];
+  trailing.strokes = [];
+  trailing.layoutSizingHorizontal = "FILL";
 
   return comp;
 }

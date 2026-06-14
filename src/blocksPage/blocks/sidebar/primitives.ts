@@ -28,6 +28,7 @@ import {
 } from "../../../componentsPage/bindings";
 import { applyFont } from "../../../fonts";
 import { createNamedIcon, resolveIconLibrary } from "../../../icons";
+import { createConfiguredSlot } from "../../../componentsPage/properties";
 import type { IconLibraryName } from "../../../data/icons";
 import type { BlocksInputs } from "../../types";
 
@@ -704,6 +705,46 @@ export function createMenuSubButton(
   text.layoutGrow = 1;
 
   return row;
+}
+
+// Post-build pass: wrap each SidebarMenu's items in a slot so instances can
+// add/remove/reorder menu rows without detaching. Only the repeated menu item
+// areas (`createMenu` → "Menu" frames) are slotted; the rail chrome (header,
+// search, separators, group labels, sub-menus) stays fixed. Slots are named
+// uniquely per component ("Menu Items N") so the SLOT properties don't collide.
+export function slotifyMenus(comp: ComponentNode): void {
+  const menus: FrameNode[] = [];
+  const visit = (node: { children?: readonly SceneNode[] }) => {
+    const children = node.children;
+    if (!children) return;
+    for (const child of children) {
+      if (child.type === "FRAME" && child.name === "Menu") {
+        menus.push(child as FrameNode);
+      }
+      visit(child as unknown as { children?: readonly SceneNode[] });
+    }
+  };
+  visit(comp as unknown as { children?: readonly SceneNode[] });
+
+  let index = 0;
+  for (const menu of menus) {
+    const items = [...menu.children];
+    if (items.length === 0) continue;
+    index += 1;
+    const slot = createConfiguredSlot(comp, `Menu Items ${index}`, items, {
+      description: "Sidebar menu items.",
+      settings: { minChildren: 1 },
+    });
+    menu.appendChild(slot);
+    slot.layoutMode = "VERTICAL";
+    slot.primaryAxisSizingMode = "AUTO";
+    slot.counterAxisSizingMode = "FIXED";
+    slot.itemSpacing = menu.itemSpacing;
+    slot.fills = [];
+    slot.strokes = [];
+    fillW(slot);
+    for (const item of items) fillW(item);
+  }
 }
 
 // `SidebarSeparator`: `mx-2 h-px bg-sidebar-border`.

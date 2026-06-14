@@ -20,6 +20,7 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import {
   countDescendants,
@@ -91,26 +92,36 @@ function buildFieldVariant(
   const label = labelSource
     ? instantiateBuiltComponent(labelSource, data.label)
     : undefined;
-  if (label) {
-    comp.appendChild(label);
-  } else {
-    comp.appendChild(buildFallbackLabel(inputs, data.label));
-  }
+  const labelNode: SceneNode = label ?? buildFallbackLabel(inputs, data.label);
 
   const input = inputSource
     ? instantiateBuiltComponent(inputSource, data.placeholder)
     : undefined;
-  if (input) {
-    comp.appendChild(input);
-    try {
-      input.layoutSizingHorizontal = "FILL";
-    } catch {
-      // Leave the instance at its built width if the host rejects FILL.
-    }
-  } else {
-    const fallbackInput = buildFallbackInput(inputs, data.placeholder);
-    comp.appendChild(fallbackInput);
-    fallbackInput.layoutSizingHorizontal = "FILL";
+  const controlNode: SceneNode =
+    input ?? buildFallbackInput(inputs, data.placeholder);
+
+  // The label + control live in a Fields slot so instances can compose the
+  // form (add fields, swap controls) without detaching.
+  const fields = createConfiguredSlot(
+    comp,
+    "Fields",
+    [labelNode, controlNode],
+    {
+      description: "Form field (label + control).",
+      settings: { minChildren: 1 },
+    },
+  );
+  fields.layoutMode = "VERTICAL";
+  fields.primaryAxisSizingMode = "AUTO";
+  fields.counterAxisSizingMode = "FIXED";
+  fields.itemSpacing = 8;
+  fields.fills = [];
+  fields.strokes = [];
+  fields.layoutSizingHorizontal = "FILL";
+  try {
+    controlNode.layoutSizingHorizontal = "FILL";
+  } catch {
+    // Leave the instance at its built width if the host rejects FILL.
   }
 
   return comp;

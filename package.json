@@ -33,7 +33,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "@figma/plugin-typings": "^1.108.0",
+    "@figma/plugin-typings": "^1.128.0",
     "@vitest/coverage-v8": "^2.1.9",
     "esbuild": "^0.24.0",
     "quickjs-emscripten": "^0.32.0",

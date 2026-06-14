@@ -27,6 +27,7 @@ import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -104,7 +105,7 @@ async function buildComboboxComponent(
     return comp;
   }
 
-  const popup = buildPopup(inputs, variant);
+  const popup = buildPopup(inputs, variant, comp);
   comp.appendChild(popup);
   popup.layoutSizingHorizontal = "FILL";
   // ComboboxContent uses `shadow-md`.
@@ -248,6 +249,7 @@ function buildXMark(color: Variable | undefined): VectorNode {
 function buildPopup(
   inputs: ComponentsInputs,
   variant: ComboboxVariant,
+  comp: ComponentNode,
 ): FrameNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
@@ -271,32 +273,44 @@ function buildPopup(
   popup.strokeWeight = 1;
   popup.strokeAlign = "INSIDE";
 
+  // Gather the option rows (and group labels) into a slot so instances can
+  // add/remove/reorder options without detaching.
+  const children: SceneNode[] = [];
   if (variant === "grouped") {
     let currentGroup: string | undefined;
     for (const option of GROUPED_OPTIONS) {
       if (option.group !== currentGroup) {
         currentGroup = option.group;
-        const label = buildGroupLabel(inputs, currentGroup ?? "");
-        popup.appendChild(label);
-        label.layoutSizingHorizontal = "FILL";
+        children.push(buildGroupLabel(inputs, currentGroup ?? ""));
       }
-      const row = buildOption(inputs, option);
-      popup.appendChild(row);
-      row.layoutSizingHorizontal = "FILL";
+      children.push(buildOption(inputs, option));
     }
-    return popup;
+  } else {
+    // `multiple` checks the first two options; the others single-select Nuxt.js.
+    const multiSelected = new Set(["Next.js", "Remix"]);
+    for (const option of OPTIONS) {
+      const selected =
+        variant === "multiple"
+          ? multiSelected.has(option.label)
+          : option.selected;
+      children.push(buildOption(inputs, { ...option, selected }));
+    }
   }
 
-  // `multiple` checks the first two options; the others single-select Nuxt.js.
-  const multiSelected = new Set(["Next.js", "Remix"]);
-  for (const option of OPTIONS) {
-    const selected =
-      variant === "multiple"
-        ? multiSelected.has(option.label)
-        : option.selected;
-    const row = buildOption(inputs, { ...option, selected });
-    popup.appendChild(row);
-    row.layoutSizingHorizontal = "FILL";
+  const items = createConfiguredSlot(comp, "Items", children, {
+    description: "Combobox options.",
+    settings: { minChildren: 1 },
+  });
+  popup.appendChild(items);
+  items.layoutMode = "VERTICAL";
+  items.primaryAxisSizingMode = "AUTO";
+  items.counterAxisSizingMode = "FIXED";
+  items.itemSpacing = 0;
+  items.fills = [];
+  items.strokes = [];
+  items.layoutSizingHorizontal = "FILL";
+  for (const child of children) {
+    (child as FrameNode).layoutSizingHorizontal = "FILL";
   }
 
   return popup;

@@ -13,7 +13,11 @@ import { applyEffectStyle } from "../../effectStyles";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
-import { collectByTypeAndName, defineTextProperty } from "../properties";
+import {
+  collectByTypeAndName,
+  createConfiguredSlot,
+  defineTextProperty,
+} from "../properties";
 
 const CARD_VARIANTS = [
   "default",
@@ -152,9 +156,20 @@ function buildCardComponent(
   comp.appendChild(header);
   header.layoutSizingHorizontal = "FILL";
 
-  // Card Content.
-  const content = figma.createFrame();
-  content.name = "Card Content";
+  // Card Content — a flexible slot so instances can drop in any layout
+  // without detaching. Built first (detached), then wrapped in the slot so the
+  // slot lands in source order between the header and footer.
+  const body = figma.createText();
+  applyFont(body, "body", "Regular");
+  body.characters =
+    "This is the card body content area. It can contain any layout.";
+  body.fontSize = 14;
+  bindFontSize(body, p.get("font/size/sm"));
+  bindFill(body, t.get("foreground"));
+
+  const content = createConfiguredSlot(comp, "Content", [body], {
+    description: "Card body content. Add any layout here.",
+  });
   content.layoutMode = "VERTICAL";
   content.primaryAxisSizingMode = "AUTO";
   content.counterAxisSizingMode = "AUTO";
@@ -163,21 +178,12 @@ function buildCardComponent(
   content.paddingLeft = 16;
   content.paddingRight = 16;
   content.fills = [];
-
-  const body = figma.createText();
-  applyFont(body, "body", "Regular");
-  body.characters =
-    "This is the card body content area. It can contain any layout.";
-  body.fontSize = 14;
-  bindFontSize(body, p.get("font/size/sm"));
-  bindFill(body, t.get("foreground"));
-  content.appendChild(body);
-
-  comp.appendChild(content);
   content.layoutSizingHorizontal = "FILL";
   body.layoutSizingHorizontal = "FILL";
 
-  // Card Footer — omitted for the body-only `simple` variant.
+  // Card Footer — omitted for the body-only `simple` variant. The footer frame
+  // stays as fixed chrome; its contents live in an "Actions" slot so instances
+  // can swap in their own buttons/links without detaching.
   if (variant !== "simple") {
     const footer = figma.createFrame();
     footer.name = "Card Footer";
@@ -193,10 +199,11 @@ function buildCardComponent(
     footer.paddingRight = 16;
     footer.fills = [];
 
+    const actionChildren: SceneNode[] = [];
     if (variant === "action") {
       // A pair of footer buttons (`Cancel` outline + `Save` primary).
-      footer.appendChild(buildFooterButton(inputs, "Cancel", false));
-      footer.appendChild(buildFooterButton(inputs, "Save", true));
+      actionChildren.push(buildFooterButton(inputs, "Cancel", false));
+      actionChildren.push(buildFooterButton(inputs, "Save", true));
     } else {
       const footerText = figma.createText();
       applyFont(footerText, "body", "Regular");
@@ -204,11 +211,26 @@ function buildCardComponent(
       footerText.fontSize = 12;
       bindFontSize(footerText, p.get("font/size/xs"));
       bindFill(footerText, t.get("muted-foreground"));
-      footer.appendChild(footerText);
+      actionChildren.push(footerText);
     }
 
     comp.appendChild(footer);
     footer.layoutSizingHorizontal = "FILL";
+
+    const actions = createConfiguredSlot(comp, "Actions", actionChildren, {
+      description: "Footer actions (buttons, links).",
+    });
+    // Nest the slot inside the footer chrome so its padding/border still frames
+    // whatever an instance inserts.
+    footer.appendChild(actions);
+    actions.layoutMode = "HORIZONTAL";
+    actions.primaryAxisSizingMode = "FIXED";
+    actions.counterAxisSizingMode = "AUTO";
+    actions.primaryAxisAlignItems = "MIN";
+    actions.counterAxisAlignItems = "CENTER";
+    actions.itemSpacing = 8;
+    actions.fills = [];
+    actions.layoutSizingHorizontal = "FILL";
   }
 
   return comp;

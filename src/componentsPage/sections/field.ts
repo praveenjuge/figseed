@@ -27,6 +27,7 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -97,7 +98,8 @@ function buildVerticalField(
   const label = buildLabel(inputs, "Email", invalid);
   comp.appendChild(label);
 
-  // The control swaps with the variant; the field shell stays identical.
+  // The control swaps with the variant; the field shell stays identical. It
+  // lives in a Control slot so instances can drop in any input/control.
   let control: FrameNode;
   if (variant === "textarea") {
     control = buildTextarea(inputs, "Tell us a little about yourself…");
@@ -106,7 +108,16 @@ function buildVerticalField(
   } else {
     control = buildInput(inputs, "you@example.com", invalid);
   }
-  comp.appendChild(control);
+  const controlSlot = createConfiguredSlot(comp, "Control", [control], {
+    description: "Field control (input, textarea, select, …).",
+    settings: { minChildren: 1, maxChildren: 1 },
+  });
+  controlSlot.layoutMode = "VERTICAL";
+  controlSlot.primaryAxisSizingMode = "AUTO";
+  controlSlot.counterAxisSizingMode = "FIXED";
+  controlSlot.fills = [];
+  controlSlot.strokes = [];
+  controlSlot.layoutSizingHorizontal = "FILL";
   control.layoutSizingHorizontal = "FILL";
 
   if (invalid) {
@@ -116,14 +127,30 @@ function buildVerticalField(
     error.fontSize = 14;
     bindFontSize(error, p.get("font/size/sm"));
     bindFill(error, t.get("destructive"));
-    comp.appendChild(error);
+    const errorSlot = createConfiguredSlot(comp, "Error", [error], {
+      description: "Field error message.",
+    });
+    errorSlot.layoutMode = "VERTICAL";
+    errorSlot.primaryAxisSizingMode = "AUTO";
+    errorSlot.counterAxisSizingMode = "FIXED";
+    errorSlot.fills = [];
+    errorSlot.strokes = [];
+    errorSlot.layoutSizingHorizontal = "FILL";
     error.layoutSizingHorizontal = "FILL";
   } else {
     const desc = buildDescription(
       inputs,
       "We'll use this to send you receipts.",
     );
-    comp.appendChild(desc);
+    const descSlot = createConfiguredSlot(comp, "Description", [desc], {
+      description: "Field description / helper text.",
+    });
+    descSlot.layoutMode = "VERTICAL";
+    descSlot.primaryAxisSizingMode = "AUTO";
+    descSlot.counterAxisSizingMode = "FIXED";
+    descSlot.fills = [];
+    descSlot.strokes = [];
+    descSlot.layoutSizingHorizontal = "FILL";
     desc.layoutSizingHorizontal = "FILL";
   }
 
@@ -165,7 +192,19 @@ function buildHorizontalField(
   content.layoutGrow = 1;
   content.layoutSizingHorizontal = "FILL";
 
-  comp.appendChild(buildSwitch(inputs));
+  // The switch control lives in a Control slot so instances can swap it.
+  const control = buildSwitch(inputs);
+  const controlSlot = createConfiguredSlot(comp, "Control", [control], {
+    description: "Field control.",
+    settings: { minChildren: 1, maxChildren: 1 },
+  });
+  controlSlot.layoutMode = "HORIZONTAL";
+  controlSlot.primaryAxisSizingMode = "AUTO";
+  controlSlot.counterAxisSizingMode = "AUTO";
+  controlSlot.primaryAxisAlignItems = "CENTER";
+  controlSlot.counterAxisAlignItems = "CENTER";
+  controlSlot.fills = [];
+  controlSlot.strokes = [];
 
   return comp;
 }

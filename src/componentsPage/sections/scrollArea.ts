@@ -15,6 +15,7 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -53,9 +54,23 @@ function buildScrollAreaComponent(inputs: ComponentsInputs): ComponentNode {
   comp.strokeAlign = "INSIDE";
   comp.clipsContent = true;
 
-  // Viewport content: heading + tag rows in a vertical auto-layout column.
-  const content = figma.createFrame();
-  content.name = "Viewport";
+  // Viewport content: heading + tag rows, exposed as a Content slot so
+  // instances can swap in their own scrollable content.
+  const heading = figma.createText();
+  applyFont(heading, "body", "Medium");
+  heading.characters = "Tags";
+  heading.fontSize = 14;
+  bindFontSize(heading, p.get("font/size/sm"));
+  bindFill(heading, t.get("foreground"));
+
+  const rows: FrameNode[] = [];
+  for (let i = 0; i < TAGS.length; i++) {
+    rows.push(buildTagRow(inputs, TAGS[i]!, i > 0));
+  }
+
+  const content = createConfiguredSlot(comp, "Content", [heading, ...rows], {
+    description: "Scroll area viewport content.",
+  });
   content.layoutMode = "VERTICAL";
   content.primaryAxisSizingMode = "AUTO";
   content.counterAxisSizingMode = "FIXED";
@@ -66,26 +81,11 @@ function buildScrollAreaComponent(inputs: ComponentsInputs): ComponentNode {
   content.paddingRight = 16;
   content.fills = [];
   content.strokes = [];
-  comp.appendChild(content);
   content.resize(SCROLL_WIDTH - SCROLLBAR_WIDTH, content.height || 10);
   content.x = 0;
   content.y = 0;
-
-  const heading = figma.createText();
-  applyFont(heading, "body", "Medium");
-  heading.characters = "Tags";
-  heading.fontSize = 14;
-  bindFontSize(heading, p.get("font/size/sm"));
-  bindFill(heading, t.get("foreground"));
-  content.appendChild(heading);
   heading.layoutSizingHorizontal = "FILL";
-
-  for (let i = 0; i < TAGS.length; i++) {
-    content.appendChild(buildTagRow(inputs, TAGS[i]!, i > 0));
-    (
-      content.children[content.children.length - 1] as FrameNode
-    ).layoutSizingHorizontal = "FILL";
-  }
+  for (const row of rows) row.layoutSizingHorizontal = "FILL";
 
   // Scrollbar track + thumb on the right edge.
   const track = figma.createFrame();

@@ -17,6 +17,7 @@ import {
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -102,8 +103,26 @@ function buildAlertDialogComponent(inputs: ComponentsInputs): ComponentNode {
   comp.appendChild(footer);
   footer.layoutSizingHorizontal = "FILL";
 
-  footer.appendChild(buildButton(inputs, "Cancel", "outline"));
-  footer.appendChild(buildButton(inputs, "Continue", "default"));
+  // Footer actions live in a slot so instances can compose their own
+  // confirm/cancel buttons without detaching.
+  const actions = createConfiguredSlot(
+    comp,
+    "Actions",
+    [
+      buildButton(inputs, "Cancel", "outline"),
+      buildButton(inputs, "Continue", "default"),
+    ],
+    { description: "Alert dialog footer actions." },
+  );
+  footer.appendChild(actions);
+  actions.layoutMode = "HORIZONTAL";
+  actions.primaryAxisSizingMode = "FIXED";
+  actions.counterAxisSizingMode = "AUTO";
+  actions.primaryAxisAlignItems = "MAX";
+  actions.counterAxisAlignItems = "CENTER";
+  actions.itemSpacing = 8;
+  actions.fills = [];
+  actions.layoutSizingHorizontal = "FILL";
 
   return comp;
 }

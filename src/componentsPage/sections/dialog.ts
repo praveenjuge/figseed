@@ -21,6 +21,7 @@ import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 import {
   collectByTypeAndName,
+  createConfiguredSlot,
   defineBooleanProperty,
   defineTextProperty,
 } from "../properties";
@@ -159,8 +160,26 @@ function buildDialogComponent(inputs: ComponentsInputs): ComponentNode {
   comp.appendChild(footer);
   footer.layoutSizingHorizontal = "FILL";
 
-  footer.appendChild(buildButton(inputs, "Cancel", "outline"));
-  footer.appendChild(buildButton(inputs, "Continue", "default"));
+  // Footer actions live in a slot so instances can swap their own buttons in
+  // without detaching; the footer frame stays as fixed chrome.
+  const actions = createConfiguredSlot(
+    comp,
+    "Actions",
+    [
+      buildButton(inputs, "Cancel", "outline"),
+      buildButton(inputs, "Continue", "default"),
+    ],
+    { description: "Dialog footer actions." },
+  );
+  footer.appendChild(actions);
+  actions.layoutMode = "HORIZONTAL";
+  actions.primaryAxisSizingMode = "FIXED";
+  actions.counterAxisSizingMode = "AUTO";
+  actions.primaryAxisAlignItems = "MAX";
+  actions.counterAxisAlignItems = "CENTER";
+  actions.itemSpacing = 8;
+  actions.fills = [];
+  actions.layoutSizingHorizontal = "FILL";
 
   return comp;
 }

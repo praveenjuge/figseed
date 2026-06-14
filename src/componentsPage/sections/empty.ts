@@ -22,6 +22,7 @@ import {
 import { applyFont } from "../../fonts";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -100,11 +101,22 @@ function buildEmptyComponent(
   header.strokes = [];
   comp.appendChild(header);
 
-  if (variant === "avatar") {
-    header.appendChild(buildAvatarMedia(inputs));
-  } else {
-    header.appendChild(buildIconMedia(inputs));
-  }
+  // Illustration slot: the empty-state media (icon/avatar), so instances can
+  // swap in their own illustration.
+  const media =
+    variant === "avatar" ? buildAvatarMedia(inputs) : buildIconMedia(inputs);
+  const illustration = createConfiguredSlot(comp, "Illustration", [media], {
+    description: "Empty-state illustration (icon, avatar, image).",
+    settings: { maxChildren: 1 },
+  });
+  header.appendChild(illustration);
+  illustration.layoutMode = "HORIZONTAL";
+  illustration.primaryAxisSizingMode = "AUTO";
+  illustration.counterAxisSizingMode = "AUTO";
+  illustration.primaryAxisAlignItems = "CENTER";
+  illustration.counterAxisAlignItems = "CENTER";
+  illustration.fills = [];
+  illustration.strokes = [];
 
   const titleText = variant === "avatar" ? "No members yet" : "No projects yet";
   const descText =
@@ -131,7 +143,8 @@ function buildEmptyComponent(
   desc.resize(288, desc.height);
   header.appendChild(desc);
 
-  // Content: a primary action button — omitted for the avatar variant.
+  // Content: a primary action button in an Action slot — omitted for the
+  // avatar variant.
   if (variant !== "avatar") {
     const content = figma.createFrame();
     content.name = "Empty Content";
@@ -144,7 +157,22 @@ function buildEmptyComponent(
     content.fills = [];
     content.strokes = [];
     comp.appendChild(content);
-    content.appendChild(buildActionButton(inputs));
+
+    const action = createConfiguredSlot(
+      comp,
+      "Action",
+      [buildActionButton(inputs)],
+      { description: "Empty-state action (button)." },
+    );
+    content.appendChild(action);
+    action.layoutMode = "HORIZONTAL";
+    action.primaryAxisSizingMode = "AUTO";
+    action.counterAxisSizingMode = "AUTO";
+    action.primaryAxisAlignItems = "CENTER";
+    action.counterAxisAlignItems = "CENTER";
+    action.itemSpacing = 10;
+    action.fills = [];
+    action.strokes = [];
   }
 
   return comp;

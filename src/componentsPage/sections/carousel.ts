@@ -14,6 +14,7 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -57,7 +58,26 @@ function buildCarouselComponent(inputs: ComponentsInputs): ComponentNode {
   comp.appendChild(row);
 
   row.appendChild(buildArrow(inputs, "prev"));
-  row.appendChild(buildSlide(inputs, "1"));
+  // Slides live in a slot (created on the component, nested in the viewport)
+  // so instances can add/remove/reorder slides without detaching.
+  const slides = createConfiguredSlot(
+    comp,
+    "Slides",
+    [buildSlide(inputs, "1")],
+    {
+      description: "Carousel slides.",
+      settings: { minChildren: 1 },
+    },
+  );
+  row.appendChild(slides);
+  slides.layoutMode = "HORIZONTAL";
+  slides.primaryAxisSizingMode = "AUTO";
+  slides.counterAxisSizingMode = "AUTO";
+  slides.primaryAxisAlignItems = "CENTER";
+  slides.counterAxisAlignItems = "CENTER";
+  slides.itemSpacing = ARROW_GAP;
+  slides.fills = [];
+  slides.strokes = [];
   row.appendChild(buildArrow(inputs, "next"));
 
   // Dots row.

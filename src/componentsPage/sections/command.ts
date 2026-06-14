@@ -23,6 +23,7 @@ import {
   type SemanticIconName,
 } from "../../icons";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -86,20 +87,27 @@ function buildCommandComponent(inputs: ComponentsInputs): ComponentNode {
   comp.appendChild(search);
   search.layoutSizingHorizontal = "FILL";
 
-  // Suggestions group.
-  const suggestions = buildGroup(inputs, "Suggestions", SUGGESTIONS);
-  comp.appendChild(suggestions);
-  suggestions.layoutSizingHorizontal = "FILL";
-
-  // Separator: `-mx-1 h-px bg-border`.
-  const separator = buildSeparator(inputs);
-  comp.appendChild(separator);
-  separator.layoutSizingHorizontal = "FILL";
-
-  // Settings group.
-  const settings = buildGroup(inputs, "Settings", SETTINGS);
-  comp.appendChild(settings);
-  settings.layoutSizingHorizontal = "FILL";
+  // The command list (groups + separator) lives in a slot so instances can
+  // add/remove/reorder groups and items. The search input stays fixed on top.
+  const listChildren: SceneNode[] = [
+    buildGroup(inputs, "Suggestions", SUGGESTIONS),
+    buildSeparator(inputs),
+    buildGroup(inputs, "Settings", SETTINGS),
+  ];
+  const list = createConfiguredSlot(comp, "Items", listChildren, {
+    description: "Command list groups and items.",
+    settings: { minChildren: 1 },
+  });
+  list.layoutMode = "VERTICAL";
+  list.primaryAxisSizingMode = "AUTO";
+  list.counterAxisSizingMode = "FIXED";
+  list.itemSpacing = 4;
+  list.fills = [];
+  list.strokes = [];
+  list.layoutSizingHorizontal = "FILL";
+  for (const child of listChildren) {
+    (child as FrameNode).layoutSizingHorizontal = "FILL";
+  }
 
   return comp;
 }

@@ -8,6 +8,7 @@
 import { bindCornerRadii, bindFill } from "../bindings";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -68,18 +69,31 @@ function buildAspectRatioComponent(
   comp.strokes = [];
   comp.clipsContent = true;
 
-  // Centred image glyph hints at a media slot. Falls back silently when the
-  // active library has no candidate.
+  // Centred image glyph hints at a media slot. The whole media region is a
+  // Content slot so instances can drop in their own image/content and it
+  // stretches to the framed ratio.
   const icon = createIcon({
     library: resolveIconLibrary(inputs.presetSummary),
     name: "star",
     size: 24,
     color: t.get("muted-foreground"),
   });
+  const slotChildren: SceneNode[] = [];
   if (icon) {
     icon.name = "Icon";
-    comp.appendChild(icon);
+    slotChildren.push(icon);
   }
+  const content = createConfiguredSlot(comp, "Content", slotChildren, {
+    description: "Media or content framed to the ratio.",
+    settings: { stretchChildOnInsert: true },
+  });
+  content.layoutMode = "HORIZONTAL";
+  content.primaryAxisAlignItems = "CENTER";
+  content.counterAxisAlignItems = "CENTER";
+  content.fills = [];
+  content.strokes = [];
+  content.layoutSizingHorizontal = "FILL";
+  content.layoutSizingVertical = "FILL";
 
   return comp;
 }

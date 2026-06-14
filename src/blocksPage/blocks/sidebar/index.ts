@@ -16,6 +16,7 @@ import { styleComponentSet } from "../../../componentsPage/layout";
 import { countDescendants } from "../../utils";
 import type { BlocksInputs } from "../../types";
 import { SIDEBAR_VARIANTS } from "./variants";
+import { slotifyMenus } from "./primitives";
 
 // The set spans the full block-canvas width (1512) rather than the narrower
 // component-grid SECTION_WIDTH (1120), so the 16 rails have room to wrap.
@@ -31,6 +32,9 @@ export async function addSidebarBlock(
     const comp = variant.build(inputs);
     // Figma's variant convention: `Prop=value`. One property ("Variant").
     comp.name = `Variant=${variant.key}`;
+    // Wrap each SidebarMenu's items in a slot so designers can recompose the
+    // menus from an instance without detaching the rail.
+    slotifyMenus(comp);
     // Components must live in the document before combineAsVariants; park them
     // on the page, then the combine call reparents them into the set.
     page.appendChild(comp);

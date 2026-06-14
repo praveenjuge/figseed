@@ -12,6 +12,7 @@ import { bindCornerRadii, bindFill, bindFontSize } from "../bindings";
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -96,6 +97,8 @@ async function buildTabsComponent(
   comp.paddingBottom = LIST_PADDING;
   comp.strokes = [];
 
+  // Tab triggers live in a slot so instances can add/remove/reorder tabs.
+  const triggers: FrameNode[] = [];
   for (let i = 0; i < TAB_LABELS.length; i++) {
     const trigger = await buildTabTrigger(
       inputs,
@@ -109,8 +112,21 @@ async function buildTabsComponent(
       trigger.opacity = 0.5;
       trigger.name = "Trigger (disabled)";
     }
-    comp.appendChild(trigger);
+    triggers.push(trigger);
   }
+
+  const tabs = createConfiguredSlot(comp, "Tabs", triggers, {
+    description: "Tab triggers.",
+    settings: { minChildren: 1 },
+  });
+  tabs.layoutMode = "HORIZONTAL";
+  tabs.primaryAxisSizingMode = "AUTO";
+  tabs.counterAxisSizingMode = "AUTO";
+  tabs.primaryAxisAlignItems = "CENTER";
+  tabs.counterAxisAlignItems = "CENTER";
+  tabs.itemSpacing = isLine ? 4 : 8;
+  tabs.fills = [];
+  tabs.strokes = [];
 
   return comp;
 }

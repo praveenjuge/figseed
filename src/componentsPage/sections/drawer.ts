@@ -18,6 +18,7 @@ import {
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -170,12 +171,20 @@ function buildDrawerComponent(
   footer.layoutSizingHorizontal = "FILL";
 
   const submit = buildButton(inputs, "Submit", "default");
-  footer.appendChild(submit);
+  const cancel = buildButton(inputs, "Cancel", "outline");
+  // Footer actions live in a slot nested in the footer chrome.
+  const actions = createConfiguredSlot(comp, "Actions", [submit, cancel], {
+    description: "Drawer footer actions.",
+  });
+  footer.appendChild(actions);
+  actions.layoutMode = "VERTICAL";
+  actions.primaryAxisSizingMode = "AUTO";
+  actions.counterAxisSizingMode = "AUTO";
+  actions.itemSpacing = 8;
+  actions.fills = [];
+  actions.layoutSizingHorizontal = "FILL";
   submit.layoutSizingHorizontal = "FILL";
   submit.primaryAxisAlignItems = "CENTER";
-
-  const cancel = buildButton(inputs, "Cancel", "outline");
-  footer.appendChild(cancel);
   cancel.layoutSizingHorizontal = "FILL";
   cancel.primaryAxisAlignItems = "CENTER";
 

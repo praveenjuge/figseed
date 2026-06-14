@@ -15,6 +15,7 @@ import {
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -57,9 +58,22 @@ function buildMenubarComponent(inputs: ComponentsInputs): ComponentNode {
   comp.strokeWeight = 1;
   comp.strokeAlign = "INSIDE";
 
-  for (let i = 0; i < TRIGGERS.length; i++) {
-    comp.appendChild(buildTrigger(inputs, TRIGGERS[i]!, i === OPEN_INDEX));
-  }
+  // The triggers live in a slot so instances can add/remove top-level menus.
+  const triggers = TRIGGERS.map((label, i) =>
+    buildTrigger(inputs, label, i === OPEN_INDEX),
+  );
+  const items = createConfiguredSlot(comp, "Items", triggers, {
+    description: "Menubar triggers.",
+    settings: { minChildren: 1 },
+  });
+  items.layoutMode = "HORIZONTAL";
+  items.primaryAxisSizingMode = "AUTO";
+  items.counterAxisSizingMode = "AUTO";
+  items.primaryAxisAlignItems = "MIN";
+  items.counterAxisAlignItems = "CENTER";
+  items.itemSpacing = 4;
+  items.fills = [];
+  items.strokes = [];
 
   return comp;
 }

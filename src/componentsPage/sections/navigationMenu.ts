@@ -15,6 +15,7 @@ import {
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -74,6 +75,23 @@ async function buildNavigationMenuComponent(
   await applyEffectStyle(panel, inputs.effectStyles?.idFor("Shadow/md"));
   comp.appendChild(panel);
   panel.layoutSizingHorizontal = "FILL";
+
+  // Links live in a slot nested in the content panel so instances can
+  // add/remove/reorder navigation links.
+  const links = LINKS.map((link) => buildLink(inputs, link));
+  const list = createConfiguredSlot(comp, "Items", links, {
+    description: "Navigation links.",
+    settings: { minChildren: 1 },
+  });
+  panel.appendChild(list);
+  list.layoutMode = "VERTICAL";
+  list.primaryAxisSizingMode = "AUTO";
+  list.counterAxisSizingMode = "FIXED";
+  list.itemSpacing = 2;
+  list.fills = [];
+  list.strokes = [];
+  list.layoutSizingHorizontal = "FILL";
+  for (const link of links) link.layoutSizingHorizontal = "FILL";
 
   return comp;
 }
@@ -156,12 +174,6 @@ function buildPanel(inputs: ComponentsInputs): FrameNode {
   bindStrokeColor(panel, t.get("border"));
   panel.strokeWeight = 1;
   panel.strokeAlign = "INSIDE";
-
-  for (const link of LINKS) {
-    const row = buildLink(inputs, link);
-    panel.appendChild(row);
-    row.layoutSizingHorizontal = "FILL";
-  }
 
   return panel;
 }

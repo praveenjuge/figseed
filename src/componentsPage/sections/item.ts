@@ -29,6 +29,7 @@ import {
 import { applyFont } from "../../fonts";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -102,23 +103,23 @@ function buildItemComponent(
     bindStrokeColor(comp, t.get("border"));
   }
 
-  // Media slot: an avatar for the `avatar` variant, otherwise a `size-4` icon.
-  if (variant === "avatar") {
-    comp.appendChild(buildAvatarMedia(inputs));
-  } else {
-    comp.appendChild(buildIconMedia(inputs));
-  }
+  // Media slot ("Leading"): an avatar for the `avatar` variant, otherwise a
+  // `size-4` icon. Wrapped in a slot so instances can swap the media.
+  const media =
+    variant === "avatar" ? buildAvatarMedia(inputs) : buildIconMedia(inputs);
+  const leading = createConfiguredSlot(comp, "Leading", [media], {
+    description: "Item media (icon, avatar, image).",
+    settings: { maxChildren: 1 },
+  });
+  leading.layoutMode = "HORIZONTAL";
+  leading.primaryAxisSizingMode = "AUTO";
+  leading.counterAxisSizingMode = "AUTO";
+  leading.primaryAxisAlignItems = "CENTER";
+  leading.counterAxisAlignItems = "CENTER";
+  leading.fills = [];
+  leading.strokes = [];
 
-  // Content: title + description (`flex-1 flex-col gap-1`).
-  const content = figma.createFrame();
-  content.name = "Item Content";
-  content.layoutMode = "VERTICAL";
-  content.primaryAxisSizingMode = "AUTO";
-  content.counterAxisSizingMode = "AUTO";
-  content.itemSpacing = 4;
-  content.fills = [];
-  content.strokes = [];
-
+  // Content slot: title + description (`flex-1 flex-col gap-1`).
   const titleText = variant === "avatar" ? "Sofia Davis" : "Project files";
   const descText =
     variant === "avatar"
@@ -131,7 +132,6 @@ function buildItemComponent(
   title.fontSize = 14;
   bindFontSize(title, p.get("font/size/sm"));
   bindFill(title, t.get("foreground"));
-  content.appendChild(title);
 
   const desc = figma.createText();
   applyFont(desc, "body", "Regular");
@@ -139,31 +139,51 @@ function buildItemComponent(
   desc.fontSize = 14;
   bindFontSize(desc, p.get("font/size/sm"));
   bindFill(desc, t.get("muted-foreground"));
-  content.appendChild(desc);
 
-  comp.appendChild(content);
+  const content = createConfiguredSlot(comp, "Content", [title, desc], {
+    description: "Item content (title + description).",
+  });
+  content.layoutMode = "VERTICAL";
+  content.primaryAxisSizingMode = "AUTO";
+  content.counterAxisSizingMode = "AUTO";
+  content.itemSpacing = 4;
+  content.fills = [];
+  content.strokes = [];
   content.layoutGrow = 1;
   content.layoutSizingHorizontal = "FILL";
   title.layoutSizingHorizontal = "FILL";
   desc.layoutSizingHorizontal = "FILL";
 
-  // Actions: a trailing button for avatar/action variants, otherwise a chevron.
+  // Actions slot ("Trailing"): a trailing button for avatar/action variants,
+  // otherwise a chevron.
+  let trailingChild: SceneNode;
   if (variant === "avatar" || variant === "action") {
-    comp.appendChild(buildActionButton(inputs, variant === "avatar"));
+    trailingChild = buildActionButton(inputs, variant === "avatar");
   } else {
-    const actions = figma.createFrame();
-    actions.name = "Item Actions";
-    actions.layoutMode = "HORIZONTAL";
-    actions.primaryAxisSizingMode = "FIXED";
-    actions.counterAxisSizingMode = "FIXED";
-    actions.primaryAxisAlignItems = "CENTER";
-    actions.counterAxisAlignItems = "CENTER";
-    actions.resize(20, 20);
-    actions.fills = [];
-    actions.strokes = [];
-    actions.appendChild(buildChevronRight(t));
-    comp.appendChild(actions);
+    const chevronWrap = figma.createFrame();
+    chevronWrap.name = "Chevron Wrap";
+    chevronWrap.layoutMode = "HORIZONTAL";
+    chevronWrap.primaryAxisSizingMode = "FIXED";
+    chevronWrap.counterAxisSizingMode = "FIXED";
+    chevronWrap.primaryAxisAlignItems = "CENTER";
+    chevronWrap.counterAxisAlignItems = "CENTER";
+    chevronWrap.resize(20, 20);
+    chevronWrap.fills = [];
+    chevronWrap.strokes = [];
+    chevronWrap.appendChild(buildChevronRight(t));
+    trailingChild = chevronWrap;
   }
+  const trailing = createConfiguredSlot(comp, "Trailing", [trailingChild], {
+    description: "Item actions (button, chevron, controls).",
+  });
+  trailing.layoutMode = "HORIZONTAL";
+  trailing.primaryAxisSizingMode = "AUTO";
+  trailing.counterAxisSizingMode = "AUTO";
+  trailing.primaryAxisAlignItems = "CENTER";
+  trailing.counterAxisAlignItems = "CENTER";
+  trailing.itemSpacing = 8;
+  trailing.fills = [];
+  trailing.strokes = [];
 
   return comp;
 }

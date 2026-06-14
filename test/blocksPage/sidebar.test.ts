@@ -84,6 +84,26 @@ describe("addSidebarBlock", () => {
     const set = findComponentSet(page.children[0]!)!;
     expect(set.width).toBe(1512);
   });
+
+  it("wraps each SidebarMenu's items in a Menu Items slot", async () => {
+    const inputs = await makeInputs();
+    const page = inputs.targetPage as unknown as { children: FakeNode[] };
+    await addSidebarBlock(page as never, inputs);
+
+    const set = findComponentSet(page.children[0]!)!;
+    // Every variant slots at least its primary menu; the items are preserved
+    // inside the slot (so fidelity assertions still find the rows).
+    for (const variant of set.children) {
+      const slots = collect(
+        variant,
+        (n) => n.type === "SLOT" && n.name.startsWith("Menu Items"),
+      );
+      expect(
+        slots.length,
+        `${variant.name} has no Menu Items slot`,
+      ).toBeGreaterThan(0);
+    }
+  });
 });
 
 function findComponentSet(node: FakeNode): FakeNode | undefined {

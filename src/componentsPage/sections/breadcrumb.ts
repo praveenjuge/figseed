@@ -7,6 +7,7 @@
 import { bindFill, bindFontSize, bindStrokeColor } from "../bindings";
 import { applyFont } from "../../fonts";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -45,6 +46,8 @@ function buildBreadcrumbComponent(inputs: ComponentsInputs): ComponentNode {
   comp.fills = [];
   comp.strokes = [];
 
+  // The crumbs + separators live in a slot so instances can add/remove levels.
+  const items: SceneNode[] = [];
   for (let i = 0; i < CRUMBS.length; i++) {
     const crumb = CRUMBS[i]!;
     const label = figma.createText();
@@ -59,12 +62,25 @@ function buildBreadcrumbComponent(inputs: ComponentsInputs): ComponentNode {
     } else {
       bindFill(label, t.get("muted-foreground"));
     }
-    comp.appendChild(label);
+    items.push(label);
 
     if (i < CRUMBS.length - 1) {
-      comp.appendChild(buildChevron(t));
+      items.push(buildChevron(t));
     }
   }
+
+  const list = createConfiguredSlot(comp, "Items", items, {
+    description: "Breadcrumb items.",
+    settings: { minChildren: 1 },
+  });
+  list.layoutMode = "HORIZONTAL";
+  list.primaryAxisSizingMode = "AUTO";
+  list.counterAxisSizingMode = "AUTO";
+  list.primaryAxisAlignItems = "MIN";
+  list.counterAxisAlignItems = "CENTER";
+  list.itemSpacing = 6;
+  list.fills = [];
+  list.strokes = [];
 
   return comp;
 }

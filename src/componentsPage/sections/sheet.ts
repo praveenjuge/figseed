@@ -19,6 +19,7 @@ import { applyEffectStyle } from "../../effectStyles";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import { createCloseGlyph } from "../glyphs";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -143,9 +144,16 @@ function buildSheetComponent(
 
   headerRow.appendChild(buildCloseButton(inputs));
 
-  // Body: `grid flex-1 auto-rows-min gap-6 px-4`.
-  const body = figma.createFrame();
-  body.name = "Body";
+  // Body: `grid flex-1 auto-rows-min gap-6 px-4` — exposed as a Content slot so
+  // instances can drop in their own form rows or content.
+  const nameField = buildField(inputs, "Name", "Pedro Duarte");
+  const usernameField = buildField(inputs, "Username", "@peduarte");
+  const body = createConfiguredSlot(
+    comp,
+    "Content",
+    [nameField, usernameField],
+    { description: "Sheet body content." },
+  );
   body.layoutMode = "VERTICAL";
   body.primaryAxisSizingMode = "AUTO";
   body.counterAxisSizingMode = "AUTO";
@@ -154,11 +162,7 @@ function buildSheetComponent(
   body.paddingRight = 16;
   body.fills = [];
   body.strokes = [];
-  comp.appendChild(body);
   body.layoutSizingHorizontal = "FILL";
-
-  body.appendChild(buildField(inputs, "Name", "Pedro Duarte"));
-  body.appendChild(buildField(inputs, "Username", "@peduarte"));
   for (const child of body.children) {
     (child as FrameNode).layoutSizingHorizontal = "FILL";
   }
@@ -181,12 +185,20 @@ function buildSheetComponent(
   footer.layoutSizingHorizontal = "FILL";
 
   const save = buildButton(inputs, "Save changes", "default");
-  footer.appendChild(save);
+  const close = buildButton(inputs, "Close", "outline");
+  // Footer actions live in a slot nested in the footer chrome.
+  const actions = createConfiguredSlot(comp, "Actions", [save, close], {
+    description: "Sheet footer actions.",
+  });
+  footer.appendChild(actions);
+  actions.layoutMode = "VERTICAL";
+  actions.primaryAxisSizingMode = "AUTO";
+  actions.counterAxisSizingMode = "AUTO";
+  actions.itemSpacing = 8;
+  actions.fills = [];
+  actions.layoutSizingHorizontal = "FILL";
   save.layoutSizingHorizontal = "FILL";
   save.primaryAxisAlignItems = "CENTER";
-
-  const close = buildButton(inputs, "Close", "outline");
-  footer.appendChild(close);
   close.layoutSizingHorizontal = "FILL";
   close.primaryAxisAlignItems = "CENTER";
 

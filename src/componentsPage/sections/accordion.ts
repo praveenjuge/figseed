@@ -8,6 +8,7 @@
 import { bindFill, bindFontSize, bindStrokeColor } from "../bindings";
 import { applyFont } from "../../fonts";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -50,11 +51,24 @@ function buildAccordionComponent(inputs: ComponentsInputs): ComponentNode {
   comp.fills = [];
   comp.strokes = [];
 
+  // The accordion items live in a slot so instances can add, remove, or
+  // reorder rows without detaching.
+  const items: FrameNode[] = [];
   for (let i = 0; i < ITEMS.length; i++) {
-    const item = buildAccordionItem(inputs, ITEMS[i]!, i < ITEMS.length - 1);
-    comp.appendChild(item);
-    item.layoutSizingHorizontal = "FILL";
+    items.push(buildAccordionItem(inputs, ITEMS[i]!, i < ITEMS.length - 1));
   }
+  const list = createConfiguredSlot(comp, "Items", items, {
+    description: "Accordion items.",
+    settings: { minChildren: 1 },
+  });
+  list.layoutMode = "VERTICAL";
+  list.primaryAxisSizingMode = "AUTO";
+  list.counterAxisSizingMode = "FIXED";
+  list.itemSpacing = 0;
+  list.fills = [];
+  list.strokes = [];
+  list.layoutSizingHorizontal = "FILL";
+  for (const item of items) item.layoutSizingHorizontal = "FILL";
 
   return comp;
 }

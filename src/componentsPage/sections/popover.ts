@@ -15,6 +15,7 @@ import {
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -88,20 +89,20 @@ function buildPopoverComponent(inputs: ComponentsInputs): ComponentNode {
   header.appendChild(desc);
   desc.layoutSizingHorizontal = "FILL";
 
-  // Form: two label + input rows.
-  const form = figma.createFrame();
-  form.name = "Form";
+  // Form: two label + input rows, wrapped in a Content slot so instances can
+  // compose their own popover body.
+  const widthRow = buildFieldRow(inputs, "Width", "100%");
+  const heightRow = buildFieldRow(inputs, "Height", "25px");
+  const form = createConfiguredSlot(comp, "Content", [widthRow, heightRow], {
+    description: "Popover content.",
+  });
   form.layoutMode = "VERTICAL";
   form.primaryAxisSizingMode = "AUTO";
   form.counterAxisSizingMode = "AUTO";
   form.itemSpacing = 8;
   form.fills = [];
   form.strokes = [];
-  comp.appendChild(form);
   form.layoutSizingHorizontal = "FILL";
-
-  form.appendChild(buildFieldRow(inputs, "Width", "100%"));
-  form.appendChild(buildFieldRow(inputs, "Height", "25px"));
   for (const row of form.children) {
     (row as FrameNode).layoutSizingHorizontal = "FILL";
   }

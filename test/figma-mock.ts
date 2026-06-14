@@ -259,6 +259,8 @@ export function createFigmaMock() {
         defaultValue: string | boolean,
         options?: {
           preferredValues?: ReadonlyArray<{ type: string; key: string }>;
+          description?: string;
+          slotSettings?: Record<string, unknown>;
         },
       ): string {
         const store = (node.__componentProperties ??= {} as Record<
@@ -270,8 +272,44 @@ export function createFigmaMock() {
           type: propType,
           defaultValue,
           preferredValues: options?.preferredValues,
+          description: options?.description,
+          slotSettings: options?.slotSettings,
         };
         return propertyId;
+      },
+      // Creates a slot node (figma.ComponentNode#createSlot). In real Figma this
+      // also registers a matching SLOT component property; the mock records that
+      // property keyed by the slot's name so `editComponentProperty` can update
+      // it. The slot is appended as a child of the component, and exposes the
+      // `clone()`/`resetSlot()` surface the SlotNode type documents.
+      createSlot(): FakeNode {
+        const slot = makeNode("SLOT");
+        slot.clone = () => {
+          const copy = makeNode("FRAME");
+          copy.name = slot.name;
+          return copy;
+        };
+        slot.resetSlot = () => {
+          node.__slotResetCount = ((node.__slotResetCount as number) ?? 0) + 1;
+        };
+        node.appendChild(slot);
+        return slot;
+      },
+      // Edits an existing component property (figma.ComponentNode). The mock
+      // records the merged config under a Figma-style suffixed id keyed off the
+      // property name, so slot-settings tests can assert preferred values,
+      // description, and limit settings applied after createSlot.
+      editComponentProperty(
+        name: string,
+        newValue: Record<string, unknown>,
+      ): string {
+        const store = (node.__slotProperties ??= {} as Record<
+          string,
+          unknown
+        >) as Record<string, Record<string, unknown>>;
+        const existing = (store[name] ?? {}) as Record<string, unknown>;
+        store[name] = { ...existing, ...newValue };
+        return `${name}#${nextId("prop")}`;
       },
       // Per-node plugin data store (figma.PluginDataMixin). The page builders
       // tag the top-level frames they own with a region key so each builder can

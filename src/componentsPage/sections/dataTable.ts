@@ -18,6 +18,7 @@ import {
 import { applyFont } from "../../fonts";
 import { createIcon, resolveIconLibrary } from "../../icons";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -69,7 +70,7 @@ function buildDataTableComponent(inputs: ComponentsInputs): ComponentNode {
   toolbar.layoutSizingHorizontal = "FILL";
 
   // The bordered table surface.
-  const table = buildTable(inputs);
+  const table = buildTable(inputs, comp);
   comp.appendChild(table);
   table.layoutSizingHorizontal = "FILL";
 
@@ -123,7 +124,7 @@ function buildToolbar(inputs: ComponentsInputs): FrameNode {
   return input;
 }
 
-function buildTable(inputs: ComponentsInputs): FrameNode {
+function buildTable(inputs: ComponentsInputs, comp: ComponentNode): FrameNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
@@ -151,18 +152,30 @@ function buildTable(inputs: ComponentsInputs): FrameNode {
   table.appendChild(header);
   header.layoutSizingHorizontal = "FILL";
 
-  // Body rows. The last row drops its bottom border.
-  for (let i = 0; i < ROWS.length; i++) {
-    const data = ROWS[i]!;
-    const row = buildRow(inputs, data.cells, {
+  // Body rows live in a Rows slot (created on the component, nested in the
+  // table) so instances can add/remove/reorder rows. The last row drops its
+  // bottom border.
+  const bodyRows = ROWS.map((data, i) =>
+    buildRow(inputs, data.cells, {
       bold: false,
       height: ROW_HEIGHT,
       withBorder: i < ROWS.length - 1,
       selected: data.selected,
-    });
-    table.appendChild(row);
-    row.layoutSizingHorizontal = "FILL";
-  }
+    }),
+  );
+  const rows = createConfiguredSlot(comp, "Rows", bodyRows, {
+    description: "Data table rows.",
+    settings: { minChildren: 1 },
+  });
+  table.appendChild(rows);
+  rows.layoutMode = "VERTICAL";
+  rows.primaryAxisSizingMode = "AUTO";
+  rows.counterAxisSizingMode = "FIXED";
+  rows.itemSpacing = 0;
+  rows.fills = [];
+  rows.strokes = [];
+  rows.layoutSizingHorizontal = "FILL";
+  for (const row of bodyRows) row.layoutSizingHorizontal = "FILL";
 
   return table;
 }

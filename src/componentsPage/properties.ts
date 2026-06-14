@@ -23,13 +23,43 @@ type PropertyContainer = {
     name: string,
     type: string,
     defaultValue: string | boolean,
-    options?: { preferredValues?: ReadonlyArray<InstanceSwapPreferredValue> },
+    options?: ComponentPropertyOptionsLike,
   ): string;
 };
 
 type InstanceSwapPreferredValue = {
   type: "COMPONENT" | "COMPONENT_SET";
   key: string;
+};
+
+// The options bag `addComponentProperty` accepts. `preferredValues` applies to
+// INSTANCE_SWAP and SLOT; `description` + `slotSettings` apply to SLOT only.
+type ComponentPropertyOptionsLike = {
+  preferredValues?: ReadonlyArray<InstanceSwapPreferredValue>;
+  description?: string;
+  slotSettings?: SlotSettings;
+};
+
+// Per-property limits Figma enforces on a SLOT. Mirrors the plugin API's
+// `SlotSettings`; every field is optional so callers only set what they need.
+//   - stretchChildOnInsert: inserted children stretch to fill the slot
+//   - displayEmptyByDefault: the slot ships empty rather than with defaults
+//   - minChildren / maxChildren: child-count bounds (null clears a bound)
+//   - allowPreferredValuesOnly: restrict inserts to the preferred instances
+export type SlotSettings = {
+  stretchChildOnInsert?: boolean;
+  displayEmptyByDefault?: boolean;
+  minChildren?: number | null;
+  maxChildren?: number | null;
+  allowPreferredValuesOnly?: boolean;
+};
+
+// Niram-facing options for a slot: the curated swap choices Figma offers first,
+// a human description shown in the properties panel, and the limit settings.
+export type SlotOptions = {
+  preferredValues?: ReadonlyArray<InstanceSwapPreferredValue>;
+  description?: string;
+  settings?: SlotSettings;
 };
 
 // A node that can reference a component property (text, visibility, swap).
@@ -59,7 +89,7 @@ function addProperty(
   name: string,
   type: string,
   defaultValue: string | boolean,
-  options?: { preferredValues?: ReadonlyArray<InstanceSwapPreferredValue> },
+  options?: ComponentPropertyOptionsLike,
 ): string | undefined {
   if (typeof container.addComponentProperty !== "function") return undefined;
   try {
@@ -162,6 +192,147 @@ export function defineIconSwapProperty(
     instances,
     preferredValues,
   );
+}
+
+// ---------------------------------------------------------------------------
+// Slots
+//
+// A SLOT is a flexible content region: designers can add, remove, and reorder
+// children inside an instance without detaching it, while staying inside the
+// component's chrome. Unlike text/visibility/swap properties (wired via
+// `componentPropertyReferences`), a slot is a real node created by
+// `component.createSlot()`, which also registers the matching SLOT component
+// property. Niram adds slots only where they buy real composability (card and
+// dialog content/action regions, repeated item lists, form composition).
+//
+// Both helpers are best-effort and host-version aware: on a host without slot
+// support they degrade to a plain named frame so generation never breaks.
+// ---------------------------------------------------------------------------
+
+// A frame-like node we can name and fill with default content. Satisfied by
+// both a real SlotNode (native path) and a FrameNode (fallback path).
+type SlotLikeNode = {
+  name: string;
+  appendChild(child: SceneNode): void;
+};
+
+// A component that may expose the slot API surface. ComponentNode satisfies
+// this; the optional members let us probe support at runtime on older hosts.
+type SlotHost = PropertyContainer & {
+  createSlot?(): SlotNode;
+  editComponentProperty?(
+    name: string,
+    newValue: {
+      preferredValues?: InstanceSwapPreferredValue[];
+      description?: string;
+      slotSettings?: SlotSettings;
+    },
+  ): string;
+  appendChild?(child: SceneNode): void;
+};
+
+// Translate Niram's SlotOptions into the API options bag, dropping empty
+// fields. Returns undefined when nothing meaningful is set so callers can pass
+// it straight through (and the no-op short-circuits stay clean).
+function slotApiOptions(
+  options: SlotOptions | undefined,
+): ComponentPropertyOptionsLike | undefined {
+  if (!options) return undefined;
+  const out: ComponentPropertyOptionsLike = {};
+  if (options.preferredValues && options.preferredValues.length > 0) {
+    out.preferredValues = options.preferredValues;
+  }
+  if (options.description) out.description = options.description;
+  if (options.settings) out.slotSettings = options.settings;
+  if (
+    out.preferredValues === undefined &&
+    out.description === undefined &&
+    out.slotSettings === undefined
+  ) {
+    return undefined;
+  }
+  return out;
+}
+
+function appendChildren(
+  parent: { appendChild(child: SceneNode): void },
+  children: ReadonlyArray<SceneNode>,
+): void {
+  for (const child of children) parent.appendChild(child);
+}
+
+// Apply preferred values / description / limit settings to a native slot's
+// property after creation. createSlot already registered the property, so we
+// edit it rather than add a duplicate. Best-effort and guarded.
+function configureNativeSlot(
+  component: SlotHost,
+  name: string,
+  options: SlotOptions | undefined,
+): void {
+  const apiOptions = slotApiOptions(options);
+  if (!apiOptions) return;
+  if (typeof component.editComponentProperty !== "function") return;
+  try {
+    component.editComponentProperty(name, {
+      preferredValues: apiOptions.preferredValues
+        ? [...apiOptions.preferredValues]
+        : undefined,
+      description: apiOptions.description,
+      slotSettings: apiOptions.slotSettings,
+    });
+  } catch {
+    // The slot still exists; it is just left unconfigured.
+  }
+}
+
+// Register a SLOT component property on the container. Thin guarded wrapper over
+// `addComponentProperty(name, "SLOT", …)`; returns the suffixed property id, or
+// undefined when the API is missing or the call throws. Used directly on the
+// fallback path; native slots get their property from `createSlot()` instead.
+export function defineSlotProperty(
+  container: PropertyContainer,
+  name: string,
+  options?: SlotOptions,
+): string | undefined {
+  return addProperty(container, name, "SLOT", "", slotApiOptions(options));
+}
+
+// Create a configured content slot on a component. On a slot-capable host this
+// uses `component.createSlot()` (which also registers the SLOT property), names
+// the slot, seeds it with `defaultChildren`, and applies the preferred
+// instances / description / limit settings. On an older host it degrades to a
+// plain named frame appended to the component plus a best-effort SLOT property,
+// so the structure is preserved either way. Returns the slot/frame node so the
+// caller can keep styling it (layout, sizing, fills).
+export function createConfiguredSlot(
+  component: SlotHost,
+  name: string,
+  defaultChildren: ReadonlyArray<SceneNode>,
+  options?: SlotOptions,
+): SlotNode | FrameNode {
+  if (typeof component.createSlot === "function") {
+    let slot: SlotNode | undefined;
+    try {
+      slot = component.createSlot();
+    } catch {
+      slot = undefined;
+    }
+    if (slot) {
+      slot.name = name;
+      appendChildren(slot, defaultChildren);
+      configureNativeSlot(component, name, options);
+      return slot;
+    }
+  }
+
+  const frame = figma.createFrame();
+  frame.name = name;
+  appendChildren(frame, defaultChildren);
+  if (typeof component.appendChild === "function") {
+    component.appendChild(frame);
+  }
+  defineSlotProperty(component, name, options);
+  return frame;
 }
 
 // Collect every descendant (and the root itself) of a given Figma node type and

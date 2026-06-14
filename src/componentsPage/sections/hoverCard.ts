@@ -15,6 +15,7 @@ import {
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -65,8 +66,6 @@ function buildHoverCardComponent(inputs: ComponentsInputs): ComponentNode {
   handle.fontSize = 14;
   bindFontSize(handle, p.get("font/size/sm"));
   bindFill(handle, t.get("popover-foreground"));
-  comp.appendChild(handle);
-  handle.layoutSizingHorizontal = "FILL";
 
   // Body line.
   const body = figma.createText();
@@ -75,18 +74,31 @@ function buildHoverCardComponent(inputs: ComponentsInputs): ComponentNode {
   body.fontSize = 14;
   bindFontSize(body, p.get("font/size/sm"));
   bindFill(body, t.get("popover-foreground"));
-  comp.appendChild(body);
-  body.layoutSizingHorizontal = "FILL";
 
-  // "Joined" line: `mt-1 text-xs text-muted-foreground`. The mt-1 (4px) reads
-  // as extra top spacing; we approximate by appending a small spacer.
+  // "Joined" line: `mt-1 text-xs text-muted-foreground`.
   const joined = figma.createText();
   applyFont(joined, "body", "Regular");
   joined.characters = "Joined December 2021";
   joined.fontSize = 12;
   bindFontSize(joined, p.get("font/size/xs"));
   bindFill(joined, t.get("muted-foreground"));
-  comp.appendChild(joined);
+
+  // Wrap the demo lines in a Content slot so instances can compose their own
+  // hover-card body without detaching.
+  const content = createConfiguredSlot(
+    comp,
+    "Content",
+    [handle, body, joined],
+    { description: "Hover card content." },
+  );
+  content.layoutMode = "VERTICAL";
+  content.primaryAxisSizingMode = "AUTO";
+  content.counterAxisSizingMode = "AUTO";
+  content.itemSpacing = 2;
+  content.fills = [];
+  content.layoutSizingHorizontal = "FILL";
+  handle.layoutSizingHorizontal = "FILL";
+  body.layoutSizingHorizontal = "FILL";
   joined.layoutSizingHorizontal = "FILL";
 
   return comp;

@@ -28,6 +28,7 @@ import {
   type SemanticIconName,
 } from "../../icons";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -89,50 +90,63 @@ function buildContextMenuComponent(
   comp.strokeWeight = 1;
   comp.strokeAlign = "INSIDE";
 
+  // Menu items live in a slot so instances can add/remove/reorder rows.
+  const items = createConfiguredSlot(comp, "Items", [], {
+    description: "Menu items.",
+    settings: { minChildren: 1 },
+  });
+  items.layoutMode = "VERTICAL";
+  items.primaryAxisSizingMode = "AUTO";
+  items.counterAxisSizingMode = "FIXED";
+  items.itemSpacing = 0;
+  items.fills = [];
+  items.strokes = [];
+  items.layoutSizingHorizontal = "FILL";
+
   switch (variant) {
     case "basic":
-      appendItem(comp, inputs, { label: "Back" });
-      appendItem(comp, inputs, { label: "Forward", disabled: true });
-      appendItem(comp, inputs, { label: "Reload" });
-      appendItem(comp, inputs, { label: "Save As…" });
+      appendItem(items, inputs, { label: "Back" });
+      appendItem(items, inputs, { label: "Forward", disabled: true });
+      appendItem(items, inputs, { label: "Reload" });
+      appendItem(items, inputs, { label: "Save As…" });
       break;
     case "icons":
-      appendItem(comp, inputs, { label: "Profile", icon: "info" });
-      appendItem(comp, inputs, { label: "Notifications", icon: "bell" });
-      appendItem(comp, inputs, { label: "Add Team", icon: "plus" });
-      appendItem(comp, inputs, { label: "Favourite", icon: "star" });
+      appendItem(items, inputs, { label: "Profile", icon: "info" });
+      appendItem(items, inputs, { label: "Notifications", icon: "bell" });
+      appendItem(items, inputs, { label: "Add Team", icon: "plus" });
+      appendItem(items, inputs, { label: "Favourite", icon: "star" });
       break;
     case "checkbox":
-      appendItem(comp, inputs, {
+      appendItem(items, inputs, {
         label: "Show Bookmarks",
         checkbox: "checked",
       });
-      appendItem(comp, inputs, {
+      appendItem(items, inputs, {
         label: "Show Full URLs",
         checkbox: "unchecked",
       });
-      appendSeparator(comp, inputs);
-      appendLabel(comp, inputs, "People");
-      appendItem(comp, inputs, { label: "Pedro Duarte", radio: "selected" });
-      appendItem(comp, inputs, { label: "Colm Tuite", radio: "unselected" });
+      appendSeparator(items, inputs);
+      appendLabel(items, inputs, "People");
+      appendItem(items, inputs, { label: "Pedro Duarte", radio: "selected" });
+      appendItem(items, inputs, { label: "Colm Tuite", radio: "unselected" });
       break;
     case "submenu":
-      appendItem(comp, inputs, { label: "Back" });
-      appendItem(comp, inputs, { label: "Reload" });
-      appendItem(comp, inputs, { label: "More Tools", submenu: true });
-      appendItem(comp, inputs, { label: "Share", submenu: true });
+      appendItem(items, inputs, { label: "Back" });
+      appendItem(items, inputs, { label: "Reload" });
+      appendItem(items, inputs, { label: "More Tools", submenu: true });
+      appendItem(items, inputs, { label: "Share", submenu: true });
       break;
     case "shortcuts":
-      appendItem(comp, inputs, { label: "Back", shortcut: "⌘[" });
-      appendItem(comp, inputs, { label: "Forward", shortcut: "⌘]" });
-      appendItem(comp, inputs, { label: "Reload", shortcut: "⌘R" });
-      appendItem(comp, inputs, { label: "Save As…", shortcut: "⌘S" });
+      appendItem(items, inputs, { label: "Back", shortcut: "⌘[" });
+      appendItem(items, inputs, { label: "Forward", shortcut: "⌘]" });
+      appendItem(items, inputs, { label: "Reload", shortcut: "⌘R" });
+      appendItem(items, inputs, { label: "Save As…", shortcut: "⌘S" });
       break;
     case "destructive":
-      appendItem(comp, inputs, { label: "Edit", icon: "info" });
-      appendItem(comp, inputs, { label: "Duplicate", icon: "plus" });
-      appendSeparator(comp, inputs);
-      appendItem(comp, inputs, {
+      appendItem(items, inputs, { label: "Edit", icon: "info" });
+      appendItem(items, inputs, { label: "Duplicate", icon: "plus" });
+      appendSeparator(items, inputs);
+      appendItem(items, inputs, {
         label: "Delete",
         shortcut: "⌫",
         destructive: true,
@@ -143,8 +157,10 @@ function buildContextMenuComponent(
   return comp;
 }
 
+type ItemParent = { appendChild(child: SceneNode): void };
+
 function appendItem(
-  parent: ComponentNode,
+  parent: ItemParent,
   inputs: ComponentsInputs,
   spec: ItemSpec,
 ) {
@@ -153,14 +169,14 @@ function appendItem(
   child.layoutSizingHorizontal = "FILL";
 }
 
-function appendSeparator(parent: ComponentNode, inputs: ComponentsInputs) {
+function appendSeparator(parent: ItemParent, inputs: ComponentsInputs) {
   const child = buildSeparator(inputs);
   parent.appendChild(child);
   child.layoutSizingHorizontal = "FILL";
 }
 
 function appendLabel(
-  parent: ComponentNode,
+  parent: ItemParent,
   inputs: ComponentsInputs,
   text: string,
 ) {

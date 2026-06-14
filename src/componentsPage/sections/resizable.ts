@@ -14,6 +14,7 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -57,23 +58,36 @@ function buildResizableComponent(inputs: ComponentsInputs): ComponentNode {
   const leftWidth = Math.round((GROUP_WIDTH - HANDLE_WIDTH) * 0.4);
   const rightWidth = GROUP_WIDTH - HANDLE_WIDTH - leftWidth;
 
-  comp.appendChild(buildPanel(inputs, "One", leftWidth));
+  buildPanel(comp, inputs, "Panel One", "One", leftWidth);
   comp.appendChild(buildHandle(inputs));
-  comp.appendChild(buildPanel(inputs, "Two", rightWidth));
+  buildPanel(comp, inputs, "Panel Two", "Two", rightWidth);
 
   return comp;
 }
 
 function buildPanel(
+  comp: ComponentNode,
   inputs: ComponentsInputs,
+  slotName: string,
   label: string,
   width: number,
-): FrameNode {
+): void {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
-  const panel = figma.createFrame();
-  panel.name = "Panel";
+  const text = figma.createText();
+  applyFont(text, "body", "Medium");
+  text.characters = label;
+  text.fontSize = 14;
+  bindFontSize(text, p.get("font/size/sm"));
+  bindFill(text, t.get("foreground"));
+
+  // Each panel is a slot so instances can compose their own panel content.
+  // createConfiguredSlot appends it to the component in call order, so the two
+  // panels straddle the handle correctly.
+  const panel = createConfiguredSlot(comp, slotName, [text], {
+    description: "Resizable panel content.",
+  });
   panel.layoutMode = "HORIZONTAL";
   panel.primaryAxisSizingMode = "FIXED";
   panel.counterAxisSizingMode = "FIXED";
@@ -82,16 +96,6 @@ function buildPanel(
   panel.resize(width, GROUP_HEIGHT);
   panel.fills = [];
   panel.strokes = [];
-
-  const text = figma.createText();
-  applyFont(text, "body", "Medium");
-  text.characters = label;
-  text.fontSize = 14;
-  bindFontSize(text, p.get("font/size/sm"));
-  bindFill(text, t.get("foreground"));
-  panel.appendChild(text);
-
-  return panel;
 }
 
 // The handle: a 1px divider line with a centred grip square. Built with

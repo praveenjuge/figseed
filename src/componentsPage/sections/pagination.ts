@@ -15,6 +15,7 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { wrapInSectionCard } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -56,9 +57,19 @@ function buildPaginationComponent(inputs: ComponentsInputs): ComponentNode {
   comp.fills = [];
   comp.strokes = [];
 
-  for (const item of ITEMS) {
-    comp.appendChild(buildItem(inputs, item));
-  }
+  // Pagination controls live in a slot so instances can add/remove pages.
+  const items = ITEMS.map((item) => buildItem(inputs, item));
+  const list = createConfiguredSlot(comp, "Items", items, {
+    description: "Pagination controls.",
+    settings: { minChildren: 1 },
+  });
+  list.layoutMode = "HORIZONTAL";
+  list.primaryAxisSizingMode = "AUTO";
+  list.counterAxisSizingMode = "AUTO";
+  list.counterAxisAlignItems = "CENTER";
+  list.itemSpacing = 4;
+  list.fills = [];
+  list.strokes = [];
 
   return comp;
 }

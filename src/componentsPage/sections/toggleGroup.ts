@@ -27,6 +27,7 @@ import {
   type SemanticIconName,
 } from "../../icons";
 import { styleComponentSet } from "../layout";
+import { createConfiguredSlot } from "../properties";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -106,9 +107,23 @@ function buildToggleGroupComponent(
   comp.fills = [];
   comp.strokes = [];
 
+  // Toggle items live in a slot so instances can add/remove/reorder them.
+  const items: FrameNode[] = [];
   for (let i = 0; i < ITEMS.length; i++) {
-    comp.appendChild(buildToggleGroupItem(inputs, ITEMS[i]!, variant, dims));
+    items.push(buildToggleGroupItem(inputs, ITEMS[i]!, variant, dims));
   }
+  const slot = createConfiguredSlot(comp, "Items", items, {
+    description: "Toggle items.",
+    settings: { minChildren: 1 },
+  });
+  slot.layoutMode = "HORIZONTAL";
+  slot.primaryAxisSizingMode = "AUTO";
+  slot.counterAxisSizingMode = "AUTO";
+  slot.primaryAxisAlignItems = "MIN";
+  slot.counterAxisAlignItems = "CENTER";
+  slot.itemSpacing = 8;
+  slot.fills = [];
+  slot.strokes = [];
 
   return comp;
 }
