@@ -4,6 +4,7 @@
 import { SPACING_TOKENS } from "../../primitives";
 import { applyFont } from "../../fonts";
 import { bindFill, bindWidth } from "../bindings";
+import { createDesignSystemContext } from "../context";
 import { createSectionFrame, createVertical } from "../layout";
 import type { DesignSystemInputs } from "../types";
 import { countDescendants } from "../utils";
@@ -12,7 +13,11 @@ export async function addSpacingScale(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Spacing scale");
+  const section = createSectionFrame(
+    "Spacing scale",
+    undefined,
+    createDesignSystemContext(inputs),
+  );
 
   const stack = createVertical(section, 4);
 

@@ -84,11 +84,64 @@ describe("buildDesignSystem", () => {
     const styled = countStyledText(page as unknown as TreeNode);
     expect(styled).toBeGreaterThan(0);
   });
+
+  it("binds section chrome + labels to theme color variables", async () => {
+    const inputs = await makeInputs();
+    await buildDesignSystem(inputs);
+
+    const figma = (globalThis as unknown as { figma: FigmaMock }).figma;
+    const page = figma.root.children.find(
+      (c) => (c as unknown as { name: string }).name === "Niram",
+    ) as unknown as TreeNode;
+
+    // Section frames bind their fill to a theme surface (`card`/`background`)
+    // and headings/labels to `foreground`/`muted-foreground`, so the chrome is
+    // no longer a frozen literal gray.
+    expect(countBoundFills(page)).toBeGreaterThan(0);
+  });
+
+  it("attaches effect styles to the shadow/blur showcase tiles", async () => {
+    const inputs = await makeInputs();
+    await buildDesignSystem(inputs);
+
+    const figma = (globalThis as unknown as { figma: FigmaMock }).figma;
+    const page = figma.root.children.find(
+      (c) => (c as unknown as { name: string }).name === "Niram",
+    ) as unknown as TreeNode;
+
+    expect(countEffectStyled(page)).toBeGreaterThan(0);
+  });
+
+  it("binds primitive variables onto spacing/radius/border/font fields", async () => {
+    const inputs = await makeInputs();
+    await buildDesignSystem(inputs);
+
+    const figma = (globalThis as unknown as { figma: FigmaMock }).figma;
+    const page = figma.root.children.find(
+      (c) => (c as unknown as { name: string }).name === "Niram",
+    ) as unknown as TreeNode;
+
+    const fields = collectBoundFields(page);
+    // The post-build token sweep binds at least one of each primitive family.
+    expect(
+      fields.some((f) =>
+        ["itemSpacing", "paddingTop", "paddingLeft", "width"].includes(f),
+      ),
+    ).toBe(true);
+    expect(fields.some((f) => f.endsWith("Radius"))).toBe(true);
+    expect(
+      fields.some((f) => f.startsWith("strokeWeight") || f.endsWith("Weight")),
+    ).toBe(true);
+    expect(fields).toContain("fontSize");
+  });
 });
 
 type TreeNode = {
   type: string;
   textStyleId?: string;
+  effectStyleId?: string;
+  fills?: unknown;
+  boundVariables?: Record<string, unknown>;
   children?: TreeNode[];
 };
 
@@ -98,4 +151,47 @@ function countStyledText(node: TreeNode | undefined): number {
     node.type === "TEXT" && typeof node.textStyleId === "string" ? 1 : 0;
   for (const child of node.children ?? []) count += countStyledText(child);
   return count;
+}
+
+// A paint carries a bound color variable when the binding helper rewrote its
+// `boundVariables.color` alias (see test/figma-mock setBoundVariableForPaint).
+function fillIsBound(node: TreeNode): boolean {
+  const fills = node.fills;
+  if (!Array.isArray(fills)) return false;
+  return fills.some(
+    (paint) =>
+      paint &&
+      typeof paint === "object" &&
+      (paint as { boundVariables?: { color?: unknown } }).boundVariables
+        ?.color !== undefined,
+  );
+}
+
+function countBoundFills(node: TreeNode | undefined): number {
+  if (!node) return 0;
+  let count = fillIsBound(node) ? 1 : 0;
+  for (const child of node.children ?? []) count += countBoundFills(child);
+  return count;
+}
+
+function countEffectStyled(node: TreeNode | undefined): number {
+  if (!node) return 0;
+  let count =
+    typeof node.effectStyleId === "string" && node.effectStyleId.length > 0
+      ? 1
+      : 0;
+  for (const child of node.children ?? []) count += countEffectStyled(child);
+  return count;
+}
+
+// Collect every primitive (non-color) field name that ended up bound to a
+// variable after the post-build token sweep.
+function collectBoundFields(
+  node: TreeNode | undefined,
+  acc: string[] = [],
+): string[] {
+  if (!node) return acc;
+  for (const field of Object.keys(node.boundVariables ?? {})) acc.push(field);
+  for (const child of node.children ?? []) collectBoundFields(child, acc);
+  return acc;
 }

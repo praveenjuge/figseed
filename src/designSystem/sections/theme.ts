@@ -4,7 +4,8 @@
 // Each half binds its fill to the matching light/dark theme variable, so the
 // whole grid updates with the preset.
 
-import { bindFill } from "../bindings";
+import { bindFill, bindStrokeColor } from "../bindings";
+import { createDesignSystemContext } from "../context";
 import { applyFont } from "../../fonts";
 import { createSectionFrame, sectionContentWidth } from "../layout";
 import { solidPaint } from "../paints";
@@ -59,11 +60,16 @@ export async function addThemeSection(
 ): Promise<number> {
   const light = inputs.theme.light;
   const dark = inputs.theme.dark;
+  const ctx = createDesignSystemContext(inputs);
 
-  const section = createSectionFrame("Theme", {
-    title: "Theme",
-    subtitle: "Each chip: light (top) · dark (bottom)",
-  });
+  const section = createSectionFrame(
+    "Theme",
+    {
+      title: "Theme",
+      subtitle: "Each chip: light (top) · dark (bottom)",
+    },
+    ctx,
+  );
 
   // Two-column grid of group blocks. The section content width is fixed, so
   // each column gets exactly half (minus the column gap).
@@ -97,7 +103,7 @@ export async function addThemeSection(
     heading.fontSize = 10;
     heading.lineHeight = { unit: "PIXELS", value: 14 };
     heading.letterSpacing = { unit: "PERCENT", value: 4 };
-    heading.fills = [solidPaint(0.45)];
+    bindFill(heading, ctx.mutedForeground, 0.45);
     groupBlock.appendChild(heading);
 
     const swatchRow = figma.createFrame();
@@ -127,7 +133,10 @@ export async function addThemeSection(
       chip.layoutMode = "VERTICAL";
       chip.itemSpacing = 0;
       chip.strokeWeight = 1;
+      // Hairline outline so chips matching the page surface stay visible. The
+      // literal is a fallback; bind it to the theme `border` when available.
       chip.strokes = [solidPaint(0.85)];
+      bindStrokeColor(chip, ctx.border);
       chip.resize(SWATCH_WIDTH, SWATCH_HALF * 2);
       chip.primaryAxisSizingMode = "FIXED";
       chip.counterAxisSizingMode = "FIXED";
@@ -151,7 +160,7 @@ export async function addThemeSection(
       applyFont(caption, "body", "Regular");
       caption.characters = key;
       caption.fontSize = 9;
-      caption.fills = [solidPaint(0.35)];
+      bindFill(caption, ctx.mutedForeground, 0.35);
       cell.appendChild(caption);
 
       swatchRow.appendChild(cell);

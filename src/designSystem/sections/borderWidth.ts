@@ -3,6 +3,7 @@
 
 import { BORDER_WIDTH_TOKENS } from "../../primitives";
 import { bindStrokeColor, bindStrokeWeight } from "../bindings";
+import { createDesignSystemContext } from "../context";
 import {
   createSectionFrame,
   createSwatchCell,
@@ -16,7 +17,8 @@ export async function addBorderWidthScale(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Border widths");
+  const ctx = createDesignSystemContext(inputs);
+  const section = createSectionFrame("Border widths", undefined, ctx);
 
   const row = createWrappingRow(section, 16);
 
@@ -24,14 +26,14 @@ export async function addBorderWidthScale(
     const tile = createSwatchCell(row, {
       size: 72,
       caption: `${token.name} · ${token.value}px`,
-      captionVar: inputs.theme.light.get("foreground"),
+      captionVar: ctx.foreground,
     });
     tile.cornerRadius = 6;
     tile.fills = [];
     tile.strokes = [solidPaint(0.4)];
     tile.strokeWeight = Math.max(token.value, 1);
     // Use the theme primary color so the borders pick up the active palette.
-    bindStrokeColor(tile, inputs.theme.light.get("primary"));
+    bindStrokeColor(tile, ctx.primary);
     bindStrokeWeight(tile, inputs.primitives.get(`border-width/${token.name}`));
   }
 

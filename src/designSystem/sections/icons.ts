@@ -13,6 +13,8 @@
 
 import { ICON_LIBRARIES, type IconLibraryName } from "../../data/icons";
 import { recolorIcon, resolveIconLibrary } from "../../icons";
+import { bindStrokeColor } from "../bindings";
+import { createDesignSystemContext } from "../context";
 import { createSectionFrame, sectionContentWidth } from "../layout";
 import { solidPaint } from "../paints";
 import type { DesignSystemInputs } from "../types";
@@ -68,11 +70,16 @@ export async function addIconLibrary(
   const library = ICON_LIBRARIES[libraryName];
   const names = Object.keys(library.icons).sort();
 
+  const ctx = createDesignSystemContext(inputs);
   const label = LIBRARY_LABELS[libraryName];
-  const section = createSectionFrame("Icons", {
-    title: "Icons",
-    subtitle: `${label} · ${names.length} icons · figma component set`,
-  });
+  const section = createSectionFrame(
+    "Icons",
+    {
+      title: "Icons",
+      subtitle: `${label} · ${names.length} icons · figma component set`,
+    },
+    ctx,
+  );
 
   // No icons (shouldn't happen) — emit just the section header.
   if (names.length === 0) {
@@ -108,6 +115,7 @@ export async function addIconLibrary(
   set.paddingRight = 16;
   set.strokes = [solidPaint(0.9)];
   set.strokeWeight = 1;
+  bindStrokeColor(set, ctx.border);
   set.cornerRadius = 12;
   set.primaryAxisSizingMode = "FIXED";
   set.counterAxisSizingMode = "AUTO";

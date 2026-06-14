@@ -14,6 +14,7 @@ import {
   bindLetterSpacing,
   bindLineHeight,
 } from "../bindings";
+import { createDesignSystemContext } from "../context";
 import {
   addLabel,
   createSectionFrame,
@@ -28,17 +29,18 @@ export async function addTypography(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Typography");
+  const ctx = createDesignSystemContext(inputs);
+  const section = createSectionFrame("Typography", undefined, ctx);
 
-  const fgVar = inputs.theme.light.get("foreground");
-  const mutedVar = inputs.theme.light.get("muted-foreground");
+  const fgVar = ctx.foreground;
+  const mutedVar = ctx.mutedForeground;
 
   // Consistent metrics so the columns line up across all four sub-sections.
   const labelColumnWidth = 160;
   const sampleColumnWidth = sectionContentWidth() - labelColumnWidth - 16;
 
   // ----- Sizes -----
-  const sizeStack = createSubSection(section, "Font sizes");
+  const sizeStack = createSubSection(section, "Font sizes", ctx);
   for (const token of FONT_SIZE_TOKENS) {
     const row = createTableRow(sizeStack, labelColumnWidth);
     addLabel(row, `font/size/${token.name}`, mutedVar, labelColumnWidth);
@@ -57,7 +59,7 @@ export async function addTypography(
   // text node. Inter's per-style metrics shifted the leading column, so the
   // labels looked misaligned. Splitting into a fixed-width name column +
   // value column + sample column keeps everything on the same baseline.
-  const weightStack = createSubSection(section, "Font weights");
+  const weightStack = createSubSection(section, "Font weights", ctx);
   const weightNameWidth = 90;
   const weightValueWidth = 50;
   for (const token of FONT_WEIGHT_TOKENS) {
@@ -90,7 +92,11 @@ export async function addTypography(
   }
 
   // ----- Tracking -----
-  const trackingStack = createSubSection(section, "Letter spacing (tracking)");
+  const trackingStack = createSubSection(
+    section,
+    "Letter spacing (tracking)",
+    ctx,
+  );
   for (const token of FONT_TRACKING_TOKENS) {
     const row = createTableRow(trackingStack, labelColumnWidth);
     addLabel(row, `font/tracking/${token.name}`, mutedVar, labelColumnWidth);
@@ -112,7 +118,7 @@ export async function addTypography(
   // Leading rows need extra height so the two-line sample doesn't visually
   // collide with the next row. We set the row's counter-axis to AUTO and
   // give the sample a fixed width so the wrap is predictable.
-  const leadingStack = createSubSection(section, "Line height (leading)");
+  const leadingStack = createSubSection(section, "Line height (leading)", ctx);
   for (const token of FONT_LEADING_TOKENS) {
     const row = createTableRow(leadingStack, labelColumnWidth);
     row.counterAxisAlignItems = "MIN";

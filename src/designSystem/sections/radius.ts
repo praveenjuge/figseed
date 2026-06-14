@@ -2,6 +2,7 @@
 
 import { RADIUS_TOKENS } from "../../primitives";
 import { bindCornerRadii, bindFill } from "../bindings";
+import { createDesignSystemContext } from "../context";
 import {
   createSectionFrame,
   createSwatchCell,
@@ -14,7 +15,8 @@ export async function addRadiusScale(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Border radius");
+  const ctx = createDesignSystemContext(inputs);
+  const section = createSectionFrame("Border radius", undefined, ctx);
 
   const row = createWrappingRow(section, 16);
 
@@ -25,9 +27,9 @@ export async function addRadiusScale(
     const tile = createSwatchCell(row, {
       size: 72,
       caption: `${token.name} · ${token.value}px`,
-      captionVar: inputs.theme.light.get("foreground"),
+      captionVar: ctx.foreground,
     });
-    bindFill(tile, inputs.theme.light.get("primary"));
+    bindFill(tile, ctx.primary);
     const radius = Math.min(token.value, 36);
     tile.topLeftRadius = radius;
     tile.topRightRadius = radius;

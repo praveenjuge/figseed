@@ -1,8 +1,8 @@
 // Layout helpers shared by the Design System page sections.
 
 import { bindFill } from "./bindings";
+import type { DesignSystemContext } from "./context";
 import { applyFont } from "../fonts";
-import { solidPaint } from "./paints";
 import { SECTION_WIDTH } from "./types";
 
 export function sectionContentWidth(): number {
@@ -13,6 +13,7 @@ export function sectionContentWidth(): number {
 export function createSectionFrame(
   name: string,
   meta?: { title?: string; titleSize?: number; subtitle?: string },
+  ctx?: DesignSystemContext,
 ): FrameNode {
   const frame = figma.createFrame();
   frame.name = name;
@@ -24,7 +25,10 @@ export function createSectionFrame(
   frame.paddingBottom = 16;
   frame.paddingLeft = 16;
   frame.paddingRight = 16;
-  frame.fills = [solidPaint(1)];
+  // The section card binds to the theme `card` surface (white-ish in light
+  // mode) so the page chrome follows the preset. Falls back to a literal white
+  // when no context/variable is available (older callers/tests).
+  bindFill(frame, ctx?.card ?? ctx?.background, 1);
   frame.resize(SECTION_WIDTH, 100);
   // Clip so oversized children (large font sizes, shadow bleed at edges)
   // stay inside the rounded card. Sections that need bleed compensate by
@@ -35,7 +39,7 @@ export function createSectionFrame(
   applyFont(heading, "heading", "Semi Bold");
   heading.characters = meta?.title ?? name;
   heading.fontSize = meta?.titleSize ?? 16;
-  heading.fills = [solidPaint(0.1)];
+  bindFill(heading, ctx?.foreground, 0.1);
   frame.appendChild(heading);
 
   if (meta?.subtitle) {
@@ -43,14 +47,18 @@ export function createSectionFrame(
     applyFont(sub, "body", "Regular");
     sub.characters = meta.subtitle;
     sub.fontSize = 12;
-    sub.fills = [solidPaint(0.4)];
+    bindFill(sub, ctx?.mutedForeground, 0.4);
     frame.appendChild(sub);
   }
 
   return frame;
 }
 
-export function createSubSection(parent: FrameNode, title: string): FrameNode {
+export function createSubSection(
+  parent: FrameNode,
+  title: string,
+  ctx?: DesignSystemContext,
+): FrameNode {
   const frame = figma.createFrame();
   frame.layoutMode = "VERTICAL";
   frame.primaryAxisSizingMode = "AUTO";
@@ -62,7 +70,7 @@ export function createSubSection(parent: FrameNode, title: string): FrameNode {
   applyFont(heading, "heading", "Medium");
   heading.characters = title;
   heading.fontSize = 12;
-  heading.fills = [solidPaint(0.3)];
+  bindFill(heading, ctx?.mutedForeground, 0.3);
 
   frame.appendChild(heading);
   parent.appendChild(frame);

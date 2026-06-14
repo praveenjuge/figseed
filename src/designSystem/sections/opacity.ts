@@ -3,6 +3,7 @@
 
 import { OPACITY_TOKENS } from "../../primitives";
 import { bindFill, bindOpacity } from "../bindings";
+import { createDesignSystemContext } from "../context";
 import {
   createSectionFrame,
   createSwatchCell,
@@ -15,7 +16,8 @@ export async function addOpacityScale(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Opacity scale");
+  const ctx = createDesignSystemContext(inputs);
+  const section = createSectionFrame("Opacity scale", undefined, ctx);
 
   const row = createWrappingRow(section, 6);
 
@@ -23,11 +25,11 @@ export async function addOpacityScale(
     const tile = createSwatchCell(row, {
       size: 36,
       caption: `${token.name} · ${token.value}%`,
-      captionVar: inputs.theme.light.get("foreground"),
+      captionVar: ctx.foreground,
       centered: true,
     });
     tile.cornerRadius = 4;
-    bindFill(tile, inputs.theme.light.get("primary"));
+    bindFill(tile, ctx.primary);
     tile.opacity = Math.max(0.0001, token.value / 100);
     bindOpacity(tile, inputs.primitives.get(`opacity/${token.name}`));
   }

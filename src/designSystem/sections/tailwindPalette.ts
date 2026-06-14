@@ -3,7 +3,8 @@
 
 import { TAILWIND_COLOR_FAMILIES, TAILWIND_COLOR_SCALES } from "../../colors";
 import { applyFont } from "../../fonts";
-import { bindFill } from "../bindings";
+import { bindFill, bindStrokeColor } from "../bindings";
+import { createDesignSystemContext } from "../context";
 import {
   createSectionFrame,
   createVertical,
@@ -17,7 +18,8 @@ export async function addTailwindPalette(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Tailwind palette");
+  const ctx = createDesignSystemContext(inputs);
+  const section = createSectionFrame("Tailwind palette", undefined, ctx);
 
   const stack = createVertical(section, 2);
   const rowWidth = sectionContentWidth();
@@ -48,7 +50,7 @@ export async function addTailwindPalette(
     tag.characters = scale;
     tag.fontSize = 9;
     applyFont(tag, "body", "Medium");
-    tag.fills = [solidPaint(0.4)];
+    bindFill(tag, ctx.mutedForeground, 0.4);
     tag.textAlignHorizontal = "CENTER";
     tag.textAutoResize = "HEIGHT";
     tag.layoutGrow = 1;
@@ -73,7 +75,7 @@ export async function addTailwindPalette(
     label.characters = family;
     label.fontSize = 10;
     applyFont(label, "body", "Medium");
-    label.fills = [solidPaint(0.4)];
+    bindFill(label, ctx.mutedForeground, 0.4);
     label.resize(labelWidth, 16);
     row.appendChild(label);
 
@@ -108,13 +110,14 @@ export async function addTailwindPalette(
     swatch.cornerRadius = 4;
     swatch.strokeWeight = 1;
     swatch.strokes = [solidPaint(0.85)];
+    bindStrokeColor(swatch, ctx.border);
     bindFill(swatch, inputs.tailwindColors.get(name));
 
     const cap = figma.createText();
     cap.characters = name;
     cap.fontSize = 9;
     applyFont(cap, "body", "Medium");
-    cap.fills = [solidPaint(0.4)];
+    bindFill(cap, ctx.mutedForeground, 0.4);
 
     cell.appendChild(swatch);
     cell.appendChild(cap);

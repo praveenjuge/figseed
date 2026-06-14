@@ -13,12 +13,15 @@ import { applyEffectStyle } from "../../effectStyles";
 import { applyFont } from "../../fonts";
 import { bindFill } from "../bindings";
 import {
+  createDesignSystemContext,
+  type DesignSystemContext,
+} from "../context";
+import {
   createSectionFrame,
   createSubSection,
   createWrappingRow,
   sectionContentWidth,
 } from "../layout";
-import { solidPaint } from "../paints";
 import type { DesignSystemInputs } from "../types";
 import { countDescendants, shortTokenName } from "../utils";
 
@@ -28,14 +31,21 @@ export async function addBoxShadows(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Shadows");
+  const ctx = createDesignSystemContext(inputs);
+  const section = createSectionFrame("Shadows", undefined, ctx);
   // Shadows bleed past their tile, so the section must NOT clip its content —
   // otherwise the spread/blur gets cut off at the card edge. (Regression
   // guard: see test/designSystem/boxShadow.test.ts.)
   section.clipsContent = false;
 
-  await addShadowGroup(section, inputs, "Drop shadow", SHADOW_STYLES);
-  await addShadowGroup(section, inputs, "Inner shadow", INNER_SHADOW_STYLES);
+  await addShadowGroup(section, ctx, "Drop shadow", SHADOW_STYLES, inputs);
+  await addShadowGroup(
+    section,
+    ctx,
+    "Inner shadow",
+    INNER_SHADOW_STYLES,
+    inputs,
+  );
 
   page.appendChild(section);
   return countDescendants(section);
@@ -43,11 +53,12 @@ export async function addBoxShadows(
 
 async function addShadowGroup(
   section: FrameNode,
-  inputs: DesignSystemInputs,
+  ctx: DesignSystemContext,
   title: string,
   specs: EffectStyleSpec[],
+  inputs: DesignSystemInputs,
 ): Promise<void> {
-  const group = createSubSection(section, title);
+  const group = createSubSection(section, title, ctx);
   // The subsection frame sits between the (non-clipping) section and the row;
   // it must not clip either, or it cuts off the shadow bleed.
   group.clipsContent = false;
@@ -81,7 +92,9 @@ async function addShadowGroup(
     const tile = figma.createRectangle();
     tile.resize(TILE, TILE);
     tile.cornerRadius = 8;
-    tile.fills = [solidPaint(1)];
+    // The tile is a card surface that the shadow sits on; bind it to the theme
+    // `card` so it tracks the preset (literal white is the fallback).
+    bindFill(tile, ctx.card ?? ctx.background, 1);
     // Literal effects first (fallback), then reference the published style so
     // the tile tracks later edits to the shared shadow.
     tile.effects = spec.effects;
@@ -91,7 +104,7 @@ async function addShadowGroup(
     label.characters = shortTokenName(spec.name);
     label.fontSize = 10;
     applyFont(label, "body", "Medium");
-    bindFill(label, inputs.theme.light.get("muted-foreground"));
+    bindFill(label, ctx.mutedForeground, 0.4);
 
     cell.appendChild(tile);
     cell.appendChild(label);

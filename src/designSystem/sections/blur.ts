@@ -13,6 +13,10 @@ import { applyEffectStyle } from "../../effectStyles";
 import { applyFont } from "../../fonts";
 import { bindEffectRadius, bindFill } from "../bindings";
 import {
+  createDesignSystemContext,
+  type DesignSystemContext,
+} from "../context";
+import {
   createSectionFrame,
   createSubSection,
   createWrappingRow,
@@ -28,7 +32,8 @@ export async function addBlurAndBackdrop(
   page: PageNode,
   inputs: DesignSystemInputs,
 ): Promise<number> {
-  const section = createSectionFrame("Blur & backdrop");
+  const ctx = createDesignSystemContext(inputs);
+  const section = createSectionFrame("Blur & backdrop", undefined, ctx);
 
   // Decode the bundled background once and reuse the same image hash for
   // every tile. Figma deduplicates by hash, so this is safe across runs.
@@ -39,8 +44,8 @@ export async function addBlurAndBackdrop(
     imageHash: bgImage.hash,
   };
 
-  await addLayerBlurGroup(section, inputs, bgPaint);
-  await addBackdropBlurGroup(section, inputs, bgPaint);
+  await addLayerBlurGroup(section, inputs, ctx, bgPaint);
+  await addBackdropBlurGroup(section, inputs, ctx, bgPaint);
 
   page.appendChild(section);
   return countDescendants(section);
@@ -59,9 +64,10 @@ function blurRow(group: FrameNode): FrameNode {
 async function addLayerBlurGroup(
   section: FrameNode,
   inputs: DesignSystemInputs,
+  ctx: DesignSystemContext,
   bgPaint: ImagePaint,
 ): Promise<void> {
-  const row = blurRow(createSubSection(section, "Layer blur"));
+  const row = blurRow(createSubSection(section, "Layer blur", ctx));
 
   for (const spec of BLUR_STYLE_SPECS) {
     const cell = blurCell();
@@ -82,7 +88,7 @@ async function addLayerBlurGroup(
     await applyEffectStyle(tile, inputs.effectStyles?.idFor(spec.name));
 
     cell.appendChild(tile);
-    cell.appendChild(blurLabel(spec, inputs));
+    cell.appendChild(blurLabel(spec, ctx));
     row.appendChild(cell);
   }
 }
@@ -92,9 +98,10 @@ async function addLayerBlurGroup(
 async function addBackdropBlurGroup(
   section: FrameNode,
   inputs: DesignSystemInputs,
+  ctx: DesignSystemContext,
   bgPaint: ImagePaint,
 ): Promise<void> {
-  const row = blurRow(createSubSection(section, "Backdrop blur"));
+  const row = blurRow(createSubSection(section, "Backdrop blur", ctx));
 
   for (const spec of BACKDROP_BLUR_STYLE_SPECS) {
     const cell = blurCell();
@@ -130,7 +137,7 @@ async function addBackdropBlurGroup(
     stage.appendChild(overlay);
 
     cell.appendChild(stage);
-    cell.appendChild(blurLabel(spec, inputs));
+    cell.appendChild(blurLabel(spec, ctx));
     row.appendChild(cell);
   }
 }
@@ -146,11 +153,11 @@ function blurCell(): FrameNode {
   return cell;
 }
 
-function blurLabel(spec: BlurStyleSpec, inputs: DesignSystemInputs): TextNode {
+function blurLabel(spec: BlurStyleSpec, ctx: DesignSystemContext): TextNode {
   const label = figma.createText();
   label.characters = `${shortTokenName(spec.name)} · ${spec.radius}`;
   label.fontSize = 10;
   applyFont(label, "body", "Medium");
-  bindFill(label, inputs.theme.light.get("muted-foreground"));
+  bindFill(label, ctx.mutedForeground, 0.4);
   return label;
 }
