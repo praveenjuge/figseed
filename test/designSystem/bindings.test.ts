@@ -4,6 +4,8 @@ import {
   bindEffectRadius,
   bindFill,
   bindFontSize,
+  bindLetterSpacing,
+  bindLineHeight,
   bindOpacity,
   bindStrokeColor,
   bindStrokeWeight,
@@ -96,6 +98,16 @@ describe("scalar bindings", () => {
       "bindFontSize",
       bindFontSize as unknown as (n: FrameNode, v: Variable) => void,
       "fontSize",
+    ],
+    [
+      "bindLineHeight",
+      bindLineHeight as unknown as (n: FrameNode, v: Variable) => void,
+      "lineHeight",
+    ],
+    [
+      "bindLetterSpacing",
+      bindLetterSpacing as unknown as (n: FrameNode, v: Variable) => void,
+      "letterSpacing",
     ],
   ];
 

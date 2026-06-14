@@ -182,6 +182,18 @@ describe("buildBlocksRegion", () => {
     expect(leftCount + middleCount + rightCount).toBe(added.length);
   });
 
+  it("clears and rebuilds only its own region on a re-run", async () => {
+    const inputs = await makeInputsOnComponentsPage();
+    await buildBlocksRegion(inputs);
+    const page = inputs.targetPage as unknown as { children: unknown[] };
+    const afterFirst = page.children.length;
+
+    // A second run must clear the 14 blocks frames it tagged and re-add the
+    // same count, rather than doubling them or touching the component grid.
+    await buildBlocksRegion(inputs);
+    expect(page.children.length).toBe(afterFirst);
+  });
+
   it("falls back to drawn stand-ins on a bare page (no components)", async () => {
     // Render onto an empty page that holds no component sets. Every reuse
     // misses, so each block draws its fallback Button/Input/Label/etc. (The

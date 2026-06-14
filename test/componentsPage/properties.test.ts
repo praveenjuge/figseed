@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   collectByTypeAndName,
   defineBooleanProperty,
+  defineIconSwapProperty,
   defineInstanceSwapProperty,
   defineTextProperty,
 } from "../../src/componentsPage/properties";
@@ -107,6 +108,84 @@ describe("property helpers", () => {
       ],
     };
     expect(collectByTypeAndName(root, "TEXT", "Label")).toHaveLength(2);
+  });
+
+  it("returns undefined for empty node lists", () => {
+    const container = { addComponentProperty: (n: string) => `${n}#1:0` };
+    expect(defineTextProperty(container, "Label", "x", [])).toBeUndefined();
+    expect(defineBooleanProperty(container, "Show", true, [])).toBeUndefined();
+    expect(
+      defineInstanceSwapProperty(container, "Icon", "key", []),
+    ).toBeUndefined();
+  });
+
+  it("swallows a throwing addComponentProperty and skips the reference", () => {
+    const container = {
+      addComponentProperty: () => {
+        throw new Error("duplicate property name");
+      },
+    };
+    const node: FakeNode = { type: "TEXT", name: "x", children: [] };
+    expect(defineTextProperty(container, "Label", "x", [node])).toBeUndefined();
+    expect(node.componentPropertyReferences).toBeUndefined();
+  });
+
+  it("merges new references with any existing ones on a node", () => {
+    const container = { addComponentProperty: (n: string) => `${n}#1:0` };
+    const node: FakeNode = {
+      type: "TEXT",
+      name: "x",
+      children: [],
+      componentPropertyReferences: { visible: "Show#0:0" },
+    };
+    defineTextProperty(container, "Label", "x", [node]);
+    expect(node.componentPropertyReferences?.visible).toBe("Show#0:0");
+    expect(node.componentPropertyReferences?.characters).toBe("Label#1:0");
+  });
+});
+
+describe("defineIconSwapProperty", () => {
+  const container = { addComponentProperty: (n: string) => `${n}#1:0` };
+
+  it("no-ops when no source icon is supplied", () => {
+    const node: FakeNode = { type: "INSTANCE", name: "Icon", children: [] };
+    expect(
+      defineIconSwapProperty(container, "Icon", undefined, [node]),
+    ).toBeUndefined();
+    expect(node.componentPropertyReferences).toBeUndefined();
+  });
+
+  it("wires the swap without preferred values when the parent isn't a set", () => {
+    const node: FakeNode = { type: "INSTANCE", name: "Icon", children: [] };
+    const source = { key: "icon-key", parent: { type: "FRAME" } };
+    const id = defineIconSwapProperty(container, "Icon", source, [node]);
+    expect(id).toBe("Icon#1:0");
+    expect(node.componentPropertyReferences?.mainComponent).toBe("Icon#1:0");
+  });
+
+  it("offers the owning component set as a preferred swap value", () => {
+    const store: Record<string, { preferredValues?: unknown }> = {};
+    const recording = {
+      addComponentProperty: (
+        name: string,
+        _type: string,
+        _def: string | boolean,
+        opts?: { preferredValues?: unknown },
+      ) => {
+        const id = `${name}#1:0`;
+        store[id] = { preferredValues: opts?.preferredValues };
+        return id;
+      },
+    };
+    const node: FakeNode = { type: "INSTANCE", name: "Icon", children: [] };
+    const source = {
+      key: "icon-key",
+      parent: { type: "COMPONENT_SET", key: "set-key" },
+    };
+    const id = defineIconSwapProperty(recording, "Icon", source, [node])!;
+    expect(store[id]?.preferredValues).toEqual([
+      { type: "COMPONENT_SET", key: "set-key" },
+    ]);
   });
 });
 

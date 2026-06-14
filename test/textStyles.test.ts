@@ -219,6 +219,92 @@ describe("applyTextStyles", () => {
     );
   });
 
+  it("skips a node whose weight is off the Tailwind scale", async () => {
+    const figma = liveFigma();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    // "Ultra" is not one of the published Tailwind weight style names.
+    (text as unknown as { fontName: unknown }).fontName = {
+      family: "Inter",
+      style: "Ultra",
+    };
+
+    await applyTextStyles(text as never, map);
+    expect(
+      (text as unknown as { textStyleId?: string }).textStyleId,
+    ).toBeUndefined();
+  });
+
+  it("skips a node with no concrete fontName (mixed styling)", async () => {
+    const figma = liveFigma();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    (text as unknown as { fontName?: unknown }).fontName = undefined;
+
+    await applyTextStyles(text as never, map);
+    expect(
+      (text as unknown as { textStyleId?: string }).textStyleId,
+    ).toBeUndefined();
+  });
+
+  it("skips nodes that carry an explicit pixel letter-spacing override", async () => {
+    const figma = liveFigma();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    (text as unknown as { fontName: unknown }).fontName = {
+      family: "Inter",
+      style: "Regular",
+    };
+    (text as unknown as { letterSpacing: unknown }).letterSpacing = {
+      unit: "PIXELS",
+      value: 1,
+    };
+
+    await applyTextStyles(text as never, map);
+    expect(
+      (text as unknown as { textStyleId?: string }).textStyleId,
+    ).toBeUndefined();
+  });
+
+  it("swallows a host that rejects the style id", async () => {
+    const figma = liveFigma();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    (text as unknown as { fontName: unknown }).fontName = {
+      family: "Inter",
+      style: "Regular",
+    };
+    (
+      text as unknown as { setTextStyleIdAsync: () => Promise<void> }
+    ).setTextStyleIdAsync = () => Promise.reject(new Error("locked style"));
+
+    await expect(applyTextStyles(text as never, map)).resolves.toBeUndefined();
+  });
+
+  it("skips a node whose host can't set text styles", async () => {
+    const figma = liveFigma();
+    const map = await ensureTextStyles(await primitives());
+
+    const text = figma.createText();
+    (text as unknown as { fontSize: number }).fontSize = 14;
+    (text as unknown as { fontName: unknown }).fontName = {
+      family: "Inter",
+      style: "Regular",
+    };
+    (text as unknown as { setTextStyleIdAsync?: unknown }).setTextStyleIdAsync =
+      undefined;
+
+    await expect(applyTextStyles(text as never, map)).resolves.toBeUndefined();
+  });
+
   it("does not retag a node using a family outside the resolved set", async () => {
     const figma = liveFigma();
     // No active font context → styles resolve to Inter only.

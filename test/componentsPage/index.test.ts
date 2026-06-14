@@ -50,6 +50,30 @@ describe("buildComponentsPage", () => {
     expect(lastText.current).toBe(lastText.total);
   });
 
+  it("offsets the grid to the right of an existing Design System region", async () => {
+    const figma = (globalThis as unknown as { figma: any }).figma;
+    // Seed a Niram page that already carries a Design System region frame, so
+    // regionOriginX has a non-zero right edge to anchor the grid past.
+    const page = figma.createPage();
+    page.name = "Niram";
+    const dsFrame = figma.createFrame();
+    dsFrame.x = 0;
+    dsFrame.width = 500;
+    dsFrame.setPluginData("niramRegion", "design-system");
+    page.appendChild(dsFrame);
+
+    await buildComponentsPage(await makeInputs());
+
+    // The component frames this run tagged should all start to the right of the
+    // Design System region's right edge (500) plus the region gutter.
+    const componentFrames = (page.children as any[]).filter(
+      (c) => c.getPluginData("niramRegion") === "components",
+    );
+    expect(componentFrames.length).toBeGreaterThan(0);
+    const minX = Math.min(...componentFrames.map((c: any) => c.x));
+    expect(minX).toBeGreaterThanOrEqual(500);
+  });
+
   it("reuses and clears its region on the Niram page on rebuild", async () => {
     const inputs = await makeInputs();
     await buildComponentsPage(inputs);

@@ -104,4 +104,61 @@ describe("ProgressReporter", () => {
     reporter.mark("building", undefined, 1, 1);
     expect(updates).toHaveLength(0);
   });
+
+  it("clamps a later lower reading to the last percent (never rewinds)", () => {
+    const updates: ProgressUpdate[] = [];
+    const reporter = new ProgressReporter({
+      emit: (u) => updates.push(u),
+      now: fakeClock(),
+    });
+    const track = reporter.region("components");
+    track({ phase: "building", current: 4, total: 4 });
+    const high = updates.at(-1)!.percent;
+    // A stray earlier reading within the same segment must not lower the bar.
+    track({ phase: "building", current: 0, total: 4 });
+    expect(updates.at(-1)!.percent).toBe(high);
+  });
+
+  it("does not rewind when a later event names an earlier phase", () => {
+    const updates: ProgressUpdate[] = [];
+    const reporter = new ProgressReporter({
+      emit: (u) => updates.push(u),
+      now: fakeClock(),
+    });
+    reporter.region("components")({ phase: "building", current: 4, total: 4 });
+    const afterComponents = updates.at(-1)!.percent;
+    // A late design-system event (an earlier segment) stays pinned forward.
+    reporter.region("design-system")({
+      phase: "clearing",
+      current: 1,
+      total: 1,
+    });
+    expect(updates.at(-1)!.percent).toBeGreaterThanOrEqual(afterComponents);
+  });
+
+  it("reports elapsed time since the run started", () => {
+    let t = 1000;
+    const reporter = new ProgressReporter({
+      emit: () => {},
+      now: () => {
+        const now = t;
+        t += 50;
+        return now;
+      },
+    });
+    // First now() call seeds startedAt (1000); elapsed() reads the next tick.
+    expect(reporter.elapsed()).toBeGreaterThan(0);
+  });
+
+  it("describes the terminal done phase when marked through the normal path", () => {
+    const updates: ProgressUpdate[] = [];
+    const reporter = new ProgressReporter({
+      emit: (u) => updates.push(u),
+      now: fakeClock(),
+    });
+    reporter.phase("done");
+    expect(updates.at(-1)!.phase).toBe("done");
+    expect(updates.at(-1)!.detail).toBe("Done");
+    expect(updates.at(-1)!.percent).toBe(100);
+  });
 });

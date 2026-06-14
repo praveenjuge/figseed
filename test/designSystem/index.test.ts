@@ -69,6 +69,24 @@ describe("buildDesignSystem", () => {
     expect(pages).toHaveLength(1);
   });
 
+  it("leaves frames owned by other regions untouched on a rebuild", async () => {
+    const inputs = await makeInputs();
+    await buildDesignSystem(inputs);
+
+    const figma = (globalThis as unknown as { figma: any }).figma;
+    const page = figma.root.children.find((c: any) => c.name === "Niram");
+    // Seed a frame the Components region "owns" — the design-system rebuild
+    // must clear only its own tagged frames and leave this one in place.
+    const foreign = figma.createFrame();
+    foreign.setPluginData("niramRegion", "components");
+    page.appendChild(foreign);
+
+    await buildDesignSystem(inputs);
+
+    expect(page.children).toContain(foreign);
+    expect(foreign.getPluginData("niramRegion")).toBe("components");
+  });
+
   it("publishes the Tailwind text styles and maps matching text nodes onto them", async () => {
     const inputs = await makeInputs();
     await buildDesignSystem(inputs);

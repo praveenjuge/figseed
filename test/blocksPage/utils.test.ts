@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  fillHeight,
   fillWidth,
+  growWidth,
   instanceFromComponents,
   loadBlocksFonts,
   overrideFirstText,
@@ -42,20 +44,18 @@ describe("loadBlocksFonts", () => {
       ...baseInputs,
       fonts: { body: "Roboto", heading: "Lora" } as never,
     });
-    const families = fig()
-      .loadFontAsync.mock.calls.map(
-        (c: unknown[]) => (c[0] as { family: string }).family,
-      );
+    const families = fig().loadFontAsync.mock.calls.map(
+      (c: unknown[]) => (c[0] as { family: string }).family,
+    );
     expect(families).toContain("Roboto");
     expect(families).toContain("Lora");
   });
 
   it("falls back to Inter when no preset fonts are supplied", async () => {
     await loadBlocksFonts(baseInputs);
-    const families = fig()
-      .loadFontAsync.mock.calls.map(
-        (c: unknown[]) => (c[0] as { family: string }).family,
-      );
+    const families = fig().loadFontAsync.mock.calls.map(
+      (c: unknown[]) => (c[0] as { family: string }).family,
+    );
     expect(families).toContain("Inter");
   });
 });
@@ -136,5 +136,41 @@ describe("fillWidth", () => {
       },
     });
     expect(() => fillWidth(node as unknown as SceneNode)).not.toThrow();
+  });
+});
+
+describe("fillHeight", () => {
+  it("sets layoutSizingVertical to FILL", () => {
+    const node = frame();
+    fillHeight(node as unknown as SceneNode);
+    expect(node.layoutSizingVertical).toBe("FILL");
+  });
+
+  it("swallows hosts that reject vertical FILL", () => {
+    const node = frame();
+    Object.defineProperty(node, "layoutSizingVertical", {
+      set() {
+        throw new Error("cannot FILL");
+      },
+    });
+    expect(() => fillHeight(node as unknown as SceneNode)).not.toThrow();
+  });
+});
+
+describe("growWidth", () => {
+  it("sets layoutGrow to 1", () => {
+    const node = frame();
+    growWidth(node as unknown as SceneNode);
+    expect(node.layoutGrow).toBe(1);
+  });
+
+  it("swallows hosts that reject layoutGrow", () => {
+    const node = frame();
+    Object.defineProperty(node, "layoutGrow", {
+      set() {
+        throw new Error("cannot grow");
+      },
+    });
+    expect(() => growWidth(node as unknown as SceneNode)).not.toThrow();
   });
 });

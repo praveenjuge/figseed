@@ -94,6 +94,22 @@ describe("createNamedIcon", () => {
     expect(icon).toBeDefined();
     expect(icon.name).toBe("icon");
   });
+
+  it("rescales the geometry when the target size differs from 24px", () => {
+    const calls: number[] = [];
+    const figmaAny = fig() as unknown as {
+      createNodeFromSvg: (svg: string) => FakeNode;
+    };
+    const orig = figmaAny.createNodeFromSvg.bind(figmaAny);
+    figmaAny.createNodeFromSvg = (svg: string) => {
+      const node = orig(svg);
+      node.rescale = (factor: number) => calls.push(factor);
+      return node;
+    };
+
+    createNamedIcon({ library: "lucide", name: "chevron-right", size: 18 });
+    expect(calls).toEqual([18 / 24]);
+  });
 });
 
 describe("instantiateIcon rescale", () => {
