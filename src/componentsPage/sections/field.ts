@@ -6,13 +6,18 @@
 //   FieldDescription `text-sm text-muted-foreground`
 //   FieldError   `text-sm font-normal text-destructive`
 //
-// We surface the meaningful compositions as an `Orientation` axis:
-//   vertical    — label over an input over a description (the default)
-//   horizontal  — a switch-style control with the label/description beside it
-//   invalid     — the vertical layout with a destructive error message
+// We surface the common compositions designers actually swap as a curated
+// `Variant` axis — the control changes, not the orientation:
+//   input     — label over a text input over a description (the default)
+//   textarea  — label over a multi-line textarea over a description
+//   select    — label over a select trigger (chevron) over a description
+//   checkbox  — a switch-style row with the label/description beside it
+//   invalid   — the input layout with a destructive error message
 //
-// The control is a faithful copy of radix-nova's Input (`h-8 px-2.5 rounded-lg
-// border-input`) / Switch so the field reads as a real form row.
+// Controls are faithful copies of radix-nova's Input (`h-8 px-2.5 rounded-lg
+// border-input`), Textarea, Select trigger, and Switch so the field reads as a
+// real form row. Everything binds the selected preset's semantic tokens,
+// radius, and font.
 
 import {
   bindCornerRadii,
@@ -25,7 +30,13 @@ import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const FIELD_VARIANTS = ["vertical", "horizontal", "invalid"] as const;
+const FIELD_VARIANTS = [
+  "input",
+  "textarea",
+  "select",
+  "checkbox",
+  "invalid",
+] as const;
 type FieldVariant = (typeof FIELD_VARIANTS)[number];
 
 const FIELD_WIDTH = 320;
@@ -55,13 +66,13 @@ function buildFieldComponent(
   variant: FieldVariant,
 ): ComponentNode {
   const comp = figma.createComponent();
-  comp.name = `Orientation=${variant}`;
+  comp.name = `Variant=${variant}`;
   comp.resize(FIELD_WIDTH, 10);
 
-  if (variant === "horizontal") {
+  if (variant === "checkbox") {
     return buildHorizontalField(comp, inputs);
   }
-  return buildVerticalField(comp, inputs, variant === "invalid");
+  return buildVerticalField(comp, inputs, variant);
 }
 
 // Vertical field: `flex-col gap-2` — label, control, description (and an error
@@ -69,10 +80,11 @@ function buildFieldComponent(
 function buildVerticalField(
   comp: ComponentNode,
   inputs: ComponentsInputs,
-  invalid: boolean,
+  variant: Exclude<FieldVariant, "checkbox">,
 ): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
+  const invalid = variant === "invalid";
 
   comp.layoutMode = "VERTICAL";
   comp.primaryAxisSizingMode = "AUTO";
@@ -85,9 +97,17 @@ function buildVerticalField(
   const label = buildLabel(inputs, "Email", invalid);
   comp.appendChild(label);
 
-  const input = buildInput(inputs, "you@example.com", invalid);
-  comp.appendChild(input);
-  input.layoutSizingHorizontal = "FILL";
+  // The control swaps with the variant; the field shell stays identical.
+  let control: FrameNode;
+  if (variant === "textarea") {
+    control = buildTextarea(inputs, "Tell us a little about yourself…");
+  } else if (variant === "select") {
+    control = buildSelectTrigger(inputs, "Select an option");
+  } else {
+    control = buildInput(inputs, "you@example.com", invalid);
+  }
+  comp.appendChild(control);
+  control.layoutSizingHorizontal = "FILL";
 
   if (invalid) {
     const error = figma.createText();
@@ -216,6 +236,91 @@ function buildInput(
   input.appendChild(text);
 
   return input;
+}
+
+// Mirrors radix-nova's Textarea (`min-h-16 px-3 py-2 rounded-lg border-input`).
+function buildTextarea(inputs: ComponentsInputs, value: string): FrameNode {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
+
+  const area = figma.createFrame();
+  area.name = "Textarea";
+  area.layoutMode = "HORIZONTAL";
+  area.primaryAxisSizingMode = "FIXED";
+  area.counterAxisSizingMode = "FIXED";
+  area.primaryAxisAlignItems = "MIN";
+  area.counterAxisAlignItems = "MIN";
+  area.resize(FIELD_WIDTH, 64);
+  area.paddingLeft = 12;
+  area.paddingRight = 12;
+  area.paddingTop = 8;
+  area.paddingBottom = 8;
+  area.cornerRadius = 8;
+  bindCornerRadii(area, p.get("radius/lg"));
+  bindFill(area, t.get("background"));
+  bindStrokeColor(area, t.get("input"));
+  area.strokeWeight = 1;
+
+  const text = figma.createText();
+  applyFont(text, "body", "Regular");
+  text.characters = value;
+  text.fontSize = 14;
+  bindFontSize(text, p.get("font/size/sm"));
+  bindFill(text, t.get("muted-foreground"));
+  area.appendChild(text);
+
+  return area;
+}
+
+// Mirrors radix-nova's Select trigger (`h-8 px-2.5 rounded-lg border-input`
+// with a trailing chevron).
+function buildSelectTrigger(
+  inputs: ComponentsInputs,
+  placeholder: string,
+): FrameNode {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
+
+  const trigger = figma.createFrame();
+  trigger.name = "Select";
+  trigger.layoutMode = "HORIZONTAL";
+  trigger.primaryAxisSizingMode = "FIXED";
+  trigger.counterAxisSizingMode = "FIXED";
+  trigger.primaryAxisAlignItems = "MIN";
+  trigger.counterAxisAlignItems = "CENTER";
+  trigger.resize(FIELD_WIDTH, 32);
+  trigger.itemSpacing = 6;
+  trigger.paddingLeft = 10;
+  trigger.paddingRight = 8;
+  trigger.cornerRadius = 8;
+  bindCornerRadii(trigger, p.get("radius/lg"));
+  bindFill(trigger, t.get("background"));
+  bindStrokeColor(trigger, t.get("input"));
+  trigger.strokeWeight = 1;
+
+  const text = figma.createText();
+  applyFont(text, "body", "Regular");
+  text.characters = placeholder;
+  text.fontSize = 14;
+  bindFontSize(text, p.get("font/size/sm"));
+  bindFill(text, t.get("muted-foreground"));
+  trigger.appendChild(text);
+  text.layoutGrow = 1;
+
+  const chevron = figma.createVector();
+  chevron.name = "Chevron";
+  chevron.resize(16, 16);
+  chevron.vectorPaths = [
+    { windingRule: "NONZERO", data: "M 4 6 L 8 10 L 12 6" },
+  ];
+  chevron.strokeWeight = 1.5;
+  chevron.strokeCap = "ROUND";
+  chevron.strokeJoin = "ROUND";
+  chevron.fills = [];
+  bindStrokeColor(chevron, t.get("muted-foreground"));
+  trigger.appendChild(chevron);
+
+  return trigger;
 }
 
 // A small "on" switch (mirrors radix-nova's Switch: `h-[1.15rem] w-8 rounded-

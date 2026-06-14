@@ -14,7 +14,13 @@ import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const CARD_VARIANTS = ["default", "interactive", "simple"] as const;
+const CARD_VARIANTS = [
+  "default",
+  "interactive",
+  "simple",
+  "image",
+  "action",
+] as const;
 type CardVariant = (typeof CARD_VARIANTS)[number];
 
 export async function addCardSection(
@@ -62,13 +68,14 @@ function buildCardComponent(
   // Padding is on the inner sections (`px-4`), not the card itself, so the
   // card frame has only vertical padding here.
   comp.itemSpacing = 16;
-  comp.paddingTop = 16;
+  comp.paddingTop = variant === "image" ? 0 : 16;
   comp.paddingBottom = 16;
   comp.paddingLeft = 0;
   comp.paddingRight = 0;
   comp.cornerRadius = 12;
   bindCornerRadii(comp, p.get("radius/xl"));
   bindFill(comp, t.get("card"));
+  comp.clipsContent = true;
   // The interactive variant previews the hover affordance: a ring-coloured
   // border + lifted shadow (applied by the caller). The others keep the
   // resting `ring-1 ring-foreground/10` border with no shadow.
@@ -80,6 +87,20 @@ function buildCardComponent(
   }
   comp.strokeWeight = 1;
   comp.strokeAlign = "INSIDE";
+
+  // Image variant: a media block flush to the top edge before the header.
+  if (variant === "image") {
+    const media = figma.createFrame();
+    media.name = "Card Media";
+    media.layoutMode = "HORIZONTAL";
+    media.primaryAxisSizingMode = "FIXED";
+    media.counterAxisSizingMode = "FIXED";
+    media.resize(360, 160);
+    bindFill(media, t.get("muted"));
+    media.strokes = [];
+    comp.appendChild(media);
+    media.layoutSizingHorizontal = "FILL";
+  }
 
   // Card Header.
   const header = figma.createFrame();
@@ -155,17 +176,66 @@ function buildCardComponent(
     footer.paddingRight = 16;
     footer.fills = [];
 
-    const footerText = figma.createText();
-    applyFont(footerText, "body", "Regular");
-    footerText.characters = "Card footer";
-    footerText.fontSize = 12;
-    bindFontSize(footerText, p.get("font/size/xs"));
-    bindFill(footerText, t.get("muted-foreground"));
-    footer.appendChild(footerText);
+    if (variant === "action") {
+      // A pair of footer buttons (`Cancel` outline + `Save` primary).
+      footer.appendChild(buildFooterButton(inputs, "Cancel", false));
+      footer.appendChild(buildFooterButton(inputs, "Save", true));
+    } else {
+      const footerText = figma.createText();
+      applyFont(footerText, "body", "Regular");
+      footerText.characters = "Card footer";
+      footerText.fontSize = 12;
+      bindFontSize(footerText, p.get("font/size/xs"));
+      bindFill(footerText, t.get("muted-foreground"));
+      footer.appendChild(footerText);
+    }
 
     comp.appendChild(footer);
     footer.layoutSizingHorizontal = "FILL";
   }
 
   return comp;
+}
+
+// A footer button: primary (filled) or outline.
+function buildFooterButton(
+  inputs: ComponentsInputs,
+  label: string,
+  primary: boolean,
+): FrameNode {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
+
+  const btn = figma.createFrame();
+  btn.name = "Button";
+  btn.layoutMode = "HORIZONTAL";
+  btn.primaryAxisSizingMode = "AUTO";
+  btn.counterAxisSizingMode = "FIXED";
+  btn.primaryAxisAlignItems = "CENTER";
+  btn.counterAxisAlignItems = "CENTER";
+  btn.resize(btn.width, 32);
+  btn.primaryAxisSizingMode = "AUTO";
+  btn.paddingLeft = 12;
+  btn.paddingRight = 12;
+  btn.cornerRadius = 8;
+  bindCornerRadii(btn, p.get("radius/lg"));
+
+  if (primary) {
+    bindFill(btn, t.get("primary"));
+    btn.strokes = [];
+  } else {
+    bindFill(btn, t.get("background"));
+    bindStrokeColor(btn, t.get("input"));
+    btn.strokeWeight = 1;
+  }
+
+  const text = figma.createText();
+  applyFont(text, "body", "Medium");
+  text.characters = label;
+  text.fontSize = 14;
+  bindFontSize(text, p.get("font/size/sm"));
+  bindFill(text, primary ? t.get("primary-foreground") : t.get("foreground"));
+  btn.appendChild(text);
+
+  return btn;
 }

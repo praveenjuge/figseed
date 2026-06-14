@@ -1,16 +1,20 @@
-// Input Group: an input shell that hosts inline addons (icons, text, buttons)
-// before/after the control. Mirrors radix-nova's InputGroup: `flex h-8 w-full
-// items-center rounded-lg border border-input`, with InputGroupAddon
-// (`text-sm text-muted-foreground`, `inline-start` adds `pl-2`, `inline-end`
-// adds `pr-2`) and a flexible InputGroupInput in the middle.
+// Input Group: an input shell that hosts inline addons (icons, text, buttons,
+// kbd hints, loading spinners) before/after the control. Mirrors radix-nova's
+// InputGroup: `flex h-8 w-full items-center rounded-lg border border-input`,
+// with InputGroupAddon (`text-sm text-muted-foreground`, `inline-start` adds
+// `pl-2`, `inline-end` adds `pr-2`) and a flexible InputGroupInput in the
+// middle.
 //
-// We surface the common compositions as a `Variant` axis:
-//   icon     — a leading search icon + placeholder text
-//   text     — a leading `text-muted-foreground` prefix (e.g. "https://")
-//   button   — a trailing ghost button addon
+// We surface the common compositions designers actually swap as a curated
+// `Variant` axis:
+//   icon      — a leading search icon + placeholder text
+//   text      — a leading `text-muted-foreground` prefix (e.g. "https://")
+//   kbd       — a trailing keyboard-shortcut hint chip (`⌘K`)
+//   button    — a trailing ghost button addon
+//   spinner   — a trailing loading spinner (the async/pending state)
+//   textarea  — a multi-line shell with a block addon row beneath the control
 //
-// Focus-within swaps the border to `ring` with a 3px ring; the resting state
-// keeps the `input` border.
+// Every variant binds the selected preset's semantic tokens, radius, and font.
 
 import {
   bindCornerRadii,
@@ -24,7 +28,14 @@ import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const INPUT_GROUP_VARIANTS = ["icon", "text", "button"] as const;
+const INPUT_GROUP_VARIANTS = [
+  "icon",
+  "text",
+  "kbd",
+  "button",
+  "spinner",
+  "textarea",
+] as const;
 type InputGroupVariant = (typeof INPUT_GROUP_VARIANTS)[number];
 
 const INPUT_GROUP_WIDTH = 320;
@@ -36,7 +47,10 @@ export async function addInputGroupSection(
 ): Promise<number> {
   const components: ComponentNode[] = [];
   for (const variant of INPUT_GROUP_VARIANTS) {
-    const comp = buildInputGroupComponent(inputs, variant);
+    const comp =
+      variant === "textarea"
+        ? buildTextareaGroup(inputs)
+        : buildInputGroupComponent(inputs, variant);
     page.appendChild(comp);
     components.push(comp);
   }
@@ -52,10 +66,12 @@ export async function addInputGroupSection(
 
 function buildInputGroupComponent(
   inputs: ComponentsInputs,
-  variant: InputGroupVariant,
+  variant: Exclude<InputGroupVariant, "textarea">,
 ): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
+
+  const hasTrailingButton = variant === "button";
 
   const comp = figma.createComponent();
   comp.name = `Variant=${variant}`;
@@ -68,8 +84,8 @@ function buildInputGroupComponent(
   // InputGroup: `h-8 rounded-lg border-input`. Addons own their own padding,
   // so the shell carries a small horizontal gap and inset only.
   comp.itemSpacing = 6;
-  comp.paddingLeft = variant === "button" ? 10 : 8;
-  comp.paddingRight = variant === "button" ? 4 : 8;
+  comp.paddingLeft = hasTrailingButton ? 10 : 8;
+  comp.paddingRight = hasTrailingButton ? 4 : 8;
   comp.cornerRadius = 8;
   bindCornerRadii(comp, p.get("radius/lg"));
   bindFill(comp, t.get("background"));
@@ -112,10 +128,68 @@ function buildInputGroupComponent(
   comp.appendChild(control);
   control.layoutGrow = 1;
 
-  // Trailing addon button (`InputGroupButton`, ghost, `h-6 rounded-md px-1.5`).
+  // Trailing addons.
   if (variant === "button") {
     comp.appendChild(buildAddonButton(inputs, "Submit"));
+  } else if (variant === "kbd") {
+    comp.appendChild(buildKbd(inputs, "⌘K"));
+  } else if (variant === "spinner") {
+    comp.appendChild(buildSpinner(inputs));
   }
+
+  return comp;
+}
+
+// Textarea group: a vertical shell with the control on top and a block addon
+// row (a small ghost button) beneath it — mirrors InputGroupTextarea with a
+// `block-end` InputGroupAddon.
+function buildTextareaGroup(inputs: ComponentsInputs): ComponentNode {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
+
+  const comp = figma.createComponent();
+  comp.name = "Variant=textarea";
+  comp.layoutMode = "VERTICAL";
+  comp.primaryAxisSizingMode = "FIXED";
+  comp.counterAxisSizingMode = "FIXED";
+  comp.primaryAxisAlignItems = "MIN";
+  comp.counterAxisAlignItems = "MIN";
+  comp.resize(INPUT_GROUP_WIDTH, 88);
+  comp.itemSpacing = 8;
+  comp.paddingLeft = 12;
+  comp.paddingRight = 8;
+  comp.paddingTop = 8;
+  comp.paddingBottom = 8;
+  comp.cornerRadius = 8;
+  bindCornerRadii(comp, p.get("radius/lg"));
+  bindFill(comp, t.get("background"));
+  bindStrokeColor(comp, t.get("input"));
+  comp.strokeWeight = 1;
+  comp.strokeAlign = "INSIDE";
+
+  const control = figma.createText();
+  applyFont(control, "body", "Regular");
+  control.characters = "Ask a question…";
+  control.fontSize = 14;
+  bindFontSize(control, p.get("font/size/sm"));
+  bindFill(control, t.get("muted-foreground"));
+  comp.appendChild(control);
+  control.layoutGrow = 1;
+  control.layoutSizingHorizontal = "FILL";
+
+  // `block-end` addon row, right-aligned send button.
+  const addon = figma.createFrame();
+  addon.name = "Addon";
+  addon.layoutMode = "HORIZONTAL";
+  addon.primaryAxisSizingMode = "FIXED";
+  addon.counterAxisSizingMode = "AUTO";
+  addon.primaryAxisAlignItems = "MAX";
+  addon.counterAxisAlignItems = "CENTER";
+  addon.fills = [];
+  addon.strokes = [];
+  comp.appendChild(addon);
+  addon.layoutSizingHorizontal = "FILL";
+  addon.appendChild(buildAddonButton(inputs, "Send"));
 
   return comp;
 }
@@ -150,4 +224,80 @@ function buildAddonButton(inputs: ComponentsInputs, label: string): FrameNode {
   btn.appendChild(text);
 
   return btn;
+}
+
+// A keyboard-shortcut hint chip (`Kbd`: `h-5 rounded-sm bg-muted px-1.5
+// text-xs`).
+function buildKbd(inputs: ComponentsInputs, label: string): FrameNode {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
+
+  const chip = figma.createFrame();
+  chip.name = "Kbd";
+  chip.layoutMode = "HORIZONTAL";
+  chip.primaryAxisSizingMode = "AUTO";
+  chip.counterAxisSizingMode = "FIXED";
+  chip.primaryAxisAlignItems = "CENTER";
+  chip.counterAxisAlignItems = "CENTER";
+  chip.resize(chip.width, 20);
+  chip.primaryAxisSizingMode = "AUTO";
+  chip.paddingLeft = 6;
+  chip.paddingRight = 6;
+  chip.cornerRadius = 4;
+  bindCornerRadii(chip, p.get("radius/sm"));
+  bindFill(chip, t.get("muted"));
+  chip.strokes = [];
+
+  const text = figma.createText();
+  applyFont(text, "body", "Medium");
+  text.characters = label;
+  text.fontSize = 12;
+  bindFontSize(text, p.get("font/size/xs"));
+  bindFill(text, t.get("muted-foreground"));
+  chip.appendChild(text);
+
+  return chip;
+}
+
+// A small loading spinner: a muted ring with an accent arc, as the trailing
+// `pending`/`loading` addon.
+function buildSpinner(inputs: ComponentsInputs): FrameNode {
+  const t = inputs.theme.light;
+
+  const wrap = figma.createFrame();
+  wrap.name = "Spinner";
+  wrap.layoutMode = "HORIZONTAL";
+  wrap.primaryAxisSizingMode = "FIXED";
+  wrap.counterAxisSizingMode = "FIXED";
+  wrap.primaryAxisAlignItems = "CENTER";
+  wrap.counterAxisAlignItems = "CENTER";
+  wrap.resize(16, 16);
+  wrap.fills = [];
+  wrap.strokes = [];
+
+  // Muted base ring.
+  const ring = figma.createEllipse();
+  ring.name = "Track";
+  ring.resize(14, 14);
+  ring.fills = [];
+  bindStrokeColor(ring, t.get("border"));
+  ring.strokeWeight = 1.5;
+  wrap.appendChild(ring);
+
+  // Accent arc (open path) suggesting motion. Figma's vector path parser does
+  // not support the SVG arc (`A`) command, so approximate a quarter circle
+  // with a cubic bezier (control offset ≈ 0.5523·r).
+  const arc = figma.createVector();
+  arc.name = "Arc";
+  arc.resize(14, 14);
+  arc.vectorPaths = [
+    { windingRule: "NONZERO", data: "M 7 0.5 C 10.59 0.5 13.5 3.41 13.5 7" },
+  ];
+  arc.fills = [];
+  arc.strokeWeight = 1.5;
+  arc.strokeCap = "ROUND";
+  bindStrokeColor(arc, t.get("muted-foreground"));
+  wrap.appendChild(arc);
+
+  return wrap;
 }

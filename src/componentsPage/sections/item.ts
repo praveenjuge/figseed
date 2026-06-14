@@ -3,16 +3,22 @@
 //
 //   Item             `flex w-full items-center rounded-lg border gap-2.5
 //                     px-3 py-2.5 text-sm`
-//   ItemMedia(icon)  `size-4` icon, self-start when a description is present
+//   ItemMedia        `size-4` icon / avatar / image, self-start with a desc
 //   ItemContent      `flex flex-1 flex-col gap-1`
 //   ItemTitle        `text-sm font-medium leading-snug` (foreground)
 //   ItemDescription  `text-sm text-muted-foreground leading-normal`
 //   ItemActions      `flex items-center gap-2`
 //
-// The `variant` prop drives the border/background:
-//   default — `border-transparent`
-//   outline — `border-border`
-//   muted   — `border-transparent bg-muted/50`
+// We surface the common compositions designers actually swap as a curated
+// `Variant` axis — the border/background and the media/actions slots change:
+//   default — `border-transparent`, icon media, trailing chevron
+//   outline — `border-border`, icon media, trailing chevron
+//   muted   — `bg-muted/50`, icon media, trailing chevron
+//   avatar  — outline, avatar media, trailing action button
+//   action  — outline, icon media, trailing primary button
+//
+// Every variant binds the selected preset's semantic tokens, radius, font, and
+// icon library.
 
 import {
   bindCornerRadii,
@@ -26,7 +32,13 @@ import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const ITEM_VARIANTS = ["default", "outline", "muted"] as const;
+const ITEM_VARIANTS = [
+  "default",
+  "outline",
+  "muted",
+  "avatar",
+  "action",
+] as const;
 type ItemVariant = (typeof ITEM_VARIANTS)[number];
 
 const ITEM_WIDTH = 360;
@@ -65,7 +77,7 @@ function buildItemComponent(
   comp.primaryAxisSizingMode = "FIXED";
   comp.counterAxisSizingMode = "AUTO";
   comp.primaryAxisAlignItems = "MIN";
-  comp.counterAxisAlignItems = "MIN";
+  comp.counterAxisAlignItems = "CENTER";
   // `gap-2.5 px-3 py-2.5 rounded-lg border`.
   comp.itemSpacing = 10;
   comp.paddingLeft = 12;
@@ -77,19 +89,89 @@ function buildItemComponent(
   comp.strokeWeight = 1;
   comp.strokeAlign = "INSIDE";
 
-  if (variant === "outline") {
-    comp.fills = [];
-    bindStrokeColor(comp, t.get("border"));
-  } else if (variant === "muted") {
+  // `muted` fills with a muted surface; `outline`/`avatar`/`action` show a
+  // border; `default` is transparent (borderless).
+  if (variant === "muted") {
     bindFill(comp, t.get("muted"));
+    comp.strokes = [];
+  } else if (variant === "default") {
+    comp.fills = [];
     comp.strokes = [];
   } else {
     comp.fills = [];
-    comp.strokes = [];
+    bindStrokeColor(comp, t.get("border"));
   }
 
-  // Media (`icon` variant): a `size-4` icon nudged to the top so it aligns
-  // with the title when a description wraps (`self-start`).
+  // Media slot: an avatar for the `avatar` variant, otherwise a `size-4` icon.
+  if (variant === "avatar") {
+    comp.appendChild(buildAvatarMedia(inputs));
+  } else {
+    comp.appendChild(buildIconMedia(inputs));
+  }
+
+  // Content: title + description (`flex-1 flex-col gap-1`).
+  const content = figma.createFrame();
+  content.name = "Item Content";
+  content.layoutMode = "VERTICAL";
+  content.primaryAxisSizingMode = "AUTO";
+  content.counterAxisSizingMode = "AUTO";
+  content.itemSpacing = 4;
+  content.fills = [];
+  content.strokes = [];
+
+  const titleText = variant === "avatar" ? "Sofia Davis" : "Project files";
+  const descText =
+    variant === "avatar"
+      ? "sofia@example.com"
+      : "12 files · updated 2 hours ago";
+
+  const title = figma.createText();
+  applyFont(title, "body", "Medium");
+  title.characters = titleText;
+  title.fontSize = 14;
+  bindFontSize(title, p.get("font/size/sm"));
+  bindFill(title, t.get("foreground"));
+  content.appendChild(title);
+
+  const desc = figma.createText();
+  applyFont(desc, "body", "Regular");
+  desc.characters = descText;
+  desc.fontSize = 14;
+  bindFontSize(desc, p.get("font/size/sm"));
+  bindFill(desc, t.get("muted-foreground"));
+  content.appendChild(desc);
+
+  comp.appendChild(content);
+  content.layoutGrow = 1;
+  content.layoutSizingHorizontal = "FILL";
+  title.layoutSizingHorizontal = "FILL";
+  desc.layoutSizingHorizontal = "FILL";
+
+  // Actions: a trailing button for avatar/action variants, otherwise a chevron.
+  if (variant === "avatar" || variant === "action") {
+    comp.appendChild(buildActionButton(inputs, variant === "avatar"));
+  } else {
+    const actions = figma.createFrame();
+    actions.name = "Item Actions";
+    actions.layoutMode = "HORIZONTAL";
+    actions.primaryAxisSizingMode = "FIXED";
+    actions.counterAxisSizingMode = "FIXED";
+    actions.primaryAxisAlignItems = "CENTER";
+    actions.counterAxisAlignItems = "CENTER";
+    actions.resize(20, 20);
+    actions.fills = [];
+    actions.strokes = [];
+    actions.appendChild(buildChevronRight(t));
+    comp.appendChild(actions);
+  }
+
+  return comp;
+}
+
+// A `size-4` icon media slot.
+function buildIconMedia(inputs: ComponentsInputs): FrameNode {
+  const t = inputs.theme.light;
+
   const media = figma.createFrame();
   media.name = "Item Media";
   media.layoutMode = "HORIZONTAL";
@@ -110,55 +192,79 @@ function buildItemComponent(
     icon.name = "Icon";
     media.appendChild(icon);
   }
-  comp.appendChild(media);
+  return media;
+}
 
-  // Content: title + description (`flex-1 flex-col gap-1`).
-  const content = figma.createFrame();
-  content.name = "Item Content";
-  content.layoutMode = "VERTICAL";
-  content.primaryAxisSizingMode = "AUTO";
-  content.counterAxisSizingMode = "AUTO";
-  content.itemSpacing = 4;
-  content.fills = [];
-  content.strokes = [];
+// An avatar media slot (`size-8 rounded-full bg-muted` with initials).
+function buildAvatarMedia(inputs: ComponentsInputs): FrameNode {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
 
-  const title = figma.createText();
-  applyFont(title, "body", "Medium");
-  title.characters = "Project files";
-  title.fontSize = 14;
-  bindFontSize(title, p.get("font/size/sm"));
-  bindFill(title, t.get("foreground"));
-  content.appendChild(title);
+  const media = figma.createFrame();
+  media.name = "Item Media";
+  media.layoutMode = "HORIZONTAL";
+  media.primaryAxisSizingMode = "FIXED";
+  media.counterAxisSizingMode = "FIXED";
+  media.primaryAxisAlignItems = "CENTER";
+  media.counterAxisAlignItems = "CENTER";
+  media.resize(32, 32);
+  media.cornerRadius = 9999;
+  bindCornerRadii(media, p.get("radius/full"));
+  bindFill(media, t.get("muted"));
+  media.strokes = [];
 
-  const desc = figma.createText();
-  applyFont(desc, "body", "Regular");
-  desc.characters = "12 files · updated 2 hours ago";
-  desc.fontSize = 14;
-  bindFontSize(desc, p.get("font/size/sm"));
-  bindFill(desc, t.get("muted-foreground"));
-  content.appendChild(desc);
+  const initials = figma.createText();
+  applyFont(initials, "body", "Medium");
+  initials.characters = "SD";
+  initials.fontSize = 12;
+  bindFontSize(initials, p.get("font/size/xs"));
+  bindFill(initials, t.get("muted-foreground"));
+  media.appendChild(initials);
 
-  comp.appendChild(content);
-  content.layoutGrow = 1;
-  content.layoutSizingHorizontal = "FILL";
-  title.layoutSizingHorizontal = "FILL";
-  desc.layoutSizingHorizontal = "FILL";
+  return media;
+}
 
-  // Actions: a trailing chevron, mirroring a navigable list row.
-  const actions = figma.createFrame();
-  actions.name = "Item Actions";
-  actions.layoutMode = "HORIZONTAL";
-  actions.primaryAxisSizingMode = "AUTO";
-  actions.counterAxisSizingMode = "FIXED";
-  actions.primaryAxisAlignItems = "CENTER";
-  actions.counterAxisAlignItems = "CENTER";
-  actions.resize(20, 20);
-  actions.fills = [];
-  actions.strokes = [];
-  actions.appendChild(buildChevronRight(t));
-  comp.appendChild(actions);
+// A trailing action button: outline ("View") for the avatar variant, primary
+// ("Open") for the action variant.
+function buildActionButton(
+  inputs: ComponentsInputs,
+  outline: boolean,
+): FrameNode {
+  const t = inputs.theme.light;
+  const p = inputs.primitives;
 
-  return comp;
+  const btn = figma.createFrame();
+  btn.name = "Item Actions";
+  btn.layoutMode = "HORIZONTAL";
+  btn.primaryAxisSizingMode = "AUTO";
+  btn.counterAxisSizingMode = "FIXED";
+  btn.primaryAxisAlignItems = "CENTER";
+  btn.counterAxisAlignItems = "CENTER";
+  btn.resize(btn.width, 28);
+  btn.primaryAxisSizingMode = "AUTO";
+  btn.paddingLeft = 10;
+  btn.paddingRight = 10;
+  btn.cornerRadius = 6;
+  bindCornerRadii(btn, p.get("radius/md"));
+
+  if (outline) {
+    bindFill(btn, t.get("background"));
+    bindStrokeColor(btn, t.get("input"));
+    btn.strokeWeight = 1;
+  } else {
+    bindFill(btn, t.get("primary"));
+    btn.strokes = [];
+  }
+
+  const text = figma.createText();
+  applyFont(text, "body", "Medium");
+  text.characters = outline ? "View" : "Open";
+  text.fontSize = 13;
+  bindFontSize(text, p.get("font/size/sm"));
+  bindFill(text, outline ? t.get("foreground") : t.get("primary-foreground"));
+  btn.appendChild(text);
+
+  return btn;
 }
 
 function buildChevronRight(t: Map<string, Variable>): VectorNode {

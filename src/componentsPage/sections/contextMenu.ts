@@ -2,10 +2,17 @@
 // ContextMenuContent: `min-w-32 rounded-md border bg-popover p-1
 // text-popover-foreground shadow-md`.
 //
-// It showcases the richer item types shadcn ships that a plain Dropdown Menu
-// demo doesn't: a regular item with a trailing shortcut, a checkbox item
-// (with a leading check), a submenu trigger (with a trailing chevron), a
-// labelled radio group, and a destructive item — separated by rules.
+// We surface the richer item types shadcn ships as a curated `Variant` axis,
+// so designers can drop in the exact menu shape they need:
+//   basic       — plain items
+//   icons       — items with leading icons
+//   checkbox    — checkbox + radio items with leading indicators
+//   submenu     — items plus a submenu trigger (trailing chevron)
+//   shortcuts   — items with trailing keyboard shortcuts
+//   destructive — items plus a destructive item, separated by a rule
+//
+// Every variant binds the selected preset's semantic tokens, radius, font, and
+// icon library.
 
 import {
   bindCornerRadii,
@@ -15,29 +22,57 @@ import {
 } from "../bindings";
 import { applyFont } from "../../fonts";
 import { applyEffectStyle } from "../../effectStyles";
-import { wrapInSectionCard } from "../layout";
+import {
+  createIcon,
+  resolveIconLibrary,
+  type SemanticIconName,
+} from "../../icons";
+import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
 
-const MENU_WIDTH = 256;
+const MENU_WIDTH = 240;
+
+const CONTEXT_MENU_VARIANTS = [
+  "basic",
+  "icons",
+  "checkbox",
+  "submenu",
+  "shortcuts",
+  "destructive",
+] as const;
+type ContextMenuVariant = (typeof CONTEXT_MENU_VARIANTS)[number];
 
 export async function addContextMenuSection(
   page: PageNode,
   inputs: ComponentsInputs,
 ): Promise<number> {
-  const comp = buildContextMenuComponent(inputs);
-  await applyEffectStyle(comp, inputs.effectStyles?.idFor("Shadow/md"));
-  const card = wrapInSectionCard(comp);
-  page.appendChild(card);
-  return countDescendants(card);
+  const components: ComponentNode[] = [];
+  for (const variant of CONTEXT_MENU_VARIANTS) {
+    const comp = buildContextMenuComponent(inputs, variant);
+    await applyEffectStyle(comp, inputs.effectStyles?.idFor("Shadow/md"));
+    page.appendChild(comp);
+    components.push(comp);
+  }
+
+  const componentSet = figma.combineAsVariants(components, page);
+  componentSet.name = "Context Menu";
+  componentSet.layoutMode = "HORIZONTAL";
+  componentSet.itemSpacing = 16;
+  styleComponentSet(componentSet);
+
+  return countDescendants(componentSet);
 }
 
-function buildContextMenuComponent(inputs: ComponentsInputs): ComponentNode {
+function buildContextMenuComponent(
+  inputs: ComponentsInputs,
+  variant: ContextMenuVariant,
+): ComponentNode {
   const t = inputs.theme.light;
   const p = inputs.primitives;
 
   const comp = figma.createComponent();
-  comp.name = "Context Menu";
+  comp.name = `Variant=${variant}`;
   comp.layoutMode = "VERTICAL";
   comp.resize(MENU_WIDTH, 10);
   comp.primaryAxisSizingMode = "AUTO";
@@ -54,56 +89,82 @@ function buildContextMenuComponent(inputs: ComponentsInputs): ComponentNode {
   comp.strokeWeight = 1;
   comp.strokeAlign = "INSIDE";
 
-  // Plain items with shortcuts.
-  appendChildFill(comp, buildItem(inputs, { label: "Back", shortcut: "⌘[" }));
-  appendChildFill(
-    comp,
-    buildItem(inputs, { label: "Forward", shortcut: "⌘]", disabled: true }),
-  );
-  appendChildFill(comp, buildItem(inputs, { label: "Reload", shortcut: "⌘R" }));
-  // Submenu trigger.
-  appendChildFill(
-    comp,
-    buildItem(inputs, { label: "More Tools", submenu: true }),
-  );
-
-  appendChildFill(comp, buildSeparator(inputs));
-
-  // Checkbox item (checked).
-  appendChildFill(
-    comp,
-    buildItem(inputs, { label: "Show Bookmarks", checkbox: "checked" }),
-  );
-  appendChildFill(
-    comp,
-    buildItem(inputs, { label: "Show Full URLs", checkbox: "unchecked" }),
-  );
-
-  appendChildFill(comp, buildSeparator(inputs));
-
-  // Radio label + radio item (selected).
-  appendChildFill(comp, buildLabel(inputs, "People"));
-  appendChildFill(
-    comp,
-    buildItem(inputs, { label: "Pedro Duarte", radio: "selected" }),
-  );
-  appendChildFill(
-    comp,
-    buildItem(inputs, { label: "Colm Tuite", radio: "unselected" }),
-  );
-
-  appendChildFill(comp, buildSeparator(inputs));
-
-  // Destructive item.
-  appendChildFill(
-    comp,
-    buildItem(inputs, { label: "Delete", shortcut: "⌫", destructive: true }),
-  );
+  switch (variant) {
+    case "basic":
+      appendItem(comp, inputs, { label: "Back" });
+      appendItem(comp, inputs, { label: "Forward", disabled: true });
+      appendItem(comp, inputs, { label: "Reload" });
+      appendItem(comp, inputs, { label: "Save As…" });
+      break;
+    case "icons":
+      appendItem(comp, inputs, { label: "Profile", icon: "info" });
+      appendItem(comp, inputs, { label: "Notifications", icon: "bell" });
+      appendItem(comp, inputs, { label: "Add Team", icon: "plus" });
+      appendItem(comp, inputs, { label: "Favourite", icon: "star" });
+      break;
+    case "checkbox":
+      appendItem(comp, inputs, {
+        label: "Show Bookmarks",
+        checkbox: "checked",
+      });
+      appendItem(comp, inputs, {
+        label: "Show Full URLs",
+        checkbox: "unchecked",
+      });
+      appendSeparator(comp, inputs);
+      appendLabel(comp, inputs, "People");
+      appendItem(comp, inputs, { label: "Pedro Duarte", radio: "selected" });
+      appendItem(comp, inputs, { label: "Colm Tuite", radio: "unselected" });
+      break;
+    case "submenu":
+      appendItem(comp, inputs, { label: "Back" });
+      appendItem(comp, inputs, { label: "Reload" });
+      appendItem(comp, inputs, { label: "More Tools", submenu: true });
+      appendItem(comp, inputs, { label: "Share", submenu: true });
+      break;
+    case "shortcuts":
+      appendItem(comp, inputs, { label: "Back", shortcut: "⌘[" });
+      appendItem(comp, inputs, { label: "Forward", shortcut: "⌘]" });
+      appendItem(comp, inputs, { label: "Reload", shortcut: "⌘R" });
+      appendItem(comp, inputs, { label: "Save As…", shortcut: "⌘S" });
+      break;
+    case "destructive":
+      appendItem(comp, inputs, { label: "Edit", icon: "info" });
+      appendItem(comp, inputs, { label: "Duplicate", icon: "plus" });
+      appendSeparator(comp, inputs);
+      appendItem(comp, inputs, {
+        label: "Delete",
+        shortcut: "⌫",
+        destructive: true,
+      });
+      break;
+  }
 
   return comp;
 }
 
-function appendChildFill(parent: ComponentNode, child: FrameNode) {
+function appendItem(
+  parent: ComponentNode,
+  inputs: ComponentsInputs,
+  spec: ItemSpec,
+) {
+  const child = buildItem(inputs, spec);
+  parent.appendChild(child);
+  child.layoutSizingHorizontal = "FILL";
+}
+
+function appendSeparator(parent: ComponentNode, inputs: ComponentsInputs) {
+  const child = buildSeparator(inputs);
+  parent.appendChild(child);
+  child.layoutSizingHorizontal = "FILL";
+}
+
+function appendLabel(
+  parent: ComponentNode,
+  inputs: ComponentsInputs,
+  text: string,
+) {
+  const child = buildLabel(inputs, text);
   parent.appendChild(child);
   child.layoutSizingHorizontal = "FILL";
 }
@@ -111,6 +172,7 @@ function appendChildFill(parent: ComponentNode, child: FrameNode) {
 type ItemSpec = {
   label: string;
   shortcut?: string;
+  icon?: SemanticIconName;
   disabled?: boolean;
   destructive?: boolean;
   submenu?: boolean;
@@ -134,10 +196,7 @@ function buildItem(inputs: ComponentsInputs, spec: ItemSpec): FrameNode {
   row.primaryAxisAlignItems = "MIN";
   row.counterAxisAlignItems = "CENTER";
   row.itemSpacing = 8;
-  // checkbox/radio items get extra left padding for the leading indicator slot
-  // (`pl-8` in shadcn); plain items use `px-2`.
-  const hasIndicator = Boolean(spec.checkbox || spec.radio);
-  row.paddingLeft = hasIndicator ? 8 : 8;
+  row.paddingLeft = 8;
   row.paddingRight = 8;
   row.paddingTop = 6;
   row.paddingBottom = 6;
@@ -146,11 +205,22 @@ function buildItem(inputs: ComponentsInputs, spec: ItemSpec): FrameNode {
   row.fills = [];
   row.strokes = [];
 
-  // Leading checkbox/radio indicator slot (16px wide so labels align).
+  // Leading slot: checkbox/radio indicator or a semantic icon.
   if (spec.checkbox) {
     row.appendChild(buildCheckIndicator(inputs, spec.checkbox === "checked"));
   } else if (spec.radio) {
     row.appendChild(buildRadioIndicator(inputs, spec.radio === "selected"));
+  } else if (spec.icon) {
+    const icon = createIcon({
+      library: resolveIconLibrary(inputs.presetSummary),
+      name: spec.icon,
+      size: 16,
+      color: colorVar,
+    });
+    if (icon) {
+      icon.name = "Icon";
+      row.appendChild(icon);
+    }
   }
 
   const label = figma.createText();

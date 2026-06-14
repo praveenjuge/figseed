@@ -15,6 +15,7 @@ const SKELETON_SHAPES = [
   "line-lg",
   "block",
   "paragraph",
+  "list",
   "card",
 ] as const;
 type SkeletonShape = (typeof SKELETON_SHAPES)[number];
@@ -25,6 +26,7 @@ const SKELETON_DIMS: Record<SkeletonShape, { w: number; h: number }> = {
   "line-lg": { w: 320, h: 16 },
   block: { w: 320, h: 96 },
   paragraph: { w: 320, h: 56 },
+  list: { w: 320, h: 152 },
   card: { w: 320, h: 180 },
 };
 
@@ -60,6 +62,9 @@ function buildSkeletonComponent(
   // shapes are a single muted rectangle/circle.
   if (shape === "paragraph") {
     return buildParagraphSkeleton(inputs, dims);
+  }
+  if (shape === "list") {
+    return buildListSkeleton(inputs, dims);
   }
   if (shape === "card") {
     return buildCardSkeleton(inputs, dims);
@@ -121,6 +126,64 @@ function buildParagraphSkeleton(
     bar.name = `Line ${i + 1}`;
     comp.appendChild(bar);
   }
+  return comp;
+}
+
+// List: three stacked rows, each an avatar circle + two text lines — the
+// classic table / list loading placeholder designers reach for.
+function buildListSkeleton(
+  inputs: ComponentsInputs,
+  dims: { w: number; h: number },
+): ComponentNode {
+  const comp = figma.createComponent();
+  comp.name = "Shape=list";
+  comp.layoutMode = "VERTICAL";
+  comp.primaryAxisSizingMode = "FIXED";
+  comp.counterAxisSizingMode = "FIXED";
+  comp.resize(dims.w, dims.h);
+  comp.itemSpacing = 16;
+  comp.fills = [];
+
+  const t = inputs.theme.light;
+  for (let r = 0; r < 3; r++) {
+    const row = figma.createFrame();
+    row.name = `Row ${r + 1}`;
+    row.layoutMode = "HORIZONTAL";
+    row.primaryAxisSizingMode = "FIXED";
+    row.counterAxisSizingMode = "AUTO";
+    row.counterAxisAlignItems = "CENTER";
+    row.itemSpacing = 12;
+    row.resize(dims.w, 36);
+    row.fills = [];
+    comp.appendChild(row);
+    row.layoutSizingHorizontal = "FILL";
+
+    const circle = figma.createEllipse();
+    circle.name = "Avatar";
+    circle.resize(36, 36);
+    bindFill(circle, t.get("muted"));
+    row.appendChild(circle);
+
+    const lines = figma.createFrame();
+    lines.name = "Lines";
+    lines.layoutMode = "VERTICAL";
+    lines.primaryAxisSizingMode = "AUTO";
+    lines.counterAxisSizingMode = "AUTO";
+    lines.itemSpacing = 8;
+    lines.fills = [];
+    row.appendChild(lines);
+    lines.layoutGrow = 1;
+    lines.layoutSizingHorizontal = "FILL";
+
+    const title = muteBar(inputs, dims.w * 0.6, 12, 6);
+    title.name = "Title";
+    lines.appendChild(title);
+    title.layoutSizingHorizontal = "FILL";
+    const subtitle = muteBar(inputs, dims.w * 0.4, 10, 5);
+    subtitle.name = "Subtitle";
+    lines.appendChild(subtitle);
+  }
+
   return comp;
 }
 
