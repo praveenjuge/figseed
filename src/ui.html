@@ -17,6 +17,8 @@
         --accent: var(--figma-color-bg-brand, #0d99ff);
         --accent-fg: var(--figma-color-text-onbrand, #ffffff);
         --danger: var(--figma-color-text-danger, #e03e3e);
+        --danger-bg: var(--figma-color-bg-danger, #e03e3e);
+        --danger-fg: var(--figma-color-text-ondanger, #ffffff);
       }
       * {
         box-sizing: border-box;
@@ -283,6 +285,18 @@
         opacity: 0.4;
         cursor: default;
       }
+      button.btn.primary.danger {
+        background: var(--danger-bg);
+        border-color: var(--danger-bg);
+        color: var(--danger-fg);
+      }
+      button.btn.primary.danger:hover:not(:disabled) {
+        background: var(--danger-bg);
+        filter: brightness(0.94);
+      }
+      button.btn[hidden] {
+        display: none;
+      }
 
       a {
         color: var(--accent);
@@ -337,6 +351,17 @@
         <div class="actions">
           <button id="generate" class="btn primary" type="button" disabled>
             Generate
+          </button>
+          <button id="confirm-cancel" class="btn" type="button" hidden>
+            Cancel
+          </button>
+          <button
+            id="confirm-replace"
+            class="btn primary danger"
+            type="button"
+            hidden
+          >
+            Replace everything
           </button>
         </div>
       </footer>

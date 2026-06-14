@@ -22,13 +22,48 @@ figma.ui.onmessage = async (message: UiToPlugin) => {
   if (!message || typeof message !== "object") return;
 
   if (message.type === "generate") {
-    await handleGenerate(message.presetCode);
+    await handleGenerate(message.presetCode, message.confirmReplace === true);
   }
 };
 
-async function handleGenerate(rawCode: string) {
+// True when a previous run already materialized Niram in this file. Everything
+// Niram generates lives on a single page named "Niram", so its presence is the
+// signal that regenerating would replace existing variables, styles, and the
+// page contents. Reading a page's name/type is allowed without loading it,
+// even under `documentAccess: "dynamic-page"`.
+function niramAlreadyExists(): boolean {
+  return figma.root.children.some(
+    (child) => child.type === "PAGE" && child.name === "Niram",
+  );
+}
+
+async function handleGenerate(rawCode: string, confirmReplace: boolean) {
   const presetCode = rawCode.trim();
 
+  // The user already confirmed the destructive replace in the UI, or there's
+  // nothing to replace yet (first run / Niram page deleted): generate now.
+  if (confirmReplace || !niramAlreadyExists()) {
+    await runGenerate(presetCode);
+    return;
+  }
+
+  // Validate the preset before asking the UI to prompt — no point warning about
+  // a destructive replace for a code that can't resolve.
+  const resolved = resolvePreset(presetCode);
+  if (!resolved.ok) {
+    post({ type: "error", message: resolved.error });
+    return;
+  }
+
+  // Niram exists. Hand off to the UI to show its inline confirmation; it will
+  // resend `generate` with `confirmReplace` if the user agrees.
+  post({
+    type: "awaiting-confirmation",
+    message: "Niram already exists. Regenerating replaces everything.",
+  });
+}
+
+async function runGenerate(presetCode: string) {
   // One reporter per run: turns weighted phase updates into UI progress
   // messages with a determinate percent, elapsed time, and a detail line.
   const progress = new ProgressReporter({

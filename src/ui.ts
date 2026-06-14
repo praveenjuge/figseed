@@ -8,6 +8,12 @@ import type { PluginToUi, UiToPlugin } from "./messages";
 
 const input = document.getElementById("preset") as HTMLInputElement;
 const generateButton = document.getElementById("generate") as HTMLButtonElement;
+const confirmReplaceButton = document.getElementById(
+  "confirm-replace",
+) as HTMLButtonElement;
+const confirmCancelButton = document.getElementById(
+  "confirm-cancel",
+) as HTMLButtonElement;
 const shuffleButton = document.getElementById("shuffle") as HTMLButtonElement;
 const status = document.getElementById("status") as HTMLSpanElement;
 const meta = document.getElementById("meta") as HTMLSpanElement;
@@ -16,6 +22,9 @@ const progressBar = progress.querySelector(".bar") as HTMLSpanElement;
 const presetsList = document.getElementById("presets-list") as HTMLDivElement;
 
 let busy = false;
+// The preset code awaiting a "replace everything" confirmation. Set when the
+// sandbox reports Niram already exists; cleared once the user confirms/cancels.
+let pendingPresetCode: string | null = null;
 
 function postToPlugin(message: UiToPlugin) {
   parent.postMessage({ pluginMessage: message }, "*");
@@ -95,11 +104,21 @@ function setPresetButtonsDisabled(disabled: boolean) {
   });
 }
 
-function runPreset(presetCode: string) {
+function runPreset(presetCode: string, confirmReplace = false) {
   busy = true;
+  // Remember the code in case the sandbox comes back asking to confirm a
+  // destructive replace; the confirm button resends exactly this code.
+  pendingPresetCode = presetCode;
   syncGenerateButton();
   startProgress(presetCode);
-  postToPlugin({ type: "generate", presetCode });
+  postToPlugin({ type: "generate", presetCode, confirmReplace });
+}
+
+// Swap the Generate button for the inline Cancel / Replace prompt (or back).
+function setConfirmVisible(visible: boolean) {
+  generateButton.hidden = visible;
+  confirmCancelButton.hidden = !visible;
+  confirmReplaceButton.hidden = !visible;
 }
 
 function renderPopularPresets() {
@@ -143,6 +162,23 @@ shuffleButton.addEventListener("click", () => {
   runShuffle();
 });
 
+confirmReplaceButton.addEventListener("click", () => {
+  if (!pendingPresetCode) return;
+  const presetCode = pendingPresetCode;
+  pendingPresetCode = null;
+  setConfirmVisible(false);
+  runPreset(presetCode, true);
+});
+
+confirmCancelButton.addEventListener("click", () => {
+  pendingPresetCode = null;
+  busy = false;
+  setConfirmVisible(false);
+  setStatus("Cancelled. Nothing was changed.");
+  resetProgress();
+  syncGenerateButton();
+});
+
 function runShuffle() {
   if (busy) return;
   const presetCode = generateRandomResolvablePreset();
@@ -169,8 +205,20 @@ window.addEventListener("message", (event: MessageEvent) => {
     return;
   }
 
+  if (message.type === "awaiting-confirmation") {
+    // Niram exists. Stop the indeterminate stripe and swap the Generate button
+    // for the inline replace prompt. Stay busy so shuffle/preset chips can't
+    // fire while the prompt is up; `pendingPresetCode` already holds the code
+    // the confirm button will resend.
+    setStatus(message.message);
+    resetProgress();
+    setConfirmVisible(true);
+    return;
+  }
+
   if (message.type === "error") {
     busy = false;
+    setConfirmVisible(false);
     setStatus(message.message, "error");
     resetProgress();
     syncGenerateButton();
@@ -179,6 +227,7 @@ window.addEventListener("message", (event: MessageEvent) => {
 
   if (message.type === "done") {
     busy = false;
+    setConfirmVisible(false);
     const s = message.summary;
     const variables = s.collections.reduce(
       (acc, collection) => acc + collection.variableCount,

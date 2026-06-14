@@ -2,10 +2,21 @@
 
 import type { ProgressPhase, ProgressRegion } from "./progress";
 
-export type UiToPlugin = { type: "generate"; presetCode: string };
+export type UiToPlugin = {
+  type: "generate";
+  presetCode: string;
+  // Set when the user has confirmed Niram's inline "replace everything" prompt,
+  // so the sandbox skips the existence check and regenerates in place.
+  confirmReplace?: boolean;
+};
 
 export type PluginToUi =
   | { type: "ready"; command?: string }
+  // Niram already exists in the file. The sandbox asks the UI to show an inline
+  // confirmation (in place of the Generate button) before doing a destructive
+  // regenerate; the UI resends `generate` with `confirmReplace` if the user
+  // agrees.
+  | { type: "awaiting-confirmation"; message: string }
   | {
       type: "progress";
       // Human-readable detail line for the current phase. Kept as `message`
