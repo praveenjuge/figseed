@@ -27,6 +27,7 @@ import { addSignupSocialBlock } from "./blocks/signupSocial";
 import { addSignupCardBlock } from "./blocks/signupCard";
 import { addSignupEmailBlock } from "./blocks/signupEmail";
 import { addSidebarBlock } from "./blocks/sidebar";
+import { addChartBlock } from "./blocks/chart";
 import { addDashboardBlock } from "./blocks/dashboard";
 import {
   BLOCK_GAP,
@@ -55,8 +56,10 @@ const REGION_ID = "blocks";
 // The header renders first and pins to the top of the left column; the blocks
 // follow in a fixed, curated order laid out across three columns (mirroring the
 // Design System page). Login variants stack in the left column, signup variants
-// plus the dashboard app shell in the middle column, and the Sidebar variant
-// set gets its own column on the right so its 16-rail grid has room to wrap.
+// plus the dashboard app shell in the middle column, and the Chart + Sidebar
+// component sets share the right column so their wide variant grids have room
+// to wrap. The Chart block is built before the Dashboard so the dashboard can
+// instance a live chart from it.
 const HEADER_BLOCK: BlockBuilder = {
   label: "Header",
   column: 0,
@@ -74,6 +77,7 @@ const BLOCKS: BlockBuilder[] = [
   { label: "Signup (Card)", column: 1, build: addSignupSocialBlock },
   { label: "Signup (Split)", column: 1, build: addSignupCardBlock },
   { label: "Signup (Email)", column: 1, build: addSignupEmailBlock },
+  { label: "Chart", column: 2, build: addChartBlock },
   { label: "Dashboard", column: 1, build: addDashboardBlock },
   { label: "Sidebar", column: 2, build: addSidebarBlock },
 ];

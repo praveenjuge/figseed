@@ -66,9 +66,9 @@ describe("buildBlocksRegion", () => {
 
     const after = (inputs.targetPage as unknown as { children: unknown[] })
       .children.length;
-    // Header + 12 blocks (5 Login variants, 5 Signup variants, Dashboard,
-    // Sidebar) add 13 top-level frames.
-    expect(after - before).toBe(13);
+    // Header + 13 blocks (5 Login variants, 5 Signup variants, Chart,
+    // Dashboard, Sidebar) add 14 top-level frames.
+    expect(after - before).toBe(14);
   });
 
   it("does not create a new page (Starter tier 3-page cap)", async () => {
@@ -103,10 +103,10 @@ describe("buildBlocksRegion", () => {
     expect(phases).toContain("binding");
     expect(phases).toContain("layout");
 
-    // Header + 12 blocks step the build phase, plus a final "Done" step.
+    // Header + 13 blocks step the build phase, plus a final "Done" step.
     const building = events.filter((e) => e.phase === "building");
-    expect(building.length).toBe(14);
-    expect(building.at(-1)).toMatchObject({ current: 13, total: 13 });
+    expect(building.length).toBe(15);
+    expect(building.at(-1)).toMatchObject({ current: 14, total: 14 });
     const lastBinding = events.filter((e) => e.phase === "binding").at(-1)!;
     expect(lastBinding.current).toBe(lastBinding.total);
   });
@@ -163,21 +163,22 @@ describe("buildBlocksRegion", () => {
     await buildBlocksRegion(inputs);
 
     const added = page.children.filter((c) => !existing.includes(c));
-    // The header plus the 12 blocks split across exactly three x positions
-    // (login variants left, signup variants + dashboard middle, the Sidebar set
-    // on the right).
+    // The header plus the 13 blocks split across exactly three x positions
+    // (login variants left, signup variants + dashboard middle, the Chart and
+    // Sidebar component sets on the right).
     const columnXs = [...new Set(added.map((node) => node.x))].sort(
       (a, b) => a - b,
     );
     expect(columnXs.length).toBe(3);
     // The left column anchors the header and holds multiple blocks; the middle
-    // column holds multiple blocks; the right column holds the lone Sidebar.
+    // column holds multiple blocks; the right column holds the Chart + Sidebar
+    // sets.
     const leftCount = added.filter((n) => n.x === columnXs[0]).length;
     const middleCount = added.filter((n) => n.x === columnXs[1]).length;
     const rightCount = added.filter((n) => n.x === columnXs[2]).length;
     expect(leftCount).toBeGreaterThan(1);
     expect(middleCount).toBeGreaterThan(1);
-    expect(rightCount).toBe(1);
+    expect(rightCount).toBe(2);
     expect(leftCount + middleCount + rightCount).toBe(added.length);
   });
 
@@ -207,20 +208,22 @@ describe("buildBlocksRegion", () => {
     const children = (
       barePage as unknown as { children: (SceneNode & { x: number })[] }
     ).children;
-    expect(children.length).toBe(13);
+    expect(children.length).toBe(14);
     // Every block starts at x >= 0, and at least one anchors the left column.
     for (const node of children) expect(node.x).toBeGreaterThanOrEqual(0);
     expect(children.some((node) => node.x === 0)).toBe(true);
     // The three-column split produces blocks at three distinct x positions.
     const columnXs = new Set(children.map((node) => node.x));
     expect(columnXs.size).toBe(3);
-    // No component instances exist on a bare page — everything is drawn.
+    // The auth blocks find no Button/Input/etc. and draw fallbacks, but the
+    // Chart block builds its own component set earlier in the region, so the
+    // dashboard reuses it — exactly one live chart instance on a bare page.
     expect(
       countInstances(
         barePage as unknown as {
           children: { type: string; children?: unknown[] }[];
         },
       ),
-    ).toBe(0);
+    ).toBe(1);
   });
 });

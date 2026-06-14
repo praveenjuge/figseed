@@ -148,7 +148,11 @@ export async function addDashboardBlock(
   chartRow.counterAxisSizingMode = "FIXED";
   body.appendChild(chartRow);
   fillWidth(chartRow);
-  const chart = instanceFromComponents(inputs, "Chart", "Type=Area");
+  const chart = instanceFromComponents(
+    inputs,
+    "Chart",
+    "Family=Area, Variant=Interactive",
+  );
   if (chart) {
     chartRow.appendChild(chart);
     fillWidth(chart);

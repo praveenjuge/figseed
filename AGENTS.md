@@ -31,8 +31,20 @@ Recent product surface to preserve:
   (`design-system`, `components`, `blocks`) so each builder clears and rebuilds
   only its own region. Do not split these back into separate pages — Figma's
   Starter/free tier caps a file at 3 pages.
-- The Components region has 57 shadcn-style sections, including charts, form,
-  typography, data table, icon-backed controls, and overlays.
+- The Components region has 56 shadcn-style sections, including form,
+  typography, data table, icon-backed controls, and overlays. The Tooltip
+  section also ships a `Chart Tooltip` component set (the
+  ChartTooltipContent callout styles from ui.shadcn.com/charts), since those
+  are tooltip chrome, not chart shapes.
+- The Chart is a Blocks region component set: one Figma component named
+  "Chart" holding a curated subset of the shadcn/ui chart catalogue
+  (https://ui.shadcn.com/charts) as variants keyed by `Family` (Area, Bar,
+  Line, Pie, Radar, Radial) and `Variant` (the per-family pattern). It keeps
+  ~4 visually-distinct patterns per family and ships a single resize-friendly
+  size (no `Size` variant). It lives in `src/blocksPage/blocks/chart/` (data +
+  sizes + renderers engine; the engine understands a superset of flags so
+  trimmed variants can be re-added in data.ts). The dashboard block instances
+  the Chart, so the Chart block builds before the dashboard.
 - The Sidebar is a Blocks region component set: one Figma component named
   "Sidebar" with all 16 shadcn sidebar block layouts
   (https://ui.shadcn.com/blocks/sidebar) as variants (Variant=sidebar-01 …

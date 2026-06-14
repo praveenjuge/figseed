@@ -19,7 +19,6 @@ import { addButtonGroupSection } from "./sections/buttonGroup";
 import { addCalendarSection } from "./sections/calendar";
 import { addCardSection } from "./sections/card";
 import { addCarouselSection } from "./sections/carousel";
-import { addChartSection } from "./sections/chart";
 import { addCheckboxSection } from "./sections/checkbox";
 import { addCollapsibleSection } from "./sections/collapsible";
 import { addComboboxSection } from "./sections/combobox";
@@ -110,7 +109,6 @@ const SECTIONS: SectionBuilder[] = [
   { label: "Calendar", build: addCalendarSection },
   { label: "Card", build: addCardSection },
   { label: "Carousel", build: addCarouselSection },
-  { label: "Chart", build: addChartSection },
   { label: "Checkbox", build: addCheckboxSection },
   { label: "Collapsible", build: addCollapsibleSection },
   { label: "Combobox", build: addComboboxSection },
