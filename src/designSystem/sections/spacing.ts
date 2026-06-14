@@ -21,24 +21,18 @@ export async function addSpacingScale(
     row.layoutMode = "HORIZONTAL";
     row.primaryAxisSizingMode = "AUTO";
     row.counterAxisSizingMode = "AUTO";
+    row.counterAxisAlignItems = "CENTER";
     row.itemSpacing = 12;
     row.fills = [];
 
     const label = figma.createText();
-    label.characters = `spacing/${token.name}`;
+    label.characters = `spacing/${token.name} · ${token.value}px`;
     label.fontSize = 10;
     applyFont(label, "body", "Regular");
     bindFill(label, inputs.theme.light.get("muted-foreground"));
-    label.resize(96, 16);
+    label.resize(148, 16);
 
-    const value = figma.createText();
-    value.characters = `${token.value}px`;
-    value.fontSize = 10;
-    applyFont(value, "body", "Regular");
-    bindFill(value, inputs.theme.light.get("foreground"));
-    value.resize(40, 16);
-
-    const bar = figma.createFrame();
+    const bar = figma.createRectangle();
     // Add a 1px floor so 0px tokens still produce a visible node — Figma
     // refuses to keep a zero-width frame on canvas otherwise.
     bar.resize(Math.max(token.value, 1), 12);
@@ -47,7 +41,6 @@ export async function addSpacingScale(
     bindWidth(bar, inputs.primitives.get(`spacing/${token.name}`));
 
     row.appendChild(label);
-    row.appendChild(value);
     row.appendChild(bar);
     stack.appendChild(row);
   }

@@ -2,11 +2,10 @@
 // primitive variables.
 
 import { BORDER_WIDTH_TOKENS } from "../../primitives";
-import { applyFont } from "../../fonts";
-import { bindFill, bindStrokeColor, bindStrokeWeight } from "../bindings";
+import { bindStrokeColor, bindStrokeWeight } from "../bindings";
 import {
   createSectionFrame,
-  createVertical,
+  createSwatchCell,
   createWrappingRow,
 } from "../layout";
 import { solidPaint } from "../paints";
@@ -22,9 +21,11 @@ export async function addBorderWidthScale(
   const row = createWrappingRow(section, 16);
 
   for (const token of BORDER_WIDTH_TOKENS) {
-    const cell = createVertical(row, 6);
-    const tile = figma.createFrame();
-    tile.resize(72, 72);
+    const tile = createSwatchCell(row, {
+      size: 72,
+      caption: `${token.name} · ${token.value}px`,
+      captionVar: inputs.theme.light.get("foreground"),
+    });
     tile.cornerRadius = 6;
     tile.fills = [];
     tile.strokes = [solidPaint(0.4)];
@@ -32,15 +33,6 @@ export async function addBorderWidthScale(
     // Use the theme primary color so the borders pick up the active palette.
     bindStrokeColor(tile, inputs.theme.light.get("primary"));
     bindStrokeWeight(tile, inputs.primitives.get(`border-width/${token.name}`));
-
-    const label = figma.createText();
-    label.characters = `${token.name} · ${token.value}px`;
-    label.fontSize = 11;
-    applyFont(label, "body", "Regular");
-    bindFill(label, inputs.theme.light.get("foreground"));
-
-    cell.appendChild(tile);
-    cell.appendChild(label);
   }
 
   page.appendChild(section);

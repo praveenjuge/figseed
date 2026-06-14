@@ -49,10 +49,10 @@ describe("buildDesignSystem", () => {
     expect(phases).toContain("binding");
     expect(phases).toContain("layout");
 
-    // The build phase steps once per section (12) and emits a final "Done".
+    // The build phase steps once per section (11) and emits a final "Done".
     const building = events.filter((e) => e.phase === "building");
-    expect(building.length).toBe(13);
-    expect(building.at(-1)).toMatchObject({ current: 12, total: 12 });
+    expect(building.length).toBe(12);
+    expect(building.at(-1)).toMatchObject({ current: 11, total: 11 });
     // The post-build sweeps end at 100% of the section nodes they processed.
     const lastBinding = events.filter((e) => e.phase === "binding").at(-1)!;
     expect(lastBinding.current).toBe(lastBinding.total);

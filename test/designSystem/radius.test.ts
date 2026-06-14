@@ -52,18 +52,19 @@ function collectTiles(
   const walk = (node: NodeLike) => {
     for (const cell of node.children ?? []) {
       const tile = cell.children?.[0];
-      const sub = cell.children?.[2];
+      const caption = cell.children?.[1];
       if (
         tile &&
-        tile.type === "FRAME" &&
+        tile.type === "RECTANGLE" &&
         typeof tile.topLeftRadius === "number" &&
-        sub &&
-        sub.type === "TEXT"
+        caption &&
+        caption.type === "TEXT"
       ) {
+        const match = /(\d+)px/.exec(String(caption.characters ?? ""));
         out.push({
           radius: tile.topLeftRadius,
           bound: "topLeftRadius" in (tile.boundVariables ?? {}),
-          px: parseInt(String(sub.characters ?? "0"), 10),
+          px: match ? parseInt(match[1]!, 10) : NaN,
         });
       } else {
         walk(cell);

@@ -2,9 +2,12 @@
 // opacity/<name> primitive variable.
 
 import { OPACITY_TOKENS } from "../../primitives";
-import { applyFont } from "../../fonts";
 import { bindFill, bindOpacity } from "../bindings";
-import { createSectionFrame, createWrappingRow } from "../layout";
+import {
+  createSectionFrame,
+  createSwatchCell,
+  createWrappingRow,
+} from "../layout";
 import type { DesignSystemInputs } from "../types";
 import { countDescendants } from "../utils";
 
@@ -17,38 +20,16 @@ export async function addOpacityScale(
   const row = createWrappingRow(section, 6);
 
   for (const token of OPACITY_TOKENS) {
-    const cell = figma.createFrame();
-    cell.layoutMode = "VERTICAL";
-    cell.itemSpacing = 4;
-    cell.counterAxisAlignItems = "CENTER";
-    cell.fills = [];
-    cell.resize(44, 56);
-    cell.primaryAxisSizingMode = "FIXED";
-    cell.counterAxisSizingMode = "FIXED";
-
-    const tile = figma.createFrame();
-    tile.resize(36, 36);
+    const tile = createSwatchCell(row, {
+      size: 36,
+      caption: `${token.name} · ${token.value}%`,
+      captionVar: inputs.theme.light.get("foreground"),
+      centered: true,
+    });
     tile.cornerRadius = 4;
     bindFill(tile, inputs.theme.light.get("primary"));
     tile.opacity = Math.max(0.0001, token.value / 100);
     bindOpacity(tile, inputs.primitives.get(`opacity/${token.name}`));
-
-    const label = figma.createText();
-    label.characters = token.name;
-    label.fontSize = 10;
-    applyFont(label, "body", "Medium");
-    bindFill(label, inputs.theme.light.get("foreground"));
-
-    const sub = figma.createText();
-    sub.characters = `${token.value}%`;
-    sub.fontSize = 9;
-    applyFont(sub, "body", "Regular");
-    bindFill(sub, inputs.theme.light.get("muted-foreground"));
-
-    cell.appendChild(tile);
-    cell.appendChild(label);
-    cell.appendChild(sub);
-    row.appendChild(cell);
   }
 
   page.appendChild(section);

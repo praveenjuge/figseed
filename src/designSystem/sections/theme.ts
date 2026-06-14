@@ -1,6 +1,8 @@
-// Theme swatches grouped by purpose (Surfaces, Brand, States, …) for either
-// the light or dark scheme. Each swatch binds its fill to the matching theme
-// variable so the whole grid updates with the preset.
+// Theme swatches grouped by purpose (Surfaces, Brand, States, …). Each swatch
+// is a split chip showing the light scheme on top and the dark scheme on the
+// bottom, so both schemes live in one section instead of two duplicated grids.
+// Each half binds its fill to the matching light/dark theme variable, so the
+// whole grid updates with the preset.
 
 import { bindFill } from "../bindings";
 import { applyFont } from "../../fonts";
@@ -47,19 +49,21 @@ const THEME_GROUPS: { title: string; keys: string[] }[] = [
 
 // Tunables for the compact swatch grid.
 const SWATCH_WIDTH = 72;
-const SWATCH_HEIGHT = 40;
+const SWATCH_HALF = 24; // height of each scheme half within a chip
 const SWATCH_GAP = 8;
 const GROUP_GAP = 16;
 
 export async function addThemeSection(
   page: PageNode,
   inputs: DesignSystemInputs,
-  scheme: "light" | "dark",
 ): Promise<number> {
-  const map = scheme === "light" ? inputs.theme.light : inputs.theme.dark;
-  const title = scheme === "light" ? "Theme · Light" : "Theme · Dark";
+  const light = inputs.theme.light;
+  const dark = inputs.theme.dark;
 
-  const section = createSectionFrame(title, { title });
+  const section = createSectionFrame("Theme", {
+    title: "Theme",
+    subtitle: "Each chip: light (top) · dark (bottom)",
+  });
 
   // Two-column grid of group blocks. The section content width is fixed, so
   // each column gets exactly half (minus the column gap).
@@ -116,19 +120,31 @@ export async function addThemeSection(
       cell.primaryAxisSizingMode = "AUTO";
       cell.counterAxisSizingMode = "FIXED";
 
-      // Chip is itself an auto-layout frame with both axes fixed — a plain
-      // frame collapses to 0 height when nested in a vertical auto-layout
-      // parent, even after resize().
+      // The chip is a vertical auto-layout frame stacking a light half over a
+      // dark half. A hairline outline keeps chips that match the page surface
+      // (e.g. the literal "background" / near-white "card") visible.
       const chip = figma.createFrame();
       chip.layoutMode = "VERTICAL";
+      chip.itemSpacing = 0;
       chip.strokeWeight = 1;
-      // Hairline outline so chips matching the page surface (e.g. the literal
-      // "background" or near-white "card" in light mode) stay visible.
-      chip.strokes = [solidPaint(scheme === "light" ? 0.9 : 0.8)];
-      chip.resize(SWATCH_WIDTH, SWATCH_HEIGHT);
+      chip.strokes = [solidPaint(0.85)];
+      chip.resize(SWATCH_WIDTH, SWATCH_HALF * 2);
       chip.primaryAxisSizingMode = "FIXED";
       chip.counterAxisSizingMode = "FIXED";
-      bindFill(chip, map.get(key));
+      chip.clipsContent = true;
+
+      const lightHalf = figma.createRectangle();
+      lightHalf.resize(SWATCH_WIDTH, SWATCH_HALF);
+      lightHalf.layoutAlign = "STRETCH";
+      bindFill(lightHalf, light.get(key));
+      chip.appendChild(lightHalf);
+
+      const darkHalf = figma.createRectangle();
+      darkHalf.resize(SWATCH_WIDTH, SWATCH_HALF);
+      darkHalf.layoutAlign = "STRETCH";
+      bindFill(darkHalf, dark.get(key));
+      chip.appendChild(darkHalf);
+
       cell.appendChild(chip);
 
       const caption = figma.createText();

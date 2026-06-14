@@ -78,7 +78,7 @@ async function addShadowGroup(
     cell.primaryAxisSizingMode = "AUTO";
     cell.counterAxisSizingMode = "AUTO";
 
-    const tile = figma.createFrame();
+    const tile = figma.createRectangle();
     tile.resize(TILE, TILE);
     tile.cornerRadius = 8;
     tile.fills = [solidPaint(1)];

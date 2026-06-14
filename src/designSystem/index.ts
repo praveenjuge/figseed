@@ -46,16 +46,7 @@ const REGION_ID = "design-system";
 const SECTIONS: SectionBuilder[] = [
   // Left column: the color-related sections, grouped together.
   { label: "Header", column: 0, build: addHeader },
-  {
-    label: "Theme · Light",
-    column: 0,
-    build: (p, i) => addThemeSection(p, i, "light"),
-  },
-  {
-    label: "Theme · Dark",
-    column: 0,
-    build: (p, i) => addThemeSection(p, i, "dark"),
-  },
+  { label: "Theme", column: 0, build: addThemeSection },
   { label: "Tailwind palette", column: 0, build: addTailwindPalette },
   { label: "Spacing scale", column: 0, build: addSpacingScale },
   { label: "Icons", column: 0, build: addIconLibrary },

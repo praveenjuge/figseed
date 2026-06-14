@@ -91,6 +91,44 @@ export function createWrappingRow(
   return frame;
 }
 
+// A single scale tile: a rectangle swatch plus one caption underneath, wrapped
+// in a hugging vertical cell. Shared by the radius / opacity / border-width
+// scales (they only differed in tile size, caption text, and centering), so
+// each item is one rectangle + one text node instead of a frame tile + two
+// labels. Returns the rectangle so the caller can apply fills/strokes/radii and
+// bind the matching primitive variable.
+export function createSwatchCell(
+  parent: FrameNode,
+  opts: {
+    size: number;
+    caption: string;
+    captionVar?: Variable;
+    centered?: boolean;
+  },
+): RectangleNode {
+  const cell = figma.createFrame();
+  cell.layoutMode = "VERTICAL";
+  cell.itemSpacing = 6;
+  cell.fills = [];
+  cell.primaryAxisSizingMode = "AUTO";
+  cell.counterAxisSizingMode = "AUTO";
+  if (opts.centered) cell.counterAxisAlignItems = "CENTER";
+
+  const tile = figma.createRectangle();
+  tile.resize(opts.size, opts.size);
+  cell.appendChild(tile);
+
+  const label = figma.createText();
+  applyFont(label, "body", "Medium");
+  label.characters = opts.caption;
+  label.fontSize = 11;
+  bindFill(label, opts.captionVar);
+  cell.appendChild(label);
+
+  parent.appendChild(cell);
+  return tile;
+}
+
 export function createVertical(parent: FrameNode, spacing: number): FrameNode {
   const frame = figma.createFrame();
   frame.layoutMode = "VERTICAL";

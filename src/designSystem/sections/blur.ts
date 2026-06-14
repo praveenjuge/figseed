@@ -66,10 +66,9 @@ async function addLayerBlurGroup(
   for (const spec of BLUR_STYLE_SPECS) {
     const cell = blurCell();
 
-    const tile = figma.createFrame();
+    const tile = figma.createRectangle();
     tile.resize(TILE, TILE);
     tile.cornerRadius = 8;
-    tile.clipsContent = true;
     tile.fills = [bgPaint];
     tile.effects = [
       {
@@ -106,7 +105,7 @@ async function addBackdropBlurGroup(
     stage.clipsContent = true; // blur should stay within the tile
     stage.fills = [bgPaint];
 
-    const overlay = figma.createFrame();
+    const overlay = figma.createRectangle();
     overlay.resize(TILE - 16, TILE - 28);
     overlay.x = 8;
     overlay.y = 14;

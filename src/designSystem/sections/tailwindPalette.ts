@@ -24,6 +24,39 @@ export async function addTailwindPalette(
   const labelWidth = 56;
   const rowHeight = 24; // each scale row is exactly this tall
 
+  // Header row: the scale numbers (50…950) printed once across the columns
+  // instead of repeated inside every swatch. A spacer matches the family-label
+  // column so the numbers sit directly above their swatch columns.
+  const header = figma.createFrame();
+  header.layoutMode = "HORIZONTAL";
+  header.itemSpacing = 0;
+  header.fills = [];
+  header.resize(rowWidth, 14);
+  header.primaryAxisSizingMode = "FIXED";
+  header.counterAxisSizingMode = "FIXED";
+  header.counterAxisAlignItems = "CENTER";
+
+  const spacer = figma.createText();
+  spacer.characters = "";
+  spacer.fontSize = 9;
+  applyFont(spacer, "body", "Medium");
+  spacer.resize(labelWidth, 12);
+  header.appendChild(spacer);
+
+  for (const scale of TAILWIND_COLOR_SCALES) {
+    const tag = figma.createText();
+    tag.characters = scale;
+    tag.fontSize = 9;
+    applyFont(tag, "body", "Medium");
+    tag.fills = [solidPaint(0.4)];
+    tag.textAlignHorizontal = "CENTER";
+    tag.textAutoResize = "HEIGHT";
+    tag.layoutGrow = 1;
+    tag.layoutAlign = "STRETCH";
+    header.appendChild(tag);
+  }
+  stack.appendChild(header);
+
   for (const family of TAILWIND_COLOR_FAMILIES) {
     const row = figma.createFrame();
     row.layoutMode = "HORIZONTAL";
@@ -45,28 +78,15 @@ export async function addTailwindPalette(
     row.appendChild(label);
 
     for (const scale of TAILWIND_COLOR_SCALES) {
-      const swatch = figma.createFrame();
-      swatch.layoutMode = "VERTICAL";
-      swatch.primaryAxisAlignItems = "MAX";
-      swatch.counterAxisAlignItems = "MIN";
-      swatch.paddingLeft = 3;
-      swatch.paddingRight = 3;
-      swatch.paddingTop = 2;
-      swatch.paddingBottom = 2;
+      // Plain rectangle swatch — the scale number now lives in the shared
+      // header row, so each cell is a single childless node instead of a
+      // frame wrapping a tag text.
+      const swatch = figma.createRectangle();
       // Grow horizontally to share the remaining row width and stretch
-      // vertically to match the row height. Together these keep the swatch
-      // a real rectangle instead of collapsing onto its label.
+      // vertically to match the row height.
       swatch.layoutGrow = 1;
       swatch.layoutAlign = "STRETCH";
       bindFill(swatch, inputs.tailwindColors.get(`${family}/${scale}`));
-
-      const tag = figma.createText();
-      tag.characters = scale;
-      tag.fontSize = 9;
-      applyFont(tag, "body", "Medium");
-      const isDark = parseInt(scale, 10) >= 500;
-      tag.fills = [solidPaint(isDark ? 0.95 : 0.1)];
-      swatch.appendChild(tag);
 
       row.appendChild(swatch);
     }
@@ -83,7 +103,7 @@ export async function addTailwindPalette(
   neutralRow.fills = [];
   for (const name of ["white", "black", "transparent"]) {
     const cell = createVertical(neutralRow, 4);
-    const swatch = figma.createFrame();
+    const swatch = figma.createRectangle();
     swatch.resize(56, 24);
     swatch.cornerRadius = 4;
     swatch.strokeWeight = 1;

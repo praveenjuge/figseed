@@ -49,7 +49,7 @@ export function bindStrokeColor(
 }
 
 export function bindStrokeWeight(
-  node: FrameNode,
+  node: FrameNode | RectangleNode,
   variable: Variable | undefined,
 ) {
   if (!variable) return;
@@ -60,7 +60,10 @@ export function bindStrokeWeight(
   }
 }
 
-export function bindWidth(node: FrameNode, variable: Variable | undefined) {
+export function bindWidth(
+  node: FrameNode | RectangleNode,
+  variable: Variable | undefined,
+) {
   if (!variable) return;
   try {
     node.setBoundVariable("width", variable);
@@ -69,7 +72,10 @@ export function bindWidth(node: FrameNode, variable: Variable | undefined) {
   }
 }
 
-export function bindOpacity(node: FrameNode, variable: Variable | undefined) {
+export function bindOpacity(
+  node: FrameNode | RectangleNode,
+  variable: Variable | undefined,
+) {
   if (!variable) return;
   try {
     node.setBoundVariable("opacity", variable);
@@ -109,7 +115,7 @@ export function bindLetterSpacing(
 }
 
 export function bindCornerRadii(
-  node: FrameNode,
+  node: FrameNode | RectangleNode,
   variable: Variable | undefined,
 ) {
   if (!variable) return;
@@ -124,7 +130,7 @@ export function bindCornerRadii(
 }
 
 export function bindEffectRadius(
-  node: FrameNode,
+  node: FrameNode | RectangleNode,
   effectIndex: number,
   variable: Variable | undefined,
 ) {
