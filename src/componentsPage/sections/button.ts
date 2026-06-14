@@ -11,6 +11,7 @@ import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import { type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
+import { collectByTypeAndName, defineTextProperty } from "../properties";
 
 const BUTTON_VARIANTS = [
   "default",
@@ -76,6 +77,15 @@ export async function addButtonSection(
   componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
+
+  // Expose the button label as an editable text property, fanned across every
+  // text-bearing (non-icon) variant's "Label" node.
+  defineTextProperty(
+    componentSet,
+    "Label",
+    "Button",
+    collectByTypeAndName(componentSet, "TEXT", "Label"),
+  );
 
   return countDescendants(componentSet);
 }
@@ -158,6 +168,9 @@ function buildButtonComponent(
   const label = figma.createText();
   applyFont(label, "body", "Medium");
   label.characters = isIconSize(size) ? "+" : "Button";
+  // Name the real text label so the section can wire a "Label" text property.
+  // Icon-size fallbacks ("+") stay unnamed and out of the property.
+  if (!isIconSize(size)) label.name = "Label";
   label.fontSize = size === "xs" || size === "icon-xs" ? 12 : 14;
   bindFontSize(
     label,

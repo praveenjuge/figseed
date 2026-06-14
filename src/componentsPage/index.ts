@@ -74,6 +74,7 @@ import {
   type SectionBuilder,
 } from "./types";
 import { loadComponentsFonts } from "./utils";
+import { applyDocsToSections } from "./docs";
 import { ensureEffectStyles } from "../effectStyles";
 import { ensureTextStyles, applyTextStylesChunked } from "../textStyles";
 import { applyTokenBindingsChunked } from "../tokenBindings";
@@ -241,6 +242,12 @@ export async function buildComponentsPage(
     (child) => !preexisting.has(child),
   );
   for (const node of sectionNodes) node.setPluginData(REGION_KEY, REGION_ID);
+
+  // Attach documentation metadata (a short description + a single shadcn docs
+  // link) to every publishable component/component set this run appended, so
+  // designers see what each component is for and can jump to the canonical
+  // reference. Curated + bundled (see docs.ts) so it works offline.
+  applyDocsToSections(sectionNodes as unknown as { type: string }[]);
 
   // Map eligible text nodes onto their Tailwind text style before the token
   // sweep, so the style owns each node's font size + line height. Chunked so

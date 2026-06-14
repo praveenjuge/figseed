@@ -13,6 +13,7 @@ import { applyEffectStyle } from "../../effectStyles";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
+import { collectByTypeAndName, defineTextProperty } from "../properties";
 
 const CARD_VARIANTS = [
   "default",
@@ -43,6 +44,20 @@ export async function addCardSection(
   componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
+
+  // Expose the card header copy as editable text properties across variants.
+  defineTextProperty(
+    componentSet,
+    "Title",
+    "Card Title",
+    collectByTypeAndName(componentSet, "TEXT", "Title"),
+  );
+  defineTextProperty(
+    componentSet,
+    "Description",
+    "Card description goes here with supporting text.",
+    collectByTypeAndName(componentSet, "TEXT", "Description"),
+  );
 
   return countDescendants(componentSet);
 }
@@ -116,6 +131,7 @@ function buildCardComponent(
 
   const title = figma.createText();
   applyFont(title, "heading", "Medium");
+  title.name = "Title";
   title.characters = "Card Title";
   title.fontSize = 16;
   bindFontSize(title, p.get("font/size/base"));
@@ -125,6 +141,7 @@ function buildCardComponent(
 
   const desc = figma.createText();
   applyFont(desc, "body", "Regular");
+  desc.name = "Description";
   desc.characters = "Card description goes here with supporting text.";
   desc.fontSize = 14;
   bindFontSize(desc, p.get("font/size/sm"));

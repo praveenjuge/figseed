@@ -17,6 +17,7 @@ import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
+import { collectByTypeAndName, defineTextProperty } from "../properties";
 
 const ARROW_LONG = 10; // base length of the arrow triangle
 const ARROW_SHORT = 5; // height of the arrow triangle
@@ -64,6 +65,14 @@ export async function addTooltipSection(
   tooltipSet.itemSpacing = 24;
   styleComponentSet(tooltipSet);
   count += countDescendants(tooltipSet);
+
+  // Expose the tooltip copy as an editable text property across the four sides.
+  defineTextProperty(
+    tooltipSet,
+    "Text",
+    "Add to library",
+    collectByTypeAndName(tooltipSet, "TEXT", "Text"),
+  );
 
   // 2) The chart tooltip callouts (ChartTooltipContent).
   const chartTooltips: ComponentNode[] = [];
@@ -119,6 +128,7 @@ function buildTooltipComponent(
   const text = figma.createText();
   // shadcn TooltipContent uses `text-xs` with no explicit weight (Regular).
   applyFont(text, "body", "Regular");
+  text.name = "Text";
   text.characters = "Add to library";
   text.fontSize = 12;
   bindFontSize(text, p.get("font/size/xs"));

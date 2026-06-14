@@ -19,10 +19,15 @@ import {
   bindStrokeColor,
 } from "../bindings";
 import { applyFont } from "../../fonts";
-import { instantiateIcon, resolveIconLibrary } from "../../icons";
+import {
+  instantiateIcon,
+  resolveIconLibrary,
+  resolveIconName,
+} from "../../icons";
 import { styleComponentSet } from "../layout";
 import { type ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
+import { collectByTypeAndName, defineIconSwapProperty } from "../properties";
 
 const TOGGLE_VARIANTS = ["default", "outline"] as const;
 type ToggleVariant = (typeof TOGGLE_VARIANTS)[number];
@@ -69,6 +74,23 @@ export async function addToggleSection(
   componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
+
+  // When the published icon set is available, the glyph is a real instance of
+  // it — expose an "Icon" instance-swap property so designers can swap it,
+  // with the icon set offered as the preferred choice.
+  if (inputs.iconComponents) {
+    const iconName = resolveIconName(
+      resolveIconLibrary(inputs.presetSummary),
+      "bold",
+    );
+    const source = iconName ? inputs.iconComponents.get(iconName) : undefined;
+    defineIconSwapProperty(
+      componentSet,
+      "Icon",
+      source as unknown as { key?: string; parent?: { type: string } },
+      collectByTypeAndName(componentSet, "INSTANCE", "Icon"),
+    );
+  }
 
   return countDescendants(componentSet);
 }

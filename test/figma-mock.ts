@@ -187,6 +187,10 @@ export function createFigmaMock() {
     const node = {
       type,
       id: nextId("node"),
+      // Published component key (figma.ComponentNode#key). Real components only
+      // get a non-empty key once published, but the in-memory mock hands one to
+      // every node so instance-swap property defaults have something to bind.
+      key: nextId("key"),
       name: "",
       children: [] as FakeNode[],
       parent: null as FakeNode | null,
@@ -243,6 +247,31 @@ export function createFigmaMock() {
           type: "VARIABLE_ALIAS",
           id: variable.id,
         };
+      },
+      // Component properties (figma.ComponentNode / ComponentSetNode). Records
+      // each definition under a Figma-style suffixed id and returns it, so the
+      // property + reference tests can assert what was wired. Variant axes use
+      // a different code path (combineAsVariants), so this only sees the TEXT /
+      // BOOLEAN / INSTANCE_SWAP properties the builders add.
+      addComponentProperty(
+        name: string,
+        propType: string,
+        defaultValue: string | boolean,
+        options?: {
+          preferredValues?: ReadonlyArray<{ type: string; key: string }>;
+        },
+      ): string {
+        const store = (node.__componentProperties ??= {} as Record<
+          string,
+          unknown
+        >) as Record<string, unknown>;
+        const propertyId = `${name}#${nextId("prop")}`;
+        store[propertyId] = {
+          type: propType,
+          defaultValue,
+          preferredValues: options?.preferredValues,
+        };
+        return propertyId;
       },
       // Per-node plugin data store (figma.PluginDataMixin). The page builders
       // tag the top-level frames they own with a region key so each builder can

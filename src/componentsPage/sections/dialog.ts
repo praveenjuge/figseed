@@ -19,6 +19,11 @@ import { wrapInSectionCard } from "../layout";
 import { createCloseGlyph } from "../glyphs";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
+import {
+  collectByTypeAndName,
+  defineBooleanProperty,
+  defineTextProperty,
+} from "../properties";
 
 const DIALOG_WIDTH = 384; // max-w-sm
 
@@ -27,6 +32,23 @@ export async function addDialogSection(
   inputs: ComponentsInputs,
 ): Promise<number> {
   const comp = buildDialogComponent(inputs);
+
+  // Expose the dialog title/description copy and a toggle for the description.
+  defineTextProperty(
+    comp,
+    "Title",
+    "Are you absolutely sure?",
+    collectByTypeAndName(comp, "TEXT", "Title"),
+  );
+  const descNodes = collectByTypeAndName(comp, "TEXT", "Description");
+  defineTextProperty(
+    comp,
+    "Description",
+    "This action cannot be undone. This will permanently delete your account.",
+    descNodes,
+  );
+  defineBooleanProperty(comp, "Show Description", true, descNodes);
+
   const card = wrapInSectionCard(comp);
   page.appendChild(card);
   return countDescendants(card);
@@ -90,6 +112,7 @@ function buildDialogComponent(inputs: ComponentsInputs): ComponentNode {
 
   const title = figma.createText();
   applyFont(title, "heading", "Medium");
+  title.name = "Title";
   title.characters = "Are you absolutely sure?";
   title.fontSize = 16;
   bindFontSize(title, p.get("font/size/base"));
@@ -99,6 +122,7 @@ function buildDialogComponent(inputs: ComponentsInputs): ComponentNode {
 
   const desc = figma.createText();
   applyFont(desc, "body", "Regular");
+  desc.name = "Description";
   desc.characters =
     "This action cannot be undone. This will permanently delete your account.";
   desc.fontSize = 14;

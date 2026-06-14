@@ -39,6 +39,7 @@ import {
   type BlocksResult,
 } from "./types";
 import { loadBlocksFonts } from "./utils";
+import { applyDocsToSections } from "../componentsPage/docs";
 import { ensureEffectStyles } from "../effectStyles";
 import { ensureTextStyles, applyTextStylesChunked } from "../textStyles";
 import { applyTokenBindingsChunked } from "../tokenBindings";
@@ -154,6 +155,12 @@ export async function buildBlocksRegion(
 
   // Tag the frames this run appended so a later re-run clears only this region.
   for (const node of newNodes) node.setPluginData(REGION_KEY, REGION_ID);
+
+  // Attach documentation metadata to the publishable Blocks-region component
+  // sets (Chart, Sidebar). The auth/dashboard blocks are compositions of live
+  // instances, not standalone publishable components, so the docs pass only
+  // matches the two reusable library sets here.
+  applyDocsToSections(newNodes as unknown as { type: string }[]);
 
   // Map eligible text nodes onto their Tailwind text style before the token
   // sweep, so the style owns each node's font size + line height. (Instances

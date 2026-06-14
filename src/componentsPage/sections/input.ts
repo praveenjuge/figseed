@@ -11,6 +11,7 @@ import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
+import { collectByTypeAndName, defineTextProperty } from "../properties";
 
 const INPUT_STATES = ["default", "focused", "disabled", "invalid"] as const;
 type InputState = (typeof INPUT_STATES)[number];
@@ -39,6 +40,14 @@ export async function addInputSection(
   componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
+
+  // Expose the field text as an editable placeholder property across variants.
+  defineTextProperty(
+    componentSet,
+    "Placeholder",
+    "you@example.com",
+    collectByTypeAndName(componentSet, "TEXT", "Value"),
+  );
 
   return countDescendants(componentSet);
 }
@@ -100,6 +109,7 @@ function buildInputComponent(
 
   const text = figma.createText();
   applyFont(text, "body", "Regular");
+  text.name = "Value";
   text.fontSize = 14;
   bindFontSize(text, p.get("font/size/sm"));
 

@@ -11,6 +11,7 @@ import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
+import { collectByTypeAndName, defineTextProperty } from "../properties";
 
 const ALERT_VARIANTS = [
   "default",
@@ -36,6 +37,20 @@ export async function addAlertSection(
   componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
+
+  // Expose the alert title and description as editable text properties.
+  defineTextProperty(
+    componentSet,
+    "Title",
+    "Heads up!",
+    collectByTypeAndName(componentSet, "TEXT", "Title"),
+  );
+  defineTextProperty(
+    componentSet,
+    "Description",
+    "You can add components to your app using the CLI.",
+    collectByTypeAndName(componentSet, "TEXT", "Description"),
+  );
 
   return countDescendants(componentSet);
 }
@@ -122,6 +137,7 @@ function buildAlertComponent(
 
   const title = figma.createText();
   applyFont(title, "heading", "Medium");
+  title.name = "Title";
   title.fontSize = 14;
   bindFontSize(title, p.get("font/size/sm"));
   title.characters = alertTitle(variant);
@@ -131,6 +147,7 @@ function buildAlertComponent(
 
   const desc = figma.createText();
   applyFont(desc, "body", "Regular");
+  desc.name = "Description";
   desc.fontSize = 14;
   bindFontSize(desc, p.get("font/size/sm"));
   desc.characters = alertDescription(variant);

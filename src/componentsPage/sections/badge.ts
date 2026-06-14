@@ -13,6 +13,7 @@ import { createIcon, resolveIconLibrary } from "../../icons";
 import { styleComponentSet } from "../layout";
 import type { ComponentsInputs } from "../types";
 import { countDescendants } from "../utils";
+import { collectByTypeAndName, defineTextProperty } from "../properties";
 
 const BADGE_VARIANTS = [
   "default",
@@ -48,6 +49,14 @@ export async function addBadgeSection(
   componentSet.layoutMode = "HORIZONTAL";
   componentSet.itemSpacing = 16;
   styleComponentSet(componentSet);
+
+  // Expose the badge label copy as an editable text property across variants.
+  defineTextProperty(
+    componentSet,
+    "Label",
+    "Badge",
+    collectByTypeAndName(componentSet, "TEXT", "Label"),
+  );
 
   return countDescendants(componentSet);
 }
@@ -140,6 +149,9 @@ function buildBadgeComponent(
   const label = figma.createText();
   applyFont(label, "body", "Medium");
   label.characters = style === "count" ? "8" : "Badge";
+  // Name the text label so the section can wire a "Label" text property. The
+  // count style keeps its own numeric content, so it stays out of the property.
+  if (style !== "count") label.name = "Label";
   label.fontSize = 12;
   bindFontSize(label, p.get("font/size/xs"));
   bindFill(label, fg);
