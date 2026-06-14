@@ -22,7 +22,22 @@ describe("sandbox under QuickJS", () => {
     // No error message should appear anywhere in the stream.
     expect(posted.find((m) => m.type === "error")).toBeUndefined();
 
-    // The run must terminate in a single `done`.
+    // A full generate streams determinate progress before completing.
+    const progress = posted.filter((m) => m.type === "progress");
+    expect(progress.length).toBeGreaterThan(0);
+    // Progress carries the phase-weighted fields and a monotonic percent.
+    const percents = progress
+      .map((m) => m.percent)
+      .filter((p): p is number => typeof p === "number");
+    expect(percents.length).toBeGreaterThan(0);
+    for (let i = 1; i < percents.length; i++) {
+      expect(percents[i]!).toBeGreaterThanOrEqual(percents[i - 1]!);
+    }
+    // Phases were reported (not just bare messages).
+    expect(progress.some((m) => typeof m.phase === "string")).toBe(true);
+    expect(progress.every((m) => typeof m.elapsedMs === "number")).toBe(true);
+
+    // The run must terminate in a single `done` carrying the summary + warnings.
     const done = posted.filter((m) => m.type === "done");
     expect(done).toHaveLength(1);
     expect(done[0]).toMatchObject({
@@ -31,7 +46,9 @@ describe("sandbox under QuickJS", () => {
       summary: {
         collections: expect.any(Array),
       },
+      warnings: expect.any(Array),
     });
+    expect(typeof done[0]!.elapsedMs).toBe("number");
 
     // The three known collections were materialized inside the VM.
     const names = summary.collections.map((c) => c.name).sort();

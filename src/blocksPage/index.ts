@@ -39,8 +39,9 @@ import {
 } from "./types";
 import { loadBlocksFonts } from "./utils";
 import { ensureEffectStyles } from "../effectStyles";
-import { ensureTextStyles, applyTextStyles } from "../textStyles";
-import { applyTokenBindings } from "../tokenBindings";
+import { ensureTextStyles, applyTextStylesChunked } from "../textStyles";
+import { applyTokenBindingsChunked } from "../tokenBindings";
+import { yieldToUi } from "../async";
 
 export type { BlocksInputs, BlocksResult } from "./types";
 
@@ -90,9 +91,11 @@ export async function buildBlocksRegion(
   // System and Components regions on the shared page untouched. (When the
   // Components builder ran just before us it already cleared its own region;
   // this keeps the blocks region idempotent on its own terms too.)
+  inputs.onProgress?.({ phase: "clearing", current: 0, total: 1 });
   for (const node of [...(page.children as SceneNode[])]) {
     if (node.getPluginData(REGION_KEY) === REGION_ID) node.remove();
   }
+  inputs.onProgress?.({ phase: "clearing", current: 1, total: 1 });
 
   // Publish/refresh the shadow + blur effect styles (idempotent) so blocks can
   // reference real styles instead of literal effects.
@@ -115,11 +118,21 @@ export async function buildBlocksRegion(
 
   for (let i = 0; i < ORDERED_BLOCKS.length; i++) {
     const block = ORDERED_BLOCKS[i]!;
-    inputs.onProgress?.(i, total, block.label);
+    inputs.onProgress?.({
+      phase: "building",
+      current: i,
+      total,
+      label: block.label,
+    });
     count += await block.build(page, inputsWithStyles);
-    await Promise.resolve();
+    await yieldToUi();
   }
-  inputs.onProgress?.(total, total, "Done");
+  inputs.onProgress?.({
+    phase: "building",
+    current: total,
+    total,
+    label: "Done",
+  });
 
   const newNodes = (page.children as SceneNode[]).filter(
     (child) => !preexisting.has(child),
@@ -131,19 +144,32 @@ export async function buildBlocksRegion(
   // Map eligible text nodes onto their Tailwind text style before the token
   // sweep, so the style owns each node's font size + line height. (Instances
   // embedded from the component grid keep their own styling — the sweep only
-  // touches the nodes this region drew.)
-  for (const child of newNodes) {
-    await applyTextStyles(child, textStyles);
-  }
+  // touches the nodes this region drew.) Chunked so the UI keeps painting.
+  await applyTextStylesChunked(newNodes, textStyles, (done, totalNodes) =>
+    inputs.onProgress?.({
+      phase: "text-styles",
+      current: done,
+      total: totalNodes,
+    }),
+  );
 
   // Bind the remaining non-color primitives (spacing, padding, gaps, border
   // widths, radii, font sizes) wherever a literal matches a token, so later
   // variable edits reflow the blocks instead of leaving frozen literals.
-  for (const child of newNodes) {
-    applyTokenBindings(child, inputs.primitives);
-  }
+  await applyTokenBindingsChunked(
+    newNodes,
+    inputs.primitives,
+    (done, totalNodes) =>
+      inputs.onProgress?.({
+        phase: "binding",
+        current: done,
+        total: totalNodes,
+      }),
+  );
 
+  inputs.onProgress?.({ phase: "layout", current: 0, total: 1 });
   layoutBlocksRegion(page, preexisting, newNodes);
+  inputs.onProgress?.({ phase: "layout", current: 1, total: 1 });
   return { nodeCount: count };
 }
 

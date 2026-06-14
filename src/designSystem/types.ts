@@ -10,6 +10,7 @@ import type { EffectStyleMap } from "../effectStyles";
 import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
 import type { IconComponentMap } from "../icons";
+import type { RegionProgress } from "../progress";
 
 // Everything Niram generates lives on a single page so the file stays within
 // Figma Starter/free page limits. The Design System sections sit at the top,
@@ -37,8 +38,10 @@ export type DesignSystemInputs = {
   // Tailwind typography text styles. Populated by the builder when absent so
   // matching text nodes get mapped onto a published style.
   textStyles?: TextStyleMap;
-  // Called once per section so the UI can show a determinate progress bar.
-  onProgress?: (current: number, total: number, label: string) => void;
+  // Reports build + post-processing phase progress (clearing, building each
+  // section, applying text styles, binding tokens, layout) so the UI can show a
+  // phase-weighted determinate bar.
+  onProgress?: RegionProgress;
 };
 
 export type DesignSystemResult = {

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildBlocksRegion } from "../../src/blocksPage";
 import type { BlocksInputs } from "../../src/blocksPage";
 import { buildComponentsPage } from "../../src/componentsPage";
@@ -90,15 +90,25 @@ describe("buildBlocksRegion", () => {
     ).toBeUndefined();
   });
 
-  it("reports progress for the header plus all blocks and Done", async () => {
-    const onProgress = vi.fn();
+  it("reports build and post-processing phase progress", async () => {
+    const events: { phase: string; current: number; total: number }[] = [];
     await buildBlocksRegion({
       ...(await makeInputsOnComponentsPage()),
-      onProgress,
+      onProgress: (event) => events.push(event),
     });
-    // Header + 12 blocks = 13 builders, plus the final Done.
-    expect(onProgress).toHaveBeenCalledTimes(14);
-    expect(onProgress).toHaveBeenLastCalledWith(13, 13, "Done");
+
+    const phases = new Set(events.map((e) => e.phase));
+    expect(phases).toContain("building");
+    expect(phases).toContain("text-styles");
+    expect(phases).toContain("binding");
+    expect(phases).toContain("layout");
+
+    // Header + 12 blocks step the build phase, plus a final "Done" step.
+    const building = events.filter((e) => e.phase === "building");
+    expect(building.length).toBe(14);
+    expect(building.at(-1)).toMatchObject({ current: 13, total: 13 });
+    const lastBinding = events.filter((e) => e.phase === "binding").at(-1)!;
+    expect(lastBinding.current).toBe(lastBinding.total);
   });
 
   it("embeds live instances of the page's components", async () => {

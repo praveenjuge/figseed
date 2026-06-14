@@ -171,8 +171,14 @@
         flex-direction: column;
         gap: 8px;
       }
-      .status {
+      .status-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
         min-height: 16px;
+      }
+      .status {
         color: var(--muted);
         word-break: break-word;
       }
@@ -181,6 +187,11 @@
       }
       .status.done {
         color: var(--fg);
+      }
+      .meta {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
       }
       .progress {
         height: 2px;
@@ -291,7 +302,10 @@
       </div>
 
       <footer>
-        <div id="status" class="status"></div>
+        <div class="status-row">
+          <span id="status" class="status"></span>
+          <span id="meta" class="meta"></span>
+        </div>
         <div id="progress" class="progress" aria-hidden="true">
           <span class="bar"></span>
         </div>

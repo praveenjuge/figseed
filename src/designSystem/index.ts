@@ -29,9 +29,10 @@ import {
 } from "./types";
 import { loadDesignSystemFonts } from "./utils";
 import { ensureEffectStyles } from "../effectStyles";
-import { ensureTextStyles, applyTextStyles } from "../textStyles";
-import { applyTokenBindings } from "../tokenBindings";
+import { ensureTextStyles, applyTextStylesChunked } from "../textStyles";
+import { applyTokenBindingsChunked } from "../tokenBindings";
 import { collectIconComponents } from "../icons";
+import { yieldToUi } from "../async";
 
 export type { DesignSystemInputs, DesignSystemResult } from "./types";
 
@@ -85,9 +86,11 @@ export async function buildDesignSystem(
   ) as PageNode | undefined;
 
   if (page) {
+    inputs.onProgress?.({ phase: "clearing", current: 0, total: 1 });
     for (const node of [...page.children]) {
       if (node.getPluginData(REGION_KEY) === REGION_ID) node.remove();
     }
+    inputs.onProgress?.({ phase: "clearing", current: 1, total: 1 });
   } else {
     page = figma.createPage();
     page.name = PAGE_NAME;
@@ -120,12 +123,22 @@ export async function buildDesignSystem(
 
   for (let i = 0; i < SECTIONS.length; i++) {
     const section = SECTIONS[i]!;
-    inputs.onProgress?.(i, total, section.label);
+    inputs.onProgress?.({
+      phase: "building",
+      current: i,
+      total,
+      label: section.label,
+    });
     count += await section.build(page, inputsWithStyles);
     // Yield to the event loop so the UI can paint between sections.
-    await Promise.resolve();
+    await yieldToUi();
   }
-  inputs.onProgress?.(total, total, "Done");
+  inputs.onProgress?.({
+    phase: "building",
+    current: total,
+    total,
+    label: "Done",
+  });
 
   // The frames this run appended, in SECTIONS order (each builder appends
   // exactly one top-level frame in sequence). Tag them so a later re-run clears
@@ -138,20 +151,34 @@ export async function buildDesignSystem(
   // Map every eligible text node onto its Tailwind text style first, so the
   // style owns the node's font size + line height. The token sweep below then
   // skips those fields (a node with a text style needs no literal bindings).
-  for (const child of sectionNodes) {
-    await applyTextStyles(child, textStyles);
-  }
+  // Chunked so the UI keeps painting through this post-build sweep.
+  await applyTextStylesChunked(sectionNodes, textStyles, (done, totalNodes) =>
+    inputs.onProgress?.({
+      phase: "text-styles",
+      current: done,
+      total: totalNodes,
+    }),
+  );
 
   // Bind the remaining non-color primitives (spacing, padding, gaps, border
   // widths, radii, font sizes) wherever a literal matches a token, so later
   // variable edits reflow the page instead of leaving frozen literals.
-  for (const child of sectionNodes) {
-    applyTokenBindings(child, inputs.primitives);
-  }
+  await applyTokenBindingsChunked(
+    sectionNodes,
+    inputs.primitives,
+    (done, totalNodes) =>
+      inputs.onProgress?.({
+        phase: "binding",
+        current: done,
+        total: totalNodes,
+      }),
+  );
 
   // Lay out the section frames across two columns, keeping each section in
   // its assigned column (all color sections stay together).
+  inputs.onProgress?.({ phase: "layout", current: 0, total: 1 });
   layoutSectionsInColumns(sectionNodes);
+  inputs.onProgress?.({ phase: "layout", current: 1, total: 1 });
 
   // Move the user to the page and frame the result.
   await figma.setCurrentPageAsync(page);

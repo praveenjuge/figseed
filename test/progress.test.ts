@@ -1,0 +1,107 @@
+import { describe, expect, it } from "vitest";
+import {
+  ProgressReporter,
+  type ProgressRegion,
+  type ProgressUpdate,
+} from "../src/progress";
+
+// A fake monotonic clock so elapsed times are deterministic.
+function fakeClock(step = 5) {
+  let t = 1000;
+  return () => {
+    const now = t;
+    t += step;
+    return now;
+  };
+}
+
+function drive(emit: (u: ProgressUpdate) => void) {
+  const reporter = new ProgressReporter({ emit, now: fakeClock() });
+  reporter.phase("resolving");
+  reporter.phase("variables");
+  for (const region of [
+    "design-system",
+    "components",
+    "blocks",
+  ] as ProgressRegion[]) {
+    const track = reporter.region(region);
+    track({ phase: "clearing", current: 1, total: 1 });
+    track({ phase: "building", current: 0, total: 4, label: "Header" });
+    track({ phase: "building", current: 4, total: 4, label: "Done" });
+    track({ phase: "text-styles", current: 4, total: 4 });
+    track({ phase: "binding", current: 4, total: 4 });
+    track({ phase: "layout", current: 1, total: 1 });
+  }
+  reporter.finish();
+  return reporter;
+}
+
+describe("ProgressReporter", () => {
+  it("emits phases in order and never rewinds the phase index", () => {
+    const updates: ProgressUpdate[] = [];
+    drive((u) => updates.push(u));
+
+    // The first two updates are the global phases.
+    expect(updates[0]!.phase).toBe("resolving");
+    expect(updates[1]!.phase).toBe("variables");
+    // The terminal update is `done`.
+    expect(updates.at(-1)!.phase).toBe("done");
+
+    // Region progression: design-system → components → blocks.
+    const regionSeq = updates
+      .map((u) => u.region)
+      .filter((r): r is ProgressRegion => r !== undefined);
+    const firstComponents = regionSeq.indexOf("components");
+    const lastDesign = regionSeq.lastIndexOf("design-system");
+    const firstBlocks = regionSeq.indexOf("blocks");
+    expect(lastDesign).toBeLessThan(firstComponents);
+    expect(firstComponents).toBeLessThan(firstBlocks);
+  });
+
+  it("produces a monotonically non-decreasing percent", () => {
+    const updates: ProgressUpdate[] = [];
+    drive((u) => updates.push(u));
+
+    let prev = -1;
+    for (const update of updates) {
+      expect(update.percent).toBeGreaterThanOrEqual(prev);
+      expect(update.percent).toBeGreaterThanOrEqual(0);
+      expect(update.percent).toBeLessThanOrEqual(100);
+      prev = update.percent;
+    }
+  });
+
+  it("reserves 100% for the terminal done update", () => {
+    const updates: ProgressUpdate[] = [];
+    drive((u) => updates.push(u));
+
+    // Only the final `done` update reaches 100%.
+    const hundreds = updates.filter((u) => u.percent === 100);
+    expect(hundreds).toHaveLength(1);
+    expect(hundreds[0]!.phase).toBe("done");
+    expect(updates.at(-1)!.percent).toBe(100);
+  });
+
+  it("includes a non-negative elapsed time on every update", () => {
+    const updates: ProgressUpdate[] = [];
+    drive((u) => updates.push(u));
+
+    for (const update of updates) {
+      expect(typeof update.elapsedMs).toBe("number");
+      expect(update.elapsedMs).toBeGreaterThanOrEqual(0);
+    }
+    // Elapsed time advances with the fake clock.
+    expect(updates.at(-1)!.elapsedMs).toBeGreaterThan(updates[0]!.elapsedMs);
+  });
+
+  it("ignores unknown phase/region combinations without throwing", () => {
+    const updates: ProgressUpdate[] = [];
+    const reporter = new ProgressReporter({
+      emit: (u) => updates.push(u),
+      now: fakeClock(),
+    });
+    // A region phase with no matching segment is a no-op.
+    reporter.mark("building", undefined, 1, 1);
+    expect(updates).toHaveLength(0);
+  });
+});

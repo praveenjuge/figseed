@@ -1,14 +1,25 @@
 // Message contract between the Figma plugin sandbox (code.ts) and UI (ui.ts).
 
+import type { ProgressPhase, ProgressRegion } from "./progress";
+
 export type UiToPlugin = { type: "generate"; presetCode: string };
 
 export type PluginToUi =
   | { type: "ready"; command?: string }
   | {
       type: "progress";
+      // Human-readable detail line for the current phase. Kept as `message`
+      // for back-compat with older UI/tests.
       message: string;
-      // step/total are optional so legacy progress messages still render. The
-      // UI uses them to drive a determinate progress bar.
+      // Phase-weighted determinate progress. `percent` is monotonic and only
+      // reaches 100 on `done`; `phase`/`region`/`detail` drive the stage panel.
+      phase?: ProgressPhase;
+      region?: ProgressRegion;
+      detail?: string;
+      percent?: number;
+      elapsedMs?: number;
+      // Legacy section counters. Retained as optional so any caller/test that
+      // still reads them keeps working; the bar now prefers `percent`.
       step?: number;
       total?: number;
     }
@@ -22,5 +33,10 @@ export type PluginToUi =
         componentsNodes: number;
         blocksNodes: number;
       };
+      // Total wall-clock time for the run, surfaced in the done summary.
+      elapsedMs?: number;
+      // Non-fatal notes (e.g. theme colors that fell back to literal values).
+      // Always present; empty when the run was clean.
+      warnings: string[];
     }
   | { type: "error"; message: string };

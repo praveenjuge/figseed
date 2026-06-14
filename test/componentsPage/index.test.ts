@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildComponentsPage } from "../../src/componentsPage";
 import type { ComponentsInputs } from "../../src/componentsPage";
 import { generateFromRegistry } from "../../src/generator";
@@ -28,11 +28,26 @@ describe("buildComponentsPage", () => {
     expect(page).toBeDefined();
   });
 
-  it("reports progress for all 58 sections plus Done", async () => {
-    const onProgress = vi.fn();
-    await buildComponentsPage({ ...(await makeInputs()), onProgress });
-    expect(onProgress).toHaveBeenCalledTimes(59);
-    expect(onProgress).toHaveBeenLastCalledWith(58, 58, "Done");
+  it("reports build and post-processing phase progress for all sections", async () => {
+    const events: { phase: string; current: number; total: number }[] = [];
+    await buildComponentsPage({
+      ...(await makeInputs()),
+      onProgress: (event) => events.push(event),
+    });
+
+    const phases = new Set(events.map((e) => e.phase));
+    expect(phases).toContain("building");
+    expect(phases).toContain("text-styles");
+    expect(phases).toContain("binding");
+    expect(phases).toContain("layout");
+
+    // 58 sections each step the build phase, plus a final "Done" step.
+    const building = events.filter((e) => e.phase === "building");
+    expect(building.length).toBe(59);
+    expect(building.at(-1)).toMatchObject({ current: 58, total: 58 });
+    // The sweeps complete (current === total of the nodes they walked).
+    const lastText = events.filter((e) => e.phase === "text-styles").at(-1)!;
+    expect(lastText.current).toBe(lastText.total);
   });
 
   it("reuses and clears its region on the Niram page on rebuild", async () => {

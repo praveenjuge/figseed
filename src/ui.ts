@@ -9,7 +9,8 @@ import type { PluginToUi, UiToPlugin } from "./messages";
 const input = document.getElementById("preset") as HTMLInputElement;
 const generateButton = document.getElementById("generate") as HTMLButtonElement;
 const shuffleButton = document.getElementById("shuffle") as HTMLButtonElement;
-const status = document.getElementById("status") as HTMLDivElement;
+const status = document.getElementById("status") as HTMLSpanElement;
+const meta = document.getElementById("meta") as HTMLSpanElement;
 const progress = document.getElementById("progress") as HTMLDivElement;
 const progressBar = progress.querySelector(".bar") as HTMLSpanElement;
 const presetsList = document.getElementById("presets-list") as HTMLDivElement;
@@ -26,25 +27,41 @@ function setStatus(text: string, variant: "info" | "error" | "done" = "info") {
   status.classList.toggle("done", variant === "done");
 }
 
-// Show the bar and either drive it directly (step + total provided) or run
-// the indeterminate stripe while we wait for the next tick.
-function updateProgress(step?: number, total?: number) {
+function setMeta(text: string) {
+  meta.textContent = text;
+}
+
+function formatCount(value: number): string {
+  return value.toLocaleString();
+}
+
+// Drive the bar + meta from a progress message: determinate percent when
+// available, otherwise the indeterminate stripe.
+function updateProgress(message: Extract<PluginToUi, { type: "progress" }>) {
   progress.classList.add("visible");
-  if (typeof step === "number" && typeof total === "number" && total > 0) {
+  setStatus(message.detail ?? message.message);
+
+  setMeta(typeof message.percent === "number" ? `${message.percent}%` : "");
+
+  if (typeof message.percent === "number") {
     progress.classList.remove("indeterminate");
-    const pct = Math.max(0, Math.min(100, (step / total) * 100));
-    progressBar.style.width = `${pct}%`;
+    progressBar.style.width = `${Math.max(0, Math.min(100, message.percent))}%`;
   } else {
     progress.classList.add("indeterminate");
     progressBar.style.width = "";
   }
 }
 
+function startProgress(presetCode: string) {
+  setStatus(`Working on it (${presetCode})…`);
+  setMeta("");
+  progress.classList.add("visible", "indeterminate");
+  progressBar.style.width = "";
+}
+
 function finishProgress() {
   progress.classList.remove("indeterminate");
   progressBar.style.width = "100%";
-  // Fade the bar back out once the run completes — keeps the resting UI
-  // clean without removing the element entirely.
   setTimeout(() => {
     progress.classList.remove("visible");
     progressBar.style.width = "0%";
@@ -52,6 +69,7 @@ function finishProgress() {
 }
 
 function resetProgress() {
+  setMeta("");
   progress.classList.remove("visible", "indeterminate");
   progressBar.style.width = "0%";
 }
@@ -80,8 +98,7 @@ function setPresetButtonsDisabled(disabled: boolean) {
 function runPreset(presetCode: string) {
   busy = true;
   syncGenerateButton();
-  setStatus(`Working on it (${presetCode})…`);
-  updateProgress();
+  startProgress(presetCode);
   postToPlugin({ type: "generate", presetCode });
 }
 
@@ -148,8 +165,7 @@ window.addEventListener("message", (event: MessageEvent) => {
   }
 
   if (message.type === "progress") {
-    setStatus(message.message);
-    updateProgress(message.step, message.total);
+    updateProgress(message);
     return;
   }
 
@@ -163,14 +179,17 @@ window.addEventListener("message", (event: MessageEvent) => {
 
   if (message.type === "done") {
     busy = false;
-    const total = message.summary.collections.reduce(
+    const s = message.summary;
+    const variables = s.collections.reduce(
       (acc, collection) => acc + collection.variableCount,
       0,
     );
+    const nodes = s.designSystemNodes + s.componentsNodes + s.blocksNodes;
     setStatus(
-      `Created ${total} variables · Design System (${message.summary.designSystemNodes} nodes) · Components (${message.summary.componentsNodes} nodes) · Blocks (${message.summary.blocksNodes} nodes).`,
+      `Done · ${formatCount(variables)} variables · ${formatCount(nodes)} nodes`,
       "done",
     );
+    setMeta("");
     finishProgress();
     syncGenerateButton();
     return;

@@ -32,6 +32,7 @@ import {
   SPACING_TOKENS,
   type NumberToken,
 } from "./primitives";
+import { yieldToUi } from "./async";
 
 type VarMap = Map<string, Variable>;
 
@@ -350,5 +351,22 @@ export function applyTokenBindings(root: SceneNode, primitives: VarMap): void {
   const children = (root as unknown as { children?: SceneNode[] }).children;
   if (children) {
     for (const child of children) applyTokenBindings(child, primitives);
+  }
+}
+
+// Sweep a region's top-level section/block nodes one at a time, yielding to the
+// UI after each so a long binding pass never blocks the event loop. `onChunk`
+// reports the boundary (1-based count, total) so the caller can drive progress.
+export async function applyTokenBindingsChunked(
+  nodes: SceneNode[],
+  primitives: VarMap,
+  onChunk?: (done: number, total: number) => void,
+): Promise<void> {
+  const total = nodes.length;
+  onChunk?.(0, total);
+  for (let i = 0; i < total; i++) {
+    applyTokenBindings(nodes[i]!, primitives);
+    onChunk?.(i + 1, total);
+    await yieldToUi();
   }
 }

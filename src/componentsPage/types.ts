@@ -10,6 +10,7 @@ import type { EffectStyleMap } from "../effectStyles";
 import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
 import type { IconComponentMap } from "../icons";
+import type { RegionProgress } from "../progress";
 
 // Shared with the Design System builder: every Niram surface renders onto one
 // page (Design System sections on top, the Components grid below, the Blocks
@@ -44,7 +45,10 @@ export type ComponentsInputs = {
   // these (swappable icons that stay in sync with the set) instead of baking a
   // one-off vector. Optional so existing callers/tests keep working.
   iconComponents?: IconComponentMap;
-  onProgress?: (current: number, total: number, label: string) => void;
+  // Reports build + post-processing phase progress (clearing, building each
+  // section, applying text styles, binding tokens, layout) for the UI's
+  // phase-weighted determinate bar.
+  onProgress?: RegionProgress;
 };
 
 export type ComponentsResult = { nodeCount: number };

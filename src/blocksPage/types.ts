@@ -18,6 +18,7 @@ import type {
 import type { EffectStyleMap } from "../effectStyles";
 import type { TextStyleMap } from "../textStyles";
 import type { ResolvedFonts } from "../primitives";
+import type { RegionProgress } from "../progress";
 
 // Blocks stack in a single column with generous breathing room between them.
 export const BLOCK_GAP = 64;
@@ -57,7 +58,10 @@ export type BlocksInputs = {
   // Sidebar). When the page has no matching components (older callers / tests
   // rendering onto a bare page) each block draws a plain fallback instead.
   targetPage: PageNode;
-  onProgress?: (current: number, total: number, label: string) => void;
+  // Reports build + post-processing phase progress (clearing, building each
+  // block, applying text styles, binding tokens, layout) for the UI's
+  // phase-weighted determinate bar.
+  onProgress?: RegionProgress;
 };
 
 export type BlocksResult = { nodeCount: number };

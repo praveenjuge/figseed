@@ -7,6 +7,7 @@ import { buildDesignSystem } from "./designSystem";
 import { generateFromRegistry, withShadcnRadius } from "./generator";
 import { decodePreset } from "./preset";
 import { resolvePreset } from "./registry";
+import { ProgressReporter } from "./progress";
 import type { PluginToUi, UiToPlugin } from "./messages";
 
 figma.showUI(__html__, { width: 360, height: 360, themeColors: true });
@@ -27,7 +28,24 @@ figma.ui.onmessage = async (message: UiToPlugin) => {
 
 async function handleGenerate(rawCode: string) {
   const presetCode = rawCode.trim();
-  post({ type: "progress", message: "Resolving preset…" });
+
+  // One reporter per run: turns weighted phase updates into UI progress
+  // messages with a determinate percent, elapsed time, and a detail line.
+  const progress = new ProgressReporter({
+    emit: (update) => {
+      post({
+        type: "progress",
+        message: update.detail,
+        phase: update.phase,
+        region: update.region,
+        detail: update.detail,
+        percent: update.percent,
+        elapsedMs: update.elapsedMs,
+      });
+    },
+  });
+
+  progress.phase("resolving");
 
   const resolved = resolvePreset(presetCode);
   if (!resolved.ok) {
@@ -35,7 +53,7 @@ async function handleGenerate(rawCode: string) {
     return;
   }
 
-  post({ type: "progress", message: "Generating Figma variables…" });
+  progress.phase("variables");
 
   try {
     const decoded = decodePreset(presetCode) ?? undefined;
@@ -66,8 +84,6 @@ async function handleGenerate(rawCode: string) {
       result.variables.radiusScale,
     );
 
-    post({ type: "progress", message: "Building Design System…" });
-
     const ds = await buildDesignSystem({
       presetCode: result.presetCode,
       presetSummary,
@@ -78,17 +94,8 @@ async function handleGenerate(rawCode: string) {
       fontVars: result.variables.fonts,
       effectStyles: result.effectStyles,
       textStyles: result.textStyles,
-      onProgress: (current, total, label) => {
-        post({
-          type: "progress",
-          message: `Building ${label}…`,
-          step: current,
-          total,
-        });
-      },
+      onProgress: progress.region("design-system"),
     });
-
-    post({ type: "progress", message: "Building Components…" });
 
     const components = await buildComponentsPage({
       presetCode: result.presetCode,
@@ -101,17 +108,8 @@ async function handleGenerate(rawCode: string) {
       effectStyles: result.effectStyles,
       textStyles: result.textStyles,
       iconComponents: ds.iconComponents,
-      onProgress: (current, total, label) => {
-        post({
-          type: "progress",
-          message: `Building ${label}…`,
-          step: current,
-          total,
-        });
-      },
+      onProgress: progress.region("components"),
     });
-
-    post({ type: "progress", message: "Building Blocks…" });
 
     // Everything Niram generates lives on one page (Figma's Starter tier caps
     // a file at 3 pages). The Design System sections render at the top, the
@@ -135,16 +133,16 @@ async function handleGenerate(rawCode: string) {
           effectStyles: result.effectStyles,
           textStyles: result.textStyles,
           targetPage: componentsPage,
-          onProgress: (current, total, label) => {
-            post({
-              type: "progress",
-              message: `Building ${label}…`,
-              step: current,
-              total,
-            });
-          },
+          onProgress: progress.region("blocks"),
         })
       : { nodeCount: 0 };
+
+    // Non-fatal notes the run should surface without failing. (The theme-color
+    // fallback to literal values is normal for most presets, so it's tracked in
+    // the summary count but not surfaced as a warning.)
+    const warnings: string[] = [];
+
+    progress.finish();
 
     post({
       type: "done",
@@ -156,6 +154,8 @@ async function handleGenerate(rawCode: string) {
         componentsNodes: components.nodeCount,
         blocksNodes: blocks.nodeCount,
       },
+      elapsedMs: progress.elapsed(),
+      warnings,
     });
 
     const variableTotal = result.collections.reduce(

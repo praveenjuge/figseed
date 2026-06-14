@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildDesignSystem } from "../../src/designSystem";
 import type { DesignSystemInputs } from "../../src/designSystem";
 import { generateFromRegistry } from "../../src/generator";
@@ -34,13 +34,28 @@ describe("buildDesignSystem", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("reports progress once per section plus a final Done", async () => {
+  it("reports build and post-processing phase progress", async () => {
     const inputs = await makeInputs();
-    const onProgress = vi.fn();
-    await buildDesignSystem({ ...inputs, onProgress });
-    // 12 sections + the final "Done" call.
-    expect(onProgress).toHaveBeenCalledTimes(13);
-    expect(onProgress).toHaveBeenLastCalledWith(12, 12, "Done");
+    const events: { phase: string; current: number; total: number }[] = [];
+    await buildDesignSystem({
+      ...inputs,
+      onProgress: (event) => events.push(event),
+    });
+
+    const phases = new Set(events.map((e) => e.phase));
+    // Build phase plus every post-processing sweep reports progress.
+    expect(phases).toContain("building");
+    expect(phases).toContain("text-styles");
+    expect(phases).toContain("binding");
+    expect(phases).toContain("layout");
+
+    // The build phase steps once per section (12) and emits a final "Done".
+    const building = events.filter((e) => e.phase === "building");
+    expect(building.length).toBe(13);
+    expect(building.at(-1)).toMatchObject({ current: 12, total: 12 });
+    // The post-build sweeps end at 100% of the section nodes they processed.
+    const lastBinding = events.filter((e) => e.phase === "binding").at(-1)!;
+    expect(lastBinding.current).toBe(lastBinding.total);
   });
 
   it("rebuilds in place rather than duplicating the page", async () => {

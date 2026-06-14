@@ -25,6 +25,7 @@
 // document-level, so we reuse a style by name and refresh it in place rather
 // than minting duplicates.
 
+import { yieldToUi } from "./async";
 import { getActiveFonts, resolveBodyFont, weightStyleName } from "./fonts";
 import type { PrimitiveVariableMap, ThemeFontVars } from "./generator";
 import {
@@ -275,5 +276,22 @@ export async function applyTextStyles(
   const children = (root as unknown as { children?: SceneNode[] }).children;
   if (children) {
     for (const child of children) await applyTextStyles(child, styles);
+  }
+}
+
+// Sweep a region's top-level section/block nodes one at a time, yielding to the
+// UI after each so a long sweep never blocks the event loop. `onChunk` reports
+// the boundary (1-based count, total) so the caller can drive a progress bar.
+export async function applyTextStylesChunked(
+  nodes: SceneNode[],
+  styles: TextStyleMap,
+  onChunk?: (done: number, total: number) => void,
+): Promise<void> {
+  const total = nodes.length;
+  onChunk?.(0, total);
+  for (let i = 0; i < total; i++) {
+    await applyTextStyles(nodes[i]!, styles);
+    onChunk?.(i + 1, total);
+    await yieldToUi();
   }
 }
