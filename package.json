@@ -5,7 +5,7 @@
   "description": "Niram generates shadcn/ui design systems as Figma variables, styles, components, and blocks.",
   "license": "MIT",
   "author": "Praveen Juge",
-  "homepage": "https://github.com/praveenjuge/niram#readme",
+  "homepage": "https://www.figma.com/community/plugin/1642487887236877076/niram-shadcn-design-system-generator",
   "bugs": {
     "url": "https://github.com/praveenjuge/niram/issues"
   },

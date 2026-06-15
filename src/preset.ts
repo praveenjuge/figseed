@@ -54,6 +54,20 @@ export const PRESET_THEMES = [
   "taupe",
 ] as const;
 
+// Before v2, base-color themes shipped colored chart palettes borrowed from
+// these colored themes. Mirrors shadcn's V1_CHART_COLOR_MAP — used to restore
+// the original chart colors when decoding legacy v1 ("a") presets, which had
+// no separate chartColor field.
+export const V1_CHART_COLOR_MAP: Record<string, string> = {
+  neutral: "blue",
+  stone: "lime",
+  zinc: "amber",
+  mauve: "emerald",
+  olive: "violet",
+  mist: "rose",
+  taupe: "cyan",
+};
+
 export const PRESET_ICON_LIBRARIES = [
   "lucide",
   "hugeicons",
@@ -250,7 +264,10 @@ export function decodePreset(code: string): PresetConfig | null {
   }
   if (version === "a") {
     out.fontHeading = "inherit";
-    out.chartColor = out.theme!;
+    // v1 had no chartColor field. shadcn restores the original colored chart
+    // palettes for base-color themes (neutral→blue, etc.) and otherwise reuses
+    // the theme's own charts.
+    out.chartColor = V1_CHART_COLOR_MAP[out.theme!] ?? out.theme!;
   }
   return out as unknown as PresetConfig;
 }

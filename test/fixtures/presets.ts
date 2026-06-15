@@ -29,8 +29,9 @@ export const MENU_BOLD_CODE = "b1Ymqvgj2";
 // override pulling chart-1..5 from a different family.
 export const CHART_OVERRIDE_CODE = "b1YmpVh4a";
 
-// Minimal v1 ("a") code: all fields at index 0. Exercises the v1 upgrade path
-// (fontHeading -> "inherit", chartColor -> theme).
+// Minimal v1 ("a") code: all fields at index 0 (theme = neutral). Exercises the
+// v1 upgrade path (fontHeading -> "inherit", chartColor via V1_CHART_COLOR_MAP
+// so neutral -> blue charts).
 export const V1_MINIMAL_CODE = "a0";
 
 // Shape-valid (version + base62) but the bits overflow the encoded field range,

@@ -5,6 +5,8 @@ shadcn/ui design system generator for Figma
 Niram is a Figma plugin that turns a [shadcn/ui](https://ui.shadcn.com)
 preset code into native Figma variables, styles, components, and app blocks.
 
+[Install the Figma Community plugin](https://www.figma.com/community/plugin/1642487887236877076/niram-shadcn-design-system-generator).
+
 Paste a preset code, generate once, and Niram builds the design-system
 surface around it:
 
@@ -17,11 +19,11 @@ surface around it:
   blur effect styles.
 - A single `Niram` page that hosts three regions: a Design System region for
   colors, type, spacing, radii, effects, opacity, border widths, and icons; a
-  Components region with 58 shadcn-style sections (charts, forms, typography,
-  data tables, sidebars, icon-backed controls, and common overlays); and a
-  Blocks region with all five shadcn login layouts, all five signup layouts, a
-  shadcn-structured dashboard, and the 16-variant Sidebar set — the auth and
-  dashboard blocks assembled from generated component instances.
+  57-section Components region with forms, typography, data tables,
+  icon-backed controls, and common overlays; and a Blocks region with all five
+  shadcn login layouts, all five signup layouts, a shadcn-structured
+  dashboard, a Chart component set, and the 16-variant Sidebar set — the auth
+  and dashboard blocks assembled from generated component instances.
 
 Re-running with a different preset updates the same variables, styles, and
 page in place.
@@ -69,6 +71,9 @@ and select `manifest.json`.
 See [AGENTS.md](./AGENTS.md) for architecture, commands, and constraints.
 
 ## Support
+
+Install the plugin from
+<https://www.figma.com/community/plugin/1642487887236877076/niram-shadcn-design-system-generator>.
 
 Open issues at <https://github.com/praveenjuge/niram/issues>.
 

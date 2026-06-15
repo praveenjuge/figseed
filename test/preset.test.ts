@@ -115,8 +115,32 @@ describe("decodePreset", () => {
     const config = decodePreset(V1_MINIMAL_CODE);
     expect(config).not.toBeNull();
     expect(config!.fontHeading).toBe("inherit");
-    // v1 has no chartColor field, so it mirrors the theme.
-    expect(config!.chartColor).toBe(config!.theme);
+    // v1 has no chartColor field. shadcn restores the original colored chart
+    // palette for base-color themes, so a v1 neutral preset gets blue charts.
+    expect(config!.theme).toBe("neutral");
+    expect(config!.chartColor).toBe("blue");
+  });
+
+  it("restores v1 chart colors for base-color themes", () => {
+    // stone -> lime (V1_CHART_COLOR_MAP). Re-version a v2 {theme: stone} code
+    // to "a"; the v1 field layout is a prefix of v2 so theme still decodes.
+    const code = encodePreset({ theme: "stone" }).replace(/^b/, "a");
+    const stone = decodePreset(code);
+    expect(stone).not.toBeNull();
+    expect(stone!.theme).toBe("stone");
+    expect(stone!.chartColor).toBe("lime");
+  });
+
+  it("keeps the theme as chartColor for non-base v1 themes", () => {
+    // A v1 code whose theme is a colored family (not in V1_CHART_COLOR_MAP)
+    // keeps its own theme as the chartColor. Re-version a v2 {theme: blue}
+    // code to "a": the v1 field layout is a prefix of v2, and the unused high
+    // bits stay zero, so the theme still decodes to blue.
+    const code = encodePreset({ theme: "blue" }).replace(/^b/, "a");
+    const config = decodePreset(code);
+    expect(config).not.toBeNull();
+    expect(config!.theme).toBe("blue");
+    expect(config!.chartColor).toBe("blue");
   });
 
   it("decodes the bold-accent edge fixture", () => {
